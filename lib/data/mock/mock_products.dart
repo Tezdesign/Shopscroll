@@ -1,0 +1,326 @@
+import '../models/product.dart';
+
+/// 18 mocked products spread across 4 categories (Fashion, Tech, Sports,
+/// Makeup) and the 5 mocked sellers in [mockSellers].
+final List<Product> mockProducts = [
+  // --- Bershka (Fashion) ---
+  Product(
+    id: 'prod-001',
+    title: 'Oversized Blazer Dress',
+    description:
+        "Bershka Menswear SS25: who's slaying better. An oversized "
+        'blazer dress with structured shoulders and a relaxed silhouette, '
+        'perfect for layering into any season.',
+    price: 65,
+    category: 'Fashion',
+    storeId: 'seller-bershka',
+    storeName: 'Bershka',
+    storeAvatarUrl: 'https://picsum.photos/seed/bershka-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-001/400/500',
+    imageUrls: [
+      'https://picsum.photos/seed/prod-001-a/800/1000',
+      'https://picsum.photos/seed/prod-001-b/800/1000',
+    ],
+    colorOptions: [0xFFFEFEFE, 0xFF0066FF, 0xFFFF6B00, 0xFF333333],
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    rating: 4.5,
+    reviewCount: 212,
+    createdAt: DateTime(2026, 6, 18),
+  ),
+  Product(
+    id: 'prod-002',
+    title: 'Ribbed Knit Sweater',
+    description:
+        'A soft ribbed-knit sweater with a relaxed crew neck, easy to '
+        'dress up or down.',
+    price: 35,
+    category: 'Fashion',
+    storeId: 'seller-bershka',
+    storeName: 'Bershka',
+    storeAvatarUrl: 'https://picsum.photos/seed/bershka-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-002/400/500',
+    colorOptions: [0xFF333333, 0xFFD2D2D2],
+    sizes: ['S', 'M', 'L'],
+    rating: 4.2,
+    reviewCount: 88,
+    createdAt: DateTime(2026, 6, 20),
+  ),
+  Product(
+    id: 'prod-003',
+    title: 'Wide Leg Denim Jeans',
+    description:
+        'High-rise wide-leg jeans in a mid-wash denim, built for '
+        'all-day comfort.',
+    price: 49,
+    category: 'Fashion',
+    storeId: 'seller-bershka',
+    storeName: 'Bershka',
+    storeAvatarUrl: 'https://picsum.photos/seed/bershka-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-003/400/500',
+    sizes: ['XS', 'S', 'M', 'L'],
+    rating: 4.6,
+    reviewCount: 340,
+    createdAt: DateTime(2026, 6, 10),
+  ),
+  Product(
+    id: 'prod-016',
+    title: 'Satin Slip Midi Dress',
+    description:
+        'A bias-cut satin slip dress with adjustable straps — dresses up '
+        'easily for evening wear.',
+    price: 58,
+    originalPrice: 82,
+    category: 'Fashion',
+    storeId: 'seller-bershka',
+    storeName: 'Bershka',
+    storeAvatarUrl: 'https://picsum.photos/seed/bershka-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-016/400/500',
+    colorOptions: [0xFF000000, 0xFFFA0000],
+    sizes: ['XS', 'S', 'M', 'L'],
+    isDeal: true,
+    rating: 4.7,
+    reviewCount: 156,
+    createdAt: DateTime(2026, 6, 28),
+  ),
+
+  // --- Pull&Bear (Fashion) ---
+  Product(
+    id: 'prod-004',
+    title: 'Graphic Print Hoodie',
+    description:
+        'Heavyweight cotton hoodie with a bold graphic print across '
+        'the chest.',
+    price: 42,
+    category: 'Fashion',
+    storeId: 'seller-pullandbear',
+    storeName: 'Pull&Bear',
+    storeAvatarUrl: 'https://picsum.photos/seed/pullandbear-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-004/400/500',
+    colorOptions: [0xFF000000, 0xFF8E8E8E],
+    sizes: ['S', 'M', 'L', 'XL'],
+    rating: 4.3,
+    reviewCount: 121,
+    createdAt: DateTime(2026, 6, 15),
+  ),
+  Product(
+    id: 'prod-005',
+    title: 'Cargo Utility Pants',
+    description:
+        'Straight-fit cargo pants with multiple utility pockets and an '
+        'adjustable waist.',
+    price: 55,
+    category: 'Fashion',
+    storeId: 'seller-pullandbear',
+    storeName: 'Pull&Bear',
+    storeAvatarUrl: 'https://picsum.photos/seed/pullandbear-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-005/400/500',
+    sizes: ['S', 'M', 'L', 'XL'],
+    rating: 4.1,
+    reviewCount: 64,
+    createdAt: DateTime(2026, 6, 22),
+  ),
+  Product(
+    id: 'prod-006',
+    title: 'Cropped Denim Jacket',
+    description:
+        'A classic cropped denim jacket with a slightly distressed '
+        'wash and front button closure.',
+    price: 60,
+    category: 'Fashion',
+    storeId: 'seller-pullandbear',
+    storeName: 'Pull&Bear',
+    storeAvatarUrl: 'https://picsum.photos/seed/pullandbear-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-006/400/500',
+    sizes: ['XS', 'S', 'M', 'L'],
+    rating: 4.4,
+    reviewCount: 97,
+    createdAt: DateTime(2026, 6, 12),
+  ),
+
+  // --- Apple (Tech) ---
+  Product(
+    id: 'prod-007',
+    title: 'iPhone 15 Pro Silicone Case',
+    description:
+        'A soft-touch silicone case with a microfiber lining, precisely '
+        'molded for iPhone 15 Pro.',
+    price: 49,
+    category: 'Tech',
+    storeId: 'seller-apple',
+    storeName: 'Apple',
+    storeAvatarUrl: 'https://picsum.photos/seed/apple-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-007/400/500',
+    colorOptions: [0xFF000000, 0xFFFEFEFE, 0xFF0066FF],
+    rating: 4.8,
+    reviewCount: 540,
+    createdAt: DateTime(2026, 6, 25),
+  ),
+  Product(
+    id: 'prod-008',
+    title: 'AirPods Pro (2nd Gen)',
+    description:
+        'Active Noise Cancellation, Adaptive Transparency, and '
+        'Personalized Spatial Audio.',
+    price: 249,
+    category: 'Tech',
+    storeId: 'seller-apple',
+    storeName: 'Apple',
+    storeAvatarUrl: 'https://picsum.photos/seed/apple-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-008/400/500',
+    rating: 4.9,
+    reviewCount: 1024,
+    createdAt: DateTime(2026, 6, 8),
+  ),
+  Product(
+    id: 'prod-009',
+    title: 'MagSafe Charger',
+    description:
+        'Snap-on wireless charging up to 15W, compatible with iPhone 12 '
+        'and later.',
+    price: 39,
+    category: 'Tech',
+    storeId: 'seller-apple',
+    storeName: 'Apple',
+    storeAvatarUrl: 'https://picsum.photos/seed/apple-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-009/400/500',
+    rating: 4.6,
+    reviewCount: 289,
+    createdAt: DateTime(2026, 6, 30),
+  ),
+  Product(
+    id: 'prod-018',
+    title: 'USB-C to Lightning Cable',
+    description: 'A 1m braided cable for fast charging and data transfer.',
+    price: 19,
+    originalPrice: 29,
+    category: 'Tech',
+    storeId: 'seller-apple',
+    storeName: 'Apple',
+    storeAvatarUrl: 'https://picsum.photos/seed/apple-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-018/400/500',
+    isDeal: true,
+    rating: 4.4,
+    reviewCount: 175,
+    createdAt: DateTime(2026, 7, 1),
+  ),
+
+  // --- Nike (Sports) ---
+  Product(
+    id: 'prod-010',
+    title: 'Air Max 270 Sneakers',
+    description:
+        "Nike's biggest heel Air unit yet, for all-day comfort with a "
+        'bold look.',
+    price: 150,
+    category: 'Sports',
+    storeId: 'seller-nike',
+    storeName: 'Nike',
+    storeAvatarUrl: 'https://picsum.photos/seed/nike-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-010/400/500',
+    colorOptions: [0xFF000000, 0xFFFEFEFE, 0xFFFA0000],
+    sizes: ['38', '39', '40', '41', '42', '43'],
+    rating: 4.7,
+    reviewCount: 892,
+    createdAt: DateTime(2026, 6, 5),
+  ),
+  Product(
+    id: 'prod-011',
+    title: 'Dri-FIT Running Shorts',
+    description:
+        'Lightweight, sweat-wicking shorts built for your daily run.',
+    price: 35,
+    category: 'Sports',
+    storeId: 'seller-nike',
+    storeName: 'Nike',
+    storeAvatarUrl: 'https://picsum.photos/seed/nike-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-011/400/500',
+    sizes: ['S', 'M', 'L', 'XL'],
+    rating: 4.3,
+    reviewCount: 145,
+    createdAt: DateTime(2026, 6, 27),
+  ),
+  Product(
+    id: 'prod-012',
+    title: 'Tech Fleece Joggers',
+    description:
+        'Warm without the bulk — Nike Tech Fleece joggers with a '
+        'tapered fit.',
+    price: 110,
+    category: 'Sports',
+    storeId: 'seller-nike',
+    storeName: 'Nike',
+    storeAvatarUrl: 'https://picsum.photos/seed/nike-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-012/400/500',
+    sizes: ['S', 'M', 'L', 'XL'],
+    rating: 4.5,
+    reviewCount: 203,
+    createdAt: DateTime(2026, 6, 14),
+  ),
+  Product(
+    id: 'prod-017',
+    title: 'Windrunner Jacket',
+    description:
+        'The iconic Nike Windrunner with a water-repellent finish and '
+        'signature chevron design.',
+    price: 120,
+    originalPrice: 160,
+    category: 'Sports',
+    storeId: 'seller-nike',
+    storeName: 'Nike',
+    storeAvatarUrl: 'https://picsum.photos/seed/nike-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-017/400/500',
+    colorOptions: [0xFF0066FF, 0xFF000000],
+    sizes: ['S', 'M', 'L', 'XL'],
+    isDeal: true,
+    rating: 4.6,
+    reviewCount: 311,
+    createdAt: DateTime(2026, 7, 3),
+  ),
+
+  // --- Glossier (Makeup) ---
+  Product(
+    id: 'prod-013',
+    title: 'Cloud Paint Blush',
+    description:
+        'A buildable, gel-cream blush that blends like a second skin.',
+    price: 22,
+    category: 'Makeup',
+    storeId: 'seller-glossier',
+    storeName: 'Glossier',
+    storeAvatarUrl: 'https://picsum.photos/seed/glossier-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-013/400/500',
+    rating: 4.7,
+    reviewCount: 402,
+    createdAt: DateTime(2026, 6, 19),
+  ),
+  Product(
+    id: 'prod-014',
+    title: 'Boy Brow Eyebrow Gel',
+    description: 'A cult-favorite, all-in-one brow gel that shapes and tints.',
+    price: 18,
+    category: 'Makeup',
+    storeId: 'seller-glossier',
+    storeName: 'Glossier',
+    storeAvatarUrl: 'https://picsum.photos/seed/glossier-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-014/400/500',
+    rating: 4.8,
+    reviewCount: 615,
+    createdAt: DateTime(2026, 6, 24),
+  ),
+  Product(
+    id: 'prod-015',
+    title: 'Lash Slick Mascara',
+    description:
+        'A lengthening, curling mascara that keeps lashes soft, not '
+        'stiff.',
+    price: 20,
+    category: 'Makeup',
+    storeId: 'seller-glossier',
+    storeName: 'Glossier',
+    storeAvatarUrl: 'https://picsum.photos/seed/glossier-avatar/100/100',
+    imageUrl: 'https://picsum.photos/seed/prod-015/400/500',
+    rating: 4.5,
+    reviewCount: 278,
+    createdAt: DateTime(2026, 7, 2),
+  ),
+];

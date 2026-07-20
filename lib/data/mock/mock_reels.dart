@@ -1,0 +1,152 @@
+import '../models/reel.dart';
+
+/// 10 mocked reels, tagging products from [mockProducts] via [productIds].
+///
+/// Sample video URLs point at Google's public GTV test clips (freely
+/// embeddable, no auth) since [video_player]/[chewie] are already project
+/// dependencies and need a real playable source to exercise.
+final List<Reel> mockReels = [
+  Reel(
+    id: 'reel-001',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-001/400/700',
+    storeId: 'seller-bershka',
+    storeName: 'Bershka',
+    storeAvatarUrl: 'https://picsum.photos/seed/bershka-avatar/100/100',
+    caption: 'Layering the oversized blazer dress for a night out ✨',
+    likeCount: 3420,
+    commentCount: 128,
+    productIds: ['prod-001'],
+    createdAt: DateTime(2026, 6, 29),
+  ),
+  Reel(
+    id: 'reel-002',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-002/400/700',
+    storeId: 'seller-pullandbear',
+    storeName: 'Pull&Bear',
+    storeAvatarUrl: 'https://picsum.photos/seed/pullandbear-avatar/100/100',
+    caption: 'Street style: graphic hoodie + cargo pants combo',
+    likeCount: 1876,
+    commentCount: 54,
+    productIds: ['prod-004', 'prod-005'],
+    createdAt: DateTime(2026, 6, 27),
+  ),
+  Reel(
+    id: 'reel-003',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-003/400/700',
+    storeId: 'seller-apple',
+    storeName: 'Apple',
+    storeAvatarUrl: 'https://picsum.photos/seed/apple-avatar/100/100',
+    caption: 'Unboxing AirPods Pro (2nd Gen) 🎧',
+    likeCount: 9820,
+    commentCount: 412,
+    productIds: ['prod-008'],
+    createdAt: DateTime(2026, 6, 20),
+  ),
+  Reel(
+    id: 'reel-004',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-004/400/700',
+    storeId: 'seller-nike',
+    storeName: 'Nike',
+    storeAvatarUrl: 'https://picsum.photos/seed/nike-avatar/100/100',
+    caption: 'Morning run in the Air Max 270 🏃',
+    likeCount: 5230,
+    commentCount: 201,
+    productIds: ['prod-010', 'prod-011'],
+    createdAt: DateTime(2026, 6, 24),
+  ),
+  Reel(
+    id: 'reel-005',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-005/400/700',
+    storeId: 'seller-glossier',
+    storeName: 'Glossier',
+    storeAvatarUrl: 'https://picsum.photos/seed/glossier-avatar/100/100',
+    caption: 'Get-ready-with-me using Cloud Paint + Boy Brow 💄',
+    likeCount: 2740,
+    commentCount: 96,
+    productIds: ['prod-013', 'prod-014'],
+    isSaved: true,
+    createdAt: DateTime(2026, 6, 22),
+  ),
+  Reel(
+    id: 'reel-006',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-006/400/700',
+    storeId: 'seller-bershka',
+    storeName: 'Bershka',
+    storeAvatarUrl: 'https://picsum.photos/seed/bershka-avatar/100/100',
+    caption: 'Denim on denim, always a good idea 🩱',
+    likeCount: 1543,
+    commentCount: 42,
+    productIds: ['prod-003'],
+    createdAt: DateTime(2026, 6, 18),
+  ),
+  Reel(
+    id: 'reel-007',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-007/400/700',
+    storeId: 'seller-nike',
+    storeName: 'Nike',
+    storeAvatarUrl: 'https://picsum.photos/seed/nike-avatar/100/100',
+    caption: 'Windrunner jacket restock — almost gone again',
+    likeCount: 4102,
+    commentCount: 178,
+    productIds: ['prod-017'],
+    isSaved: true,
+    createdAt: DateTime(2026, 7, 4),
+  ),
+  Reel(
+    id: 'reel-008',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-008/400/700',
+    storeId: 'seller-apple',
+    storeName: 'Apple',
+    storeAvatarUrl: 'https://picsum.photos/seed/apple-avatar/100/100',
+    caption: 'MagSafe charger speed test ⚡',
+    likeCount: 987,
+    commentCount: 31,
+    productIds: ['prod-009'],
+    createdAt: DateTime(2026, 6, 12),
+  ),
+  Reel(
+    id: 'reel-009',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-009/400/700',
+    storeId: 'seller-pullandbear',
+    storeName: 'Pull&Bear',
+    storeAvatarUrl: 'https://picsum.photos/seed/pullandbear-avatar/100/100',
+    caption: 'This store closed the account linked to this reel',
+    likeCount: 640,
+    commentCount: 12,
+    productIds: ['prod-006'],
+    isAvailable: false,
+    createdAt: DateTime(2026, 5, 30),
+  ),
+  Reel(
+    id: 'reel-010',
+    videoUrl:
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    thumbnailUrl: 'https://picsum.photos/seed/reel-010/400/700',
+    storeId: 'seller-glossier',
+    storeName: 'Glossier',
+    storeAvatarUrl: 'https://picsum.photos/seed/glossier-avatar/100/100',
+    caption: 'Lash Slick before/after — no clumps, just lift',
+    likeCount: 3187,
+    commentCount: 145,
+    productIds: ['prod-015'],
+    createdAt: DateTime(2026, 6, 8),
+  ),
+];
