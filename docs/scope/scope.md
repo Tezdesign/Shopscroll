@@ -13,6 +13,8 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 |---|---------|-------|--------|
 | 1 | Discover screen | Unplanned | in-progress |
 | 2 | Reels screen | Unplanned | in-progress |
+| 3 | Supabase backend | Unplanned | in-progress |
+| 4 | Auth (Clerk) | Unplanned | in-progress |
 
 ## Features
 
@@ -61,3 +63,46 @@ reels are dimmed and non navigable (see spec 0002 for the full acceptance criter
 Spec [0002](../specs/0002-reels-screen.md) · code: `lib/features/reels/reels_screen.dart`,
 `lib/features/reels/reel_player_screen.dart`, `lib/shared/widgets/reel_card.dart`,
 `lib/core/router/app_router.dart`
+
+### 3. Supabase backend · in-progress
+
+Adopts Supabase (managed Postgres + Auth) as the real backend for all five existing data models
+(products, reels, user profiles, cart items, orders), replacing the mock data layer, with anonymous
+sign in giving cart/order rows a stable owner even though there is no login screen yet.
+**Done when:** the schema exists in Supabase (tables, RLS, seed data) and the Flutter app reads and
+writes through it instead of the mock providers, per the build plan `/develop` derives from the
+decision (see spec 0003 for the full decision and data model).
+- [x] Decide the stack (spec): `/architect supabase backend`
+- [x] Scaffold from the decision: `/develop supabase backend`
+- [ ] Verify it: `/check verify supabase backend`
+- [ ] Test it: `/test supabase backend`
+
+Spec [0003](../specs/0003-supabase-backend/index.md) · code: `supabase/schema.sql`,
+`lib/data/repositories/`, `lib/data/providers/*.dart`, `lib/main.dart`,
+`lib/core/config/supabase_config.dart`
+
+### 4. Auth (Clerk) · in-progress
+
+Adds Clerk as the real sign in system (email/password, Google, Apple, phone/SMS one time code),
+connected to the existing Supabase Postgres backend through native Third Party Auth. Anonymous
+browsing stays; a real account is only asked for at cart, checkout, or the account screen, and an
+anonymous session's cart/orders carry over automatically on first real sign in.
+**Done when:** Clerk sign in/sign up work end to end, RLS is rewritten to the new text based ownership
+model, and the anonymous-to-real merge and account deletion cleanup both work, per the full acceptance
+criteria in spec 0004.
+- [x] Design it (spec): `/architect auth using clerk`
+- [ ] Build it: `/develop auth`
+   - [ ] Schema & security foundation: `ALTER`-based migration (`uuid`→`text`, RLS rewrite including
+     `order_items` and the narrowed `user_profiles` policy), `merge_anonymous_identity` security
+     definer function (AC-3, AC-5, AC-10)
+   - [ ] Clerk + Supabase Third Party Auth setup: dashboard configuration, `clerk_flutter` dependency
+     (AC-2, AC-11)
+   - [ ] Dual Supabase client wiring: second client on Clerk's `accessToken`, provider level switch
+     (AC-1, AC-2, AC-6, AC-7)
+   - [ ] Sign in/up screens, Account screen, merge + session switch logic (AC-1, AC-2, AC-3, AC-4,
+     AC-6, AC-7, AC-8, AC-9, AC-10)
+   - [ ] Account deletion webhook (`clerk-webhook` Edge Function) (AC-8)
+- [ ] Verify it: `/check verify auth`
+- [ ] Test it: `/test auth`
+
+Spec [0004](../specs/0004-clerk-authentication/index.md) · code (filled by `/develop`)

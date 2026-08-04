@@ -5,16 +5,20 @@ import 'package:go_router/go_router.dart';
 import '../../features/catalog/home_screen.dart';
 import '../../features/catalog/product_detail_screen.dart';
 import '../../features/discover/discover_screen.dart';
+import '../../features/profile/profile_gate_screen.dart';
 import '../../features/reels/reel_player_screen.dart';
 import '../../features/reels/reels_screen.dart';
 import '../../shared/widgets/coming_soon_screen.dart';
+import '../config/clerk_config.dart';
 import 'app_shell.dart';
 
 /// Root router. A [StatefulShellRoute] holds the 5 bottom nav tabs (Home,
 /// Discover, Reels, Activity, Profile) as branches under [AppShell], so
 /// switching tabs preserves each one's own navigation stack and scroll
-/// position (see spec 0001). Activity/Profile are placeholder branches
-/// (`ComingSoonScreen`) until those features get their own specs.
+/// position (see spec 0001). Activity is still a placeholder branch
+/// (`ComingSoonScreen`) until it gets its own spec. Profile gates on sign in
+/// (spec 0004, `ProfileGateScreen`) once `CLERK_PUBLISHABLE_KEY` is
+/// configured; otherwise it falls back to the same placeholder.
 ///
 /// Product detail and the Reels full screen player stay top level routes,
 /// outside the shell, so they open full screen without the bottom nav,
@@ -63,10 +67,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => const ComingSoonScreen(
-                  label: 'Profile',
-                  icon: Icons.person_outline,
-                ),
+                builder: (context, state) => ClerkConfig.isConfigured
+                    ? const ProfileGateScreen()
+                    : const ComingSoonScreen(
+                        label: 'Profile',
+                        icon: Icons.person_outline,
+                      ),
               ),
             ],
           ),

@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Supabase secrets: real values are passed via --dart-define at run/build
+# time, never committed. See .env.example for the variable names.
+.env
