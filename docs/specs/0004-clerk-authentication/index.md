@@ -1,7 +1,7 @@
 # 0004. Adopt Clerk for real user authentication
 
 **Date**: 2026-08-02
-**Status**: Accepted
+**Status**: In Progress
 
 ## Summary
 

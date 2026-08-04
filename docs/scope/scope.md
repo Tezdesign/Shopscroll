@@ -91,18 +91,24 @@ anonymous session's cart/orders carry over automatically on first real sign in.
 model, and the anonymous-to-real merge and account deletion cleanup both work, per the full acceptance
 criteria in spec 0004.
 - [x] Design it (spec): `/architect auth using clerk`
-- [ ] Build it: `/develop auth`
-   - [ ] Schema & security foundation: `ALTER`-based migration (`uuid`→`text`, RLS rewrite including
+- [x] Build it: `/develop auth`
+   - [x] Schema & security foundation: `ALTER`-based migration (`uuid`→`text`, RLS rewrite including
      `order_items` and the narrowed `user_profiles` policy), `merge_anonymous_identity` security
-     definer function (AC-3, AC-5, AC-10)
-   - [ ] Clerk + Supabase Third Party Auth setup: dashboard configuration, `clerk_flutter` dependency
+     definer function (AC-3, AC-5, AC-10) — migration file written, not yet run against the live project
+   - [x] Clerk + Supabase Third Party Auth setup: dashboard configuration, `clerk_flutter` dependency
      (AC-2, AC-11)
-   - [ ] Dual Supabase client wiring: second client on Clerk's `accessToken`, provider level switch
+   - [x] Dual Supabase client wiring: second client on Clerk's `accessToken`, provider level switch
      (AC-1, AC-2, AC-6, AC-7)
-   - [ ] Sign in/up screens, Account screen, merge + session switch logic (AC-1, AC-2, AC-3, AC-4,
-     AC-6, AC-7, AC-8, AC-9, AC-10)
-   - [ ] Account deletion webhook (`clerk-webhook` Edge Function) (AC-8)
+   - [x] Sign in/up screens, Account screen, merge + session switch logic (AC-1, AC-2, AC-3, AC-4,
+     AC-6, AC-7, AC-8, AC-9, AC-10) — gated at the account screen only; cart/checkout don't exist in
+     this codebase yet, so that part of AC-1 has nothing to gate until those screens are built
+   - [x] Account deletion webhook (`clerk-webhook` Edge Function) (AC-8) — function written, not yet
+     deployed or given its signing secret
 - [ ] Verify it: `/check verify auth`
 - [ ] Test it: `/test auth`
 
-Spec [0004](../specs/0004-clerk-authentication/index.md) · code (filled by `/develop`)
+Spec [0004](../specs/0004-clerk-authentication/index.md) · code:
+`supabase/migrations/0001_clerk_auth.sql`, `supabase/schema.sql`,
+`supabase/functions/clerk-webhook/index.ts`, `lib/core/config/clerk_config.dart`,
+`lib/core/auth/active_supabase_client.dart`, `lib/core/auth/auth_session_controller.dart`,
+`lib/features/profile/`, `lib/core/router/app_router.dart`, `lib/main.dart`

@@ -7,9 +7,20 @@
 -- live tables in place. A fresh project should use the updated
 -- schema.sql instead, which already has this migration folded in.
 --
--- Order matters: FKs into user_profiles.id must be dropped before that
--- column (or the columns referencing it) can change type, and recreated
--- only after every column involved is text.
+-- Order matters, twice over:
+-- 1. FKs into user_profiles.id must be dropped before that column (or the
+--    columns referencing it) can change type, and recreated only after
+--    every column involved is text.
+-- 2. Any RLS policy that references a column being altered must be
+--    dropped BEFORE that alter, not after — Postgres refuses to change
+--    the type of a column a live policy depends on. Every policy this
+--    migration touches is dropped up front (step 3) and only recreated
+--    once every column is text (step 6).
+--
+-- Wrapped in an explicit transaction: if anything below fails, nothing
+-- commits and it is safe to fix and rerun from the top.
+
+begin;
 
 -- ============================================================
 -- 1. Drop the foreign keys this migration touches
@@ -30,7 +41,39 @@ alter table public.orders drop constraint orders_user_id_fkey;
 alter table public.user_profiles alter column id drop default;
 
 -- ============================================================
--- 3. Change every ownership column from uuid to text. Clerk's user ids
+-- 3. Drop every RLS policy that references a column about to change
+--    type. order_items has no user_id of its own, but its policies
+--    reference orders.user_id in a subquery, which is enough for
+--    Postgres to block that column's alter too, so it is included here.
+-- ============================================================
+
+drop policy "user_profiles are publicly readable" on public.user_profiles;
+
+drop policy "read own cart items" on public.cart_items;
+drop policy "insert own cart items" on public.cart_items;
+drop policy "update own cart items" on public.cart_items;
+drop policy "delete own cart items" on public.cart_items;
+
+drop policy "read own orders" on public.orders;
+drop policy "insert own orders" on public.orders;
+drop policy "update own orders" on public.orders;
+drop policy "delete own orders" on public.orders;
+
+drop policy "read own reel likes" on public.reel_likes;
+drop policy "insert own reel likes" on public.reel_likes;
+drop policy "delete own reel likes" on public.reel_likes;
+
+drop policy "read own reel saves" on public.reel_saves;
+drop policy "insert own reel saves" on public.reel_saves;
+drop policy "delete own reel saves" on public.reel_saves;
+
+drop policy "read own order items" on public.order_items;
+drop policy "insert own order items" on public.order_items;
+drop policy "update own order items" on public.order_items;
+drop policy "delete own order items" on public.order_items;
+
+-- ============================================================
+-- 4. Change every ownership column from uuid to text. Clerk's user ids
 --    (e.g. user_2abc123) are strings, not UUIDs; anonymous sessions'
 --    `sub` claims are UUID shaped strings, so the cast is lossless for
 --    every row that exists today.
@@ -45,7 +88,7 @@ alter table public.cart_items alter column user_id type text using user_id::text
 alter table public.orders alter column user_id type text using user_id::text;
 
 -- ============================================================
--- 4. Recreate the store_id foreign keys (user_profiles.id is text now).
+-- 5. Recreate the store_id foreign keys (user_profiles.id is text now).
 --    reel_likes/reel_saves/cart_items/orders.user_id do NOT get a foreign
 --    key back: Clerk accounts never populate auth.users, and a real
 --    account's user_profiles row is created lazily by the app on first
@@ -62,99 +105,84 @@ alter table public.reels
   foreign key (store_id) references public.user_profiles (id) on delete cascade;
 
 -- ============================================================
--- 5. RLS: replace auth.uid() with auth.jwt()->>'sub' everywhere it is
---    used for ownership, and narrow user_profiles' public select policy
---    now that it also holds real buyers' contact details (spec 0004,
---    Security model).
+-- 6. RLS: recreate every policy dropped in step 3, with auth.uid()
+--    replaced by auth.jwt()->>'sub' everywhere it is used for ownership,
+--    and user_profiles' public select policy narrowed now that it also
+--    holds real buyers' contact details (spec 0004, Security model).
 -- ============================================================
 
-drop policy "user_profiles are publicly readable" on public.user_profiles;
 create policy "sellers public, buyers own row only"
 on public.user_profiles for select
 to anon, authenticated
 using (role = 'seller' or (select auth.jwt() ->> 'sub') = id);
 
-drop policy "read own cart items" on public.cart_items;
 create policy "read own cart items"
 on public.cart_items for select
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "insert own cart items" on public.cart_items;
 create policy "insert own cart items"
 on public.cart_items for insert
 to authenticated
 with check ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "update own cart items" on public.cart_items;
 create policy "update own cart items"
 on public.cart_items for update
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id)
 with check ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "delete own cart items" on public.cart_items;
 create policy "delete own cart items"
 on public.cart_items for delete
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "read own orders" on public.orders;
 create policy "read own orders"
 on public.orders for select
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "insert own orders" on public.orders;
 create policy "insert own orders"
 on public.orders for insert
 to authenticated
 with check ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "update own orders" on public.orders;
 create policy "update own orders"
 on public.orders for update
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id)
 with check ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "delete own orders" on public.orders;
 create policy "delete own orders"
 on public.orders for delete
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "read own reel likes" on public.reel_likes;
 create policy "read own reel likes"
 on public.reel_likes for select
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "insert own reel likes" on public.reel_likes;
 create policy "insert own reel likes"
 on public.reel_likes for insert
 to authenticated
 with check ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "delete own reel likes" on public.reel_likes;
 create policy "delete own reel likes"
 on public.reel_likes for delete
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "read own reel saves" on public.reel_saves;
 create policy "read own reel saves"
 on public.reel_saves for select
 to authenticated
 using ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "insert own reel saves" on public.reel_saves;
 create policy "insert own reel saves"
 on public.reel_saves for insert
 to authenticated
 with check ((select auth.jwt() ->> 'sub') = user_id);
 
-drop policy "delete own reel saves" on public.reel_saves;
 create policy "delete own reel saves"
 on public.reel_saves for delete
 to authenticated
@@ -164,7 +192,6 @@ using ((select auth.jwt() ->> 'sub') = user_id);
 -- moves the same way, or a real account's query would hit a text = uuid
 -- cast error instead of a clean RLS deny (spec 0004, Security model).
 
-drop policy "read own order items" on public.order_items;
 create policy "read own order items"
 on public.order_items for select
 to authenticated
@@ -176,7 +203,6 @@ using (
   )
 );
 
-drop policy "insert own order items" on public.order_items;
 create policy "insert own order items"
 on public.order_items for insert
 to authenticated
@@ -188,7 +214,6 @@ with check (
   )
 );
 
-drop policy "update own order items" on public.order_items;
 create policy "update own order items"
 on public.order_items for update
 to authenticated
@@ -207,7 +232,6 @@ with check (
   )
 );
 
-drop policy "delete own order items" on public.order_items;
 create policy "delete own order items"
 on public.order_items for delete
 to authenticated
@@ -220,7 +244,7 @@ using (
 );
 
 -- ============================================================
--- 6. merge_anonymous_identity: the anonymous-to-real cart/order merge
+-- 7. merge_anonymous_identity: the anonymous-to-real cart/order merge
 --    (spec 0004, AC-3, AC-10). SECURITY DEFINER because RLS's `with
 --    check` can only ever validate the caller's OWN session, so a plain
 --    UPDATE can never reassign a row's user_id across identities. Scoped
@@ -288,3 +312,5 @@ $$;
 
 revoke all on function public.merge_anonymous_identity(text) from public;
 grant execute on function public.merge_anonymous_identity(text) to authenticated;
+
+commit;
