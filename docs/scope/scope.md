@@ -83,13 +83,13 @@ Spec [0003](../specs/0003-supabase-backend/index.md) · code: `supabase/schema.s
 
 ### 4. Auth (Clerk) · in-progress
 
-Adds Clerk as the real sign in system (email/password, Google, Apple, phone/SMS one time code),
-connected to the existing Supabase Postgres backend through native Third Party Auth. Anonymous
-browsing stays; a real account is only asked for at cart, checkout, or the account screen, and an
-anonymous session's cart/orders carry over automatically on first real sign in.
+Adds Clerk as the real sign in system (email/password, Google, Apple), connected to the existing
+Supabase Postgres backend through native Third Party Auth. Anonymous browsing stays fully open; a real
+account is offered once, the first time the app opens, and can be skipped. An anonymous session's
+cart/orders carry over automatically on first real sign in.
 **Done when:** Clerk sign in/sign up work end to end, RLS is rewritten to the new text based ownership
-model, and the anonymous-to-real merge and account deletion cleanup both work, per the full acceptance
-criteria in spec 0004.
+model, the anonymous-to-real merge and account deletion cleanup both work, and sign up/sign in errors
+show a visible message, per the full acceptance criteria in spec 0004.
 - [x] Design it (spec): `/architect auth using clerk`
 - [x] Build it: `/develop auth`
    - [x] Schema & security foundation: `ALTER`-based migration (`uuid`→`text`, RLS rewrite including
@@ -99,9 +99,11 @@ criteria in spec 0004.
      (AC-2, AC-11)
    - [x] Dual Supabase client wiring: second client on Clerk's `accessToken`, provider level switch
      (AC-1, AC-2, AC-6, AC-7)
-   - [x] Sign in/up screens, Account screen, merge + session switch logic (AC-1, AC-2, AC-3, AC-4,
-     AC-6, AC-7, AC-8, AC-9, AC-10) — gated at the account screen only; cart/checkout don't exist in
-     this codebase yet, so that part of AC-1 has nothing to gate until those screens are built
+   - [x] First launch welcome screen (Figma node 561:5267), Skip / continue browsing, `shared_preferences`
+     seen flag, Profile tab back to its original empty placeholder, error messages wired through
+     `ClerkErrorListener` (AC-1, AC-2, AC-3, AC-4, AC-6, AC-7, AC-8, AC-9, AC-10, AC-12) — Account screen
+     itself is already built (sign out, delete account), just not yet linked from navigation; phone
+     number still needs to be turned off in the Clerk dashboard by hand (AC-2)
    - [x] Account deletion webhook (`clerk-webhook` Edge Function) (AC-8) — function written, not yet
      deployed or given its signing secret
 - [ ] Verify it: `/check verify auth`

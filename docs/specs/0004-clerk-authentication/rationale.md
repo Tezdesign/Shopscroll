@@ -124,6 +124,37 @@ email, and phone into the same table; leaving the policy unchanged would mean an
 the publishable key could read every buyer's contact details. Narrowing the policy to owner-or-seller
 closes that without touching how seller rows are read anywhere in the app today.
 
+## Amendment: welcome screen, error surfacing, phone removal
+
+After the first build pass shipped, three problems surfaced from actually running it. First, the
+Account/Sign in screens had been placed inside the Profile tab, but Profile has no design of its own
+yet (it is still meant to be an empty placeholder, matching Activity), and the engineer wanted the
+Figma welcome screen (node 561:5267) used as intended, a first launch, one time offer to sign up, not a
+permanent tab. Second, a real test sign up hit three Clerk side validation errors (an unsupported
+phone country, a short username, a breached password) and none of them appeared anywhere in the app;
+the whole thing failed silently, with the only trace in the developer console. Third, the phone number
+field was pulling in a country Clerk does not support for SMS, and the engineer decided phone sign in
+is not worth carrying for this app at all.
+
+The welcome screen becomes a one time, skippable first launch step rather than a standing tab because
+that is what its own design already implies (a Sign up / Log in / implied "not now" choice, not a
+settings style screen), and it keeps AC-1's promise, browsing without an account, intact while still
+giving every new person the choice once. The tradeoff, accepted directly by the engineer, is that
+signing in later has no other entry point until Profile gets its own real design; this is recorded in
+Consequences and Follow-up rather than solved further here, the same way Activity and Profile were
+already left as placeholders in the base app before this feature existed.
+
+The silent error problem turned out to already have a built in fix: `clerk_flutter` ships
+`ClerkErrorListener` specifically for this, a widget that listens to `ClerkAuthState`'s own error
+stream and shows a snack bar with Clerk's message. It was simply never wired into `main.dart`. Since
+Clerk already writes the message text, this needed no custom error design, only placing the listener
+correctly in the widget tree (inside `MaterialApp`, so it can reach a `ScaffoldMessenger`).
+
+Phone number removal turned out not to be an app code decision at all. Clerk's prebuilt sign in/sign up
+card renders whatever sign in methods the Clerk dashboard has turned on; there is no per app override.
+Turning Phone number off in the dashboard is both necessary and sufficient, the app's build plan step
+that used to say "phone/SMS" simply drops it.
+
 ## References
 
 **Project sources**:

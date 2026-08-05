@@ -1,12 +1,13 @@
-# Verify: Clerk authentication · spec 0004 · updated 2026-08-02
+# Verify: Clerk authentication · spec 0004 · updated 2026-08-04
 
 _`/check verify` runs these against each acceptance criterion (AC-N) in `index.md`'s `## Requirements`;
 `/test` locks the durable ones._
 
 ## Setup (one time, dashboards)
 
-- [ ] Clerk dashboard: application created, email/password + Google + Apple + phone/SMS sign in methods
-  enabled → matches "Configuration required"
+- [ ] Clerk dashboard: application created, email/password + Google + Apple sign in methods enabled,
+  Phone number turned off (User & Authentication > Email, Phone, Username) → matches "Configuration
+  required"
 - [ ] Clerk dashboard: native Supabase integration activated (Integrations > Supabase) → matches
   "Configuration required"
 - [ ] Supabase dashboard: Authentication > Sign In / Providers > Third Party Auth, Clerk added with its
@@ -27,6 +28,9 @@ _`/check verify` runs these against each acceptance criterion (AC-N) in `index.m
   `order_items`'s indirect `exists (...)` check → matches "Security model"
 - [ ] `user_profiles`'s select policy reads `role = 'seller' or (select auth.jwt()->>'sub') = id`, not
   bare `using (true)` → matches "Security model"
+- [ ] `user_profiles` has an insert policy and an update policy, both `(select auth.jwt()->>'sub') =
+  id`, `to authenticated` → matches "Security model"; without these a real sign in's own profile upsert
+  fails with a row level security error (`42501`) → verifies **AC-4**
 - [ ] As the anonymous/`anon` role, query another buyer's `user_profiles` row (a `role = 'buyer'` row,
   not a seed seller row) directly → rejected/empty, no email or phone visible → matches "Security model"
 - [ ] `merge_anonymous_identity`'s definer: confirm `search_path = ''` is set and `execute` is revoked
@@ -42,10 +46,22 @@ _`/check verify` runs these against each acceptance criterion (AC-N) in `index.m
 
 - [ ] Open the app fresh (no prior session) → catalog and reels browse with no sign in prompt →
   verifies **AC-1**
-- [ ] Open cart, checkout, or the account screen while anonymous → prompted to sign in → verifies
+- [ ] Open the app for the very first time on a fresh device/simulator (no prior install data) → the
+  welcome screen appears (Shopscroll, Sign up, Log in, Skip for now) before the home screen → verifies
+  **AC-1**
+- [ ] On the welcome screen, tap Skip for now → lands on the home screen, browsing works with no
+  account → verifies **AC-1**
+- [ ] Force quit and reopen the app after skipping (or after signing in) once → the welcome screen does
+  not appear again → verifies **AC-1**
+- [ ] With a real signed in session already on the device, force quit and relaunch the app → goes
+  straight to the home screen, the welcome screen never appears → verifies **AC-1**
+- [ ] From the welcome screen, tap Sign up or Log in → Clerk's sign in/sign up card opens; tap the close
+  (X) button before finishing → returns to browsing on the home screen, no account required → verifies
   **AC-1**
 - [ ] Sign up with email + password → verification required before continuing; sign up with Google;
-  sign up with Apple; sign up with a phone number via SMS code → verifies **AC-2**
+  sign up with Apple → verifies **AC-2**
+- [ ] On the sign up screen, confirm there is no phone number field or phone sign in option anywhere →
+  verifies **AC-2**
 - [ ] While anonymous, add 2+ items to cart, then sign up with a new email → the same items appear in
   cart under the new real account → verifies **AC-3**
 - [ ] Sign in on a second device/simulator with an anonymous cart containing a product already in the
@@ -69,6 +85,9 @@ _`/check verify` runs these against each acceptance criterion (AC-N) in `index.m
   usable without the old anonymous data if it still fails → verifies **AC-10**
 - [ ] Attempt several rapid failed sign ins → Clerk's own lockout/rate limit kicks in (no custom code to
   test on this app's side) → verifies **AC-11**
+- [ ] On the sign up screen, submit a common/breached password (e.g. `password123`), or a username under
+  4 characters → a visible message (a snack bar) appears naming the problem; nothing fails silently or
+  only shows in the developer console → verifies **AC-12**
 
 ## Not yet coverable
 

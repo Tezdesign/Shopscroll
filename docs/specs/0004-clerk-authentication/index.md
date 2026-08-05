@@ -11,27 +11,38 @@ devices. This decision adds Clerk (a dedicated login service) as the real sign i
 through Supabase's built in support for outside login providers ("Third Party Auth"), so the existing
 Postgres database keeps its row level security approach, just checking a different kind of login token,
 with one policy tightened so real people's contact details are never public. People can still browse
-products and reels without signing in; a real account is only asked for at cart, checkout, or profile.
+products and reels without signing in at all; a real account is offered once, the first time the app is
+opened, and can be skipped.
 
 ## Requirements
 
 **User stories**:
 - As an anonymous browser, I want to keep exploring products and reels without signing in, so I don't
   hit a login wall before I've decided to buy anything.
-- As a shopper, I want to create a real account (email, Google, Apple, or phone) so my cart and orders
-  are tied to me across devices and after a reinstall.
+- As a first time visitor, I want to be offered the choice to sign up or just continue browsing, so I'm
+  never forced into an account before I've explored.
+- As a shopper, I want to create a real account (email, Google, or Apple) so my cart and orders are tied
+  to me across devices and after a reinstall.
 - As a returning shopper, I want my anonymous cart to carry over automatically when I sign up, so I
   don't lose what I already added.
+- As someone filling in the sign up or sign in form, I want to see what went wrong when something is
+  rejected (a weak password, a taken username, and so on), so I'm not left guessing why nothing
+  happened.
 - As a signed in shopper, I want to sign out, and delete my account if I choose, so I control my own
   data.
 - As the app, when Clerk reports an account was deleted, I want that person's data cleaned up
   automatically, so no orphaned rows are left behind.
 
 **Acceptance criteria** (the contract, each criterion is IDed and independently checkable):
-- **AC-1**: Catalog and reels browsing require no sign in; a sign in prompt only appears when opening
-  cart, checkout, or the account/profile screen.
+- **AC-1**: Catalog and reels browsing require no sign in, ever. The very first time the app is opened
+  on a device, a welcome screen offers Sign up, Log in, or a Skip / continue browsing option; whichever
+  is chosen, the welcome screen is remembered as seen and never appears again on that device. Someone
+  who already has a real, signed in session skips the welcome screen automatically and goes straight to
+  the home screen. The Profile tab in the bottom navigation is not part of this flow; it stays the same
+  empty placeholder it was before this feature (a real Profile screen, and where sign in/out lives day
+  to day, is a future decision, see Follow-up).
 - **AC-2**: A person can sign up or sign in via Clerk using email + password (with email verification),
-  Google, Apple, or phone number with SMS one time code.
+  Google, or Apple. Phone number sign in is turned off; see Configuration required.
 - **AC-3**: On first successful real sign in, the prior anonymous session's cart items and orders are
   reassigned to the new real account; if the real account already has cart items, matching products'
   quantities are added together rather than overwritten, and non matching items are combined into one
@@ -42,11 +53,14 @@ products and reels without signing in; a real account is only asked for at cart,
   writable by the session whose login token matches that row's owner, for both anonymous and real
   sessions alike.
 - **AC-6**: Signing out returns the app to anonymous browsing (a fresh anonymous session), never a dead
-  end screen.
+  end screen. (The Account screen this happens on is currently not linked from anywhere in the
+  navigation, since the Profile tab reverted to empty per AC-1; this criterion describes the behavior
+  once that screen is reachable again.)
 - **AC-7**: If a real session's login expires with nothing to silently refresh it, the app falls back to
   anonymous browsing with a brief message, rather than erroring or getting stuck.
 - **AC-8**: Deleting an account (from the Account screen, or directly in Clerk) removes that person's
-  cart, likes, saves, and profile, but keeps their order history.
+  cart, likes, saves, and profile, but keeps their order history. (Same note as AC-6: the Account screen
+  is currently unreached from navigation.)
 - **AC-9**: Cancelling an OAuth (Google/Apple) sign in returns silently to the sign in screen; no error
   is shown.
 - **AC-10**: If the anonymous-to-real merge (AC-3) fails partway (e.g. the network drops mid merge), sign
@@ -54,6 +68,10 @@ products and reels without signing in; a real account is only asked for at cart,
   their new account without the unmigrated anonymous data — never a partial or duplicated row.
 - **AC-11**: Sign in attempts are rate limited and lockable after repeated failures; this is Clerk's
   built in protection, not custom code in this app.
+- **AC-12**: Any error Clerk reports while someone is filling in or submitting the sign in or sign up
+  form (a rejected password, a username that's too short, a field left blank, a server side rejection,
+  and so on) is shown to them as a visible message; nothing fails silently or only shows up in developer
+  logs. A cancelled Google/Apple sign in is not an error and keeps behaving per AC-9.
 
 ## Decision
 
@@ -111,6 +129,26 @@ the switch: the active client goes back to the anonymous one, minting a fresh an
 whichever client instance is currently wired to the repositories, so an app restart mid merge simply
 resumes as a fully signed in real account with whatever had already migrated.
 
+**First launch welcome screen** (Figma node 561:5267, "ShopScroll UI" file): a full screen with the
+Shopscroll wordmark, a one line tagline, a Sign up button, a Log in button, and a Skip / continue
+browsing link. Shown before the main app shell, but only when both are true: the device has never seen
+it before, and there is no already signed in real session. A small locally stored flag (e.g. through
+`shared_preferences`, a new dependency this adds) records "seen", set the moment any of Sign up, Log in,
+or Skip is chosen; once set, the app goes straight to the home screen on every later launch, signed in
+or not. Sign up and Log in both open the same Clerk prebuilt sign in/sign up card described below (it
+already has its own link to switch between the two modes); Skip goes straight to the home screen and
+sets the same "seen" flag. This screen is not part of the Profile tab and does not gate cart, checkout,
+or anything else; the Profile tab in the bottom navigation goes back to being the same empty placeholder
+it was before this feature, unrelated to this flow.
+
+**Error surfacing**: Clerk's prebuilt sign in/sign up card reports errors (validation failures, server
+side rejections) onto an error stream on the `ClerkAuthState`, but nothing in this app currently listens
+to it, so those errors were only printed to the developer console as an unhandled exception, never shown
+to the person filling in the form (AC-12). The fix is `clerk_flutter`'s own `ClerkErrorListener` widget,
+placed inside the `MaterialApp`'s widget tree (so it can find a `ScaffoldMessenger`) and wrapping
+whatever the router builds; it already turns every error on that stream into a plain snack bar showing
+Clerk's own message, with no bespoke error UI to design or maintain.
+
 **API surface**:
 
 | Endpoint | Method | Key inputs | Key outputs | Auth | Key errors |
@@ -146,6 +184,13 @@ and phone into this same table, so that policy must narrow to
 everywhere product/reel cards render store info, buyer rows become owner-only. This is a required
 amendment to spec 0003's policy, not an unchanged carryover.
 
+`user_profiles` also needs an insert and an update policy it never had before, both
+`(select auth.jwt()->>'sub') = id`: AC-4 has the app itself upsert a buyer's row on first real sign in
+and keep it in sync on every later one, and with only the select policy above, RLS denies that write by
+default (`insert`/`update` are separate privileges from `select`; nothing until now had granted them to
+`authenticated`). Seed seller rows were never affected, since those are written once through the SQL
+editor's own elevated connection, not through the app's `authenticated` role.
+
 `merge_anonymous_identity` is `security definer` (bypasses RLS deliberately) because reassigning a row's
 `user_id` is otherwise impossible under RLS: a `with check` clause can only validate against the
 *caller's own* current session, so a plain client side `UPDATE` can never move a row from the old
@@ -177,9 +222,11 @@ anything.
 - Clerk dashboard: activate the native Supabase integration (Integrations > Supabase) — this is what
   makes Clerk add the `role: authenticated` claim its session tokens need for Supabase's `to
   authenticated` policies to apply; no custom JWT template needed
-- Clerk dashboard: create the application, enable email/password + Google + Apple + phone/SMS sign in
-  methods, and add a webhook endpoint pointing at `/functions/v1/clerk-webhook` for the `user.deleted`
-  event
+- Clerk dashboard: create the application, enable email/password + Google + Apple sign in methods, and
+  add a webhook endpoint pointing at `/functions/v1/clerk-webhook` for the `user.deleted` event
+- Clerk dashboard: under User & Authentication > Email, Phone, Username, turn Phone number off. Clerk's
+  prebuilt sign up/sign in card always mirrors whatever the dashboard has turned on, so this is the only
+  place phone sign in can be removed; there is no app code flag for it (AC-2)
 
 **Critical test scenarios** (each maps to an acceptance criterion in ## Requirements):
 - Happy path: browse anonymously, add to cart, sign up with email, cart carries over onto the new real
@@ -240,22 +287,28 @@ production, not just at first code deploy.
    foreign keys and `user_profiles.id`'s `gen_random_uuid()` default; rewrite every owned-table RLS
    policy to `(select auth.jwt()->>'sub')`, including `order_items`'s indirect `exists (...)` check;
    narrow `user_profiles`'s public select policy to `role = 'seller' or (select auth.jwt()->>'sub') =
-   id`, satisfies **AC-5**
+   id`; add its missing insert and update policies (`(select auth.jwt()->>'sub') = id`), without which
+   the app's own upsert in task 8 is denied by RLS, satisfies **AC-4**, **AC-5**
 2. Add the `merge_anonymous_identity(target_user_id text)` `security definer` Postgres function
    (anonymous-only via the `is_anonymous` claim, additive-only, `search_path = ''`, `execute` revoked
    from `public` and granted to `authenticated` only), satisfies **AC-3**, **AC-10**
 3. Supabase dashboard: add Clerk as a Third Party Auth provider. Clerk dashboard: activate the native
    Supabase integration (adds the `role: authenticated` claim automatically), create the application,
-   enable email/password + Google + Apple + phone/SMS sign in methods, satisfies **AC-2**, **AC-11**
+   enable email/password + Google + Apple sign in methods, turn Phone number off, satisfies **AC-2**,
+   **AC-11**
 4. Add the `clerk_flutter` dependency and `CLERK_PUBLISHABLE_KEY` `--dart-define` plumbing, satisfies
    **AC-2**
 5. Stand up a second `SupabaseClient` instance configured with an `accessToken` callback that returns
    Clerk's current session token, alongside the existing anonymous-capable client from spec 0003; add
    the provider-level switch that points repositories at whichever client is currently active, satisfies
    **AC-1**, **AC-2**, **AC-6**, **AC-7**
-6. Wire Clerk's prebuilt Sign In / Sign Up screens into `app_router.dart`, gated only at cart,
-   checkout, and account entry points, satisfies **AC-1**, **AC-2**, **AC-9**
-7. Build the Account/Settings screen (sign out, delete account), satisfies **AC-6**, **AC-8**
+6. Build the first launch welcome screen (Figma node 561:5267: Sign up, Log in, Skip / continue
+   browsing) and wire Clerk's prebuilt Sign In / Sign Up card behind Sign up/Log in; add
+   `shared_preferences` and a "seen" flag so it only ever shows once per device, and is skipped outright
+   for an already signed in returning user; the Profile tab in the bottom navigation goes back to its
+   original empty placeholder, satisfies **AC-1**, **AC-2**, **AC-9**
+7. Build the Account/Settings screen (sign out, delete account); not linked from navigation yet, see
+   Follow-up, satisfies **AC-6**, **AC-8**
 8. On successful Clerk sign in: while still on the anonymous client, call `merge_anonymous_identity`
    with the new Clerk id as `target_user_id`; then switch the active client to the Clerk-backed one and
    upsert the `user_profiles` row, satisfies **AC-3**, **AC-4**, **AC-10**
@@ -265,6 +318,9 @@ production, not just at first code deploy.
 10. Build the `clerk-webhook` Supabase Edge Function (`user.deleted` handler, Svix signature
     verification, service role cleanup keeping order history) and register it in the Clerk dashboard,
     satisfies **AC-8**
+11. Wrap the app in `clerk_flutter`'s `ClerkErrorListener` (inside `MaterialApp`'s `builder`, so it can
+    reach a `ScaffoldMessenger`) so any sign in/up error shows as a visible message instead of failing
+    silently, satisfies **AC-12**
 
 ## Consequences
 
@@ -290,6 +346,13 @@ production, not just at first code deploy.
 - Every owned-table id column silently loses the `uuid` type's format validation (Postgres no longer
   rejects a malformed id at the column level); Clerk's ids are trusted by construction (only ever
   written from a verified JWT `sub`), so this is a reasonable trade, not a new hole
+- Once someone skips the first launch welcome screen, there is currently no other place in the app to
+  sign in later: the Profile tab is an empty placeholder again, and cart/checkout don't exist yet. The
+  only way back to Sign up/Log in right now is reinstalling, or clearing the app's local storage, which
+  resets the "seen" flag
+- Sign out and delete account are built and working (Account screen) but not reachable from anywhere in
+  the navigation right now, for the same reason; a signed in person currently has no in app way to leave
+  their account
 
 **Neutral**:
 - `user_profiles` rows for real accounts are now created lazily (on first real sign in) rather than
@@ -297,11 +360,17 @@ production, not just at first code deploy.
   Clerk accounts never appear in `auth.users` for a trigger to hook into
 - Existing seed seller `user_profiles` rows (uuid-looking strings) keep working unchanged: they simply
   become `text` values that happen to look like UUIDs
+- Phone number sign in is off for now; nothing about the schema, the merge function, or the webhook
+  depended on which sign in methods were enabled, so turning it back on later (or off again) is a Clerk
+  dashboard change only, no app or database change needed
 
 ## Follow-up
 
 - [ ] No `docs/scope/` feature row currently links this decision; enroll one (e.g. via `/scope`) once
   this spec is confirmed, so `/develop` has a tracked build plan to check off
+- [ ] Give the app a real, always available way to sign in, sign out, and delete an account once the
+  Profile tab gets its own design and spec; right now that only happens once, on first launch, with no
+  way back short of a reinstall (see Consequences)
 - [ ] Multi factor authentication (Clerk supports it) is not in scope for this pass; revisit once real
   payment is added
 - [ ] A seller sign in flow (this spec covers buyer/shopper accounts only, matching the app's buyer

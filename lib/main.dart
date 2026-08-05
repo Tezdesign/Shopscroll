@@ -1,12 +1,14 @@
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/auth/active_supabase_client.dart';
 import 'core/auth/auth_session_controller.dart';
 import 'core/config/clerk_config.dart';
 import 'core/config/supabase_config.dart';
+import 'core/onboarding/onboarding_prefs.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'data/repositories/repository_providers.dart';
@@ -19,10 +21,23 @@ import 'data/repositories/supabase/supabase_user_profile_repository.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Whether the first launch welcome screen (spec 0004, AC-1) has already
+  // been shown on this device; loaded up front so both early return
+  // branches below can still override the provider, even though the
+  // welcome screen itself only ever shows once Clerk is configured.
+  final onboardingPrefs = OnboardingPrefs(await SharedPreferences.getInstance());
+
   // No SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY passed (see .env.example):
   // run entirely on mock data, same as before this feature existed.
   if (!SupabaseConfig.isConfigured) {
-    runApp(const ProviderScope(child: MarketplaceApp()));
+    runApp(
+      ProviderScope(
+        overrides: [
+          onboardingPrefsProvider.overrideWithValue(onboardingPrefs),
+        ],
+        child: const MarketplaceApp(),
+      ),
+    );
     return;
   }
 
@@ -46,6 +61,7 @@ void main() async {
     runApp(
       ProviderScope(
         overrides: [
+          onboardingPrefsProvider.overrideWithValue(onboardingPrefs),
           productRepositoryProvider.overrideWithValue(
             SupabaseProductRepository(anonymousClient),
           ),
@@ -76,6 +92,12 @@ void main() async {
     config: ClerkAuthConfig(publishableKey: ClerkConfig.publishableKey),
   );
 
+  // First launch, and nobody is already signed in for real: open on the
+  // welcome screen (spec 0004, AC-1). Either way this is a one time
+  // decision made here, not re-evaluated by the router later.
+  final showWelcome =
+      !onboardingPrefs.hasSeenWelcome && !clerkAuthState.isSignedIn;
+
   final clerkBackedClient = buildClerkBackedClient(
     SupabaseConfig.url,
     SupabaseConfig.publishableKey,
@@ -86,6 +108,10 @@ void main() async {
     ProviderScope(
       overrides: [
         activeSupabaseClientProvider.overrideWith((ref) => anonymousClient),
+        onboardingPrefsProvider.overrideWithValue(onboardingPrefs),
+        initialLocationProvider.overrideWithValue(
+          showWelcome ? '/welcome' : '/',
+        ),
         productRepositoryProvider.overrideWith(
           (ref) =>
               SupabaseProductRepository(ref.watch(activeSupabaseClientProvider)),
@@ -164,6 +190,7 @@ class _MarketplaceAppState extends ConsumerState<MarketplaceApp> {
 
   @override
   Widget build(BuildContext context) {
+    final clerkAuthState = widget.clerkAuthState;
     final router = ref.watch(appRouterProvider);
     final app = MaterialApp.router(
       title: 'ShopScroll',
@@ -171,9 +198,16 @@ class _MarketplaceAppState extends ConsumerState<MarketplaceApp> {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       routerConfig: router,
+      // Turns every Clerk sign in/up error (a rejected password, a taken
+      // username, and so on) into a visible snack bar instead of failing
+      // silently (spec 0004, AC-12). Only wired when Clerk is configured:
+      // ClerkErrorListener needs a ClerkAuth ancestor, which only exists
+      // below, and only when clerkAuthState is non null.
+      builder: clerkAuthState == null
+          ? null
+          : (context, child) => ClerkErrorListener(child: child!),
     );
 
-    final clerkAuthState = widget.clerkAuthState;
     if (clerkAuthState == null) return app;
 
     return ClerkAuth(authState: clerkAuthState, child: app);

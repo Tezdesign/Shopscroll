@@ -230,6 +230,22 @@ on public.user_profiles for select
 to anon, authenticated
 using (role = 'seller' or (select auth.jwt() ->> 'sub') = id);
 
+-- The app itself upserts a buyer's row on first real sign in and keeps
+-- it in sync on every later one (spec 0004, AC-4); without these, that
+-- write has no policy granting it and is denied by default like any
+-- other unlisted action.
+
+create policy "insert own profile"
+on public.user_profiles for insert
+to authenticated
+with check ((select auth.jwt() ->> 'sub') = id);
+
+create policy "update own profile"
+on public.user_profiles for update
+to authenticated
+using ((select auth.jwt() ->> 'sub') = id)
+with check ((select auth.jwt() ->> 'sub') = id);
+
 create policy "products are publicly readable"
 on public.products for select
 to anon, authenticated
