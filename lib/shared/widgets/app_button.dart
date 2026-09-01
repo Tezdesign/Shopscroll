@@ -61,11 +61,15 @@ class AppButton extends StatelessWidget {
   static const double _bigWidth = 274;
 
   // Per-variant geometry/color, matching each of the 8 Figma instances.
+  // Every variant shares the same 12px vertical padding (Figma's `py-12`
+  // is uniform across the whole component set); only "big" primary and
+  // "small" inactive fix a height (44/40/48) beyond what that padding
+  // would naturally hug to — everything else, including both "secondary
+  // big" instances, hugs its content instead of taking a fixed height.
   // Most values land exactly on shared tokens (radius sm/md, spacing
-  // sm/md/base) — the couple that don't (the explicit 40/48 heights, and
-  // the one 8px vertical padding on primary/inactive/small) are preserved
-  // literally since Figma specifies them as fixed heights on those specific
-  // instances while the rest hug their padding.
+  // sm/md/base); horizontal padding is the one approximation (Figma's
+  // `px-18` has no matching token, so this rounds down to `AppSpacing.base`
+  // (16) rather than introduce a one-off literal).
   _ButtonSpec get _spec {
     switch (variant) {
       case AppButtonVariant.primary:
@@ -80,7 +84,7 @@ class AppButton extends StatelessWidget {
           );
         }
         return _ButtonSpec(
-          verticalPadding: enabled ? AppSpacing.md : AppSpacing.sm,
+          verticalPadding: AppSpacing.md,
           cornerRadius: AppRadius.sm,
           height: enabled ? null : 40,
           background: enabled ? AppColors.primary400 : AppColors.primary100,
@@ -91,7 +95,6 @@ class AppButton extends StatelessWidget {
           return _ButtonSpec(
             verticalPadding: AppSpacing.md,
             cornerRadius: AppRadius.sm,
-            height: 44,
             fixedWidth: _bigWidth,
             borderColor: enabled ? AppColors.primary400 : AppColors.primary100,
             textColor: enabled ? AppColors.primary400 : AppColors.primary200,

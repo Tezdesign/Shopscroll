@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../shared/widgets/app_button.dart';
 
 /// The app's first launch screen (spec 0004, AC-1), reproducing Figma node
 /// 561:5267 ("iPhone 14 & 15 Pro - 56"). Shown once per device, before the
@@ -12,6 +13,12 @@ import '../../core/theme/app_theme.dart';
 /// elsewhere in the source Figma file. "Apply now" is left as a static
 /// label: seller onboarding is out of scope (see AGENTS.md, buyer side
 /// only).
+///
+/// Sign up/Log in are [AppButton] (`AppButtonSize.small`, primary/secondary)
+/// stretched to share the row via [Expanded] — the source frame instances
+/// this exact "small" variant with `flex-1` rather than the component's
+/// standalone 274px "big" width, so `AppButton` already renders correctly
+/// here without a dedicated full-width variant.
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({
     super.key,
@@ -63,16 +70,19 @@ class WelcomeScreen extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: ElevatedButton(
+                    child: AppButton(
+                      label: 'Sign up',
+                      size: AppButtonSize.small,
                       onPressed: onSignUp,
-                      child: const Text('Sign up'),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.base),
                   Expanded(
-                    child: OutlinedButton(
+                    child: AppButton(
+                      label: 'Log in',
+                      variant: AppButtonVariant.secondary,
+                      size: AppButtonSize.small,
                       onPressed: onLogIn,
-                      child: const Text('Log in'),
                     ),
                   ),
                 ],

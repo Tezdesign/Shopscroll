@@ -1,4 +1,5 @@
 import 'package:clerk_flutter/clerk_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -94,9 +95,12 @@ void main() async {
 
   // First launch, and nobody is already signed in for real: open on the
   // welcome screen (spec 0004, AC-1). Either way this is a one time
-  // decision made here, not re-evaluated by the router later.
-  final showWelcome =
-      !onboardingPrefs.hasSeenWelcome && !clerkAuthState.isSignedIn;
+  // decision made here, not re-evaluated by the router later. In debug
+  // builds, always open on welcome instead, so the sign-in flow is there
+  // to test on every run without clearing onboarding prefs or session
+  // state by hand; release builds are unaffected.
+  final showWelcome = kDebugMode ||
+      (!onboardingPrefs.hasSeenWelcome && !clerkAuthState.isSignedIn);
 
   final clerkBackedClient = buildClerkBackedClient(
     SupabaseConfig.url,

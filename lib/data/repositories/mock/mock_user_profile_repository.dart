@@ -18,4 +18,37 @@ class MockUserProfileRepository implements UserProfileRepository {
     }
     return null;
   }
+
+  @override
+  Future<void> updateUserProfile(
+    String id, {
+    required String name,
+    required String username,
+    String? bio,
+  }) async {
+    await Future.delayed(mockNetworkDelay);
+    final takenByOther = mockSellers.any(
+      (profile) => profile.username == username && profile.id != id,
+    );
+    if (takenByOther) throw UsernameTakenException(username);
+
+    final index = mockSellers.indexWhere((profile) => profile.id == id);
+    if (index == -1) {
+      mockSellers.add(
+        UserProfile(
+          id: id,
+          name: name,
+          username: username,
+          bio: bio,
+          role: UserRole.buyer,
+        ),
+      );
+      return;
+    }
+    mockSellers[index] = mockSellers[index].copyWith(
+      name: name,
+      username: username,
+      bio: bio,
+    );
+  }
 }

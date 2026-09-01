@@ -43,4 +43,19 @@ void main() {
     await tester.pumpWidget(wrap(const AppIcon(AppIconGlyph.saveFilled)));
     expect(find.byIcon(Icons.bookmark), findsOneWidget);
   });
+
+  testWidgets('logout maps to the logout icon', (tester) async {
+    await tester.pumpWidget(wrap(const AppIcon(AppIconGlyph.logout)));
+    expect(find.byIcon(Icons.logout), findsOneWidget);
+  });
+
+  testWidgets('openExternal maps to the open-in-new icon', (tester) async {
+    await tester.pumpWidget(wrap(const AppIcon(AppIconGlyph.openExternal)));
+    expect(find.byIcon(Icons.open_in_new), findsOneWidget);
+  });
+
+  testWidgets('delete maps to the delete outline icon', (tester) async {
+    await tester.pumpWidget(wrap(const AppIcon(AppIconGlyph.delete)));
+    expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+  });
 }

@@ -20,11 +20,13 @@ A Flutter mobile marketplace/shopping app ("Shopscroll"), UI built from a Figma 
 # Install
 flutter pub get
 
-# Dev / run
-flutter run
+# Dev / run — needs --dart-define-from-file=env.json (see .env.example) or
+# Supabase/Clerk stay unconfigured and the app silently falls back to mock
+# data and ComingSoonScreen placeholders (e.g. the Profile tab looks empty).
+flutter run --dart-define-from-file=env.json
 
 # Build
-flutter build <ios|apk|...>
+flutter build <ios|apk|...> --dart-define-from-file=env.json
 
 # Test
 flutter test

@@ -27,4 +27,23 @@ class SupabaseUserProfileRepository implements UserProfileRepository {
         .maybeSingle();
     return row == null ? null : userProfileFromRow(row);
   }
+
+  @override
+  Future<void> updateUserProfile(
+    String id, {
+    required String name,
+    required String username,
+    String? bio,
+  }) async {
+    try {
+      await _client
+          .from('user_profiles')
+          .update({'name': name, 'username': username, 'bio': bio})
+          .eq('id', id);
+    } on PostgrestException catch (error) {
+      // 23505: Postgres unique_violation, the username column's constraint.
+      if (error.code == '23505') throw UsernameTakenException(username);
+      rethrow;
+    }
+  }
 }

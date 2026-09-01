@@ -1,3 +1,4 @@
+import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,9 +8,13 @@ import '../../features/catalog/product_detail_screen.dart';
 import '../../features/discover/discover_screen.dart';
 import '../../features/onboarding/sign_in_prompt_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
+import '../../features/profile/edit_profile_screen.dart';
+import '../../features/profile/profile_anonymous_view.dart';
+import '../../features/profile/profile_screen.dart';
 import '../../features/reels/reel_player_screen.dart';
 import '../../features/reels/reels_screen.dart';
 import '../../shared/widgets/coming_soon_screen.dart';
+import '../config/clerk_config.dart';
 import '../onboarding/onboarding_prefs.dart';
 import 'app_shell.dart';
 
@@ -23,14 +28,16 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// Root router. A [StatefulShellRoute] holds the 5 bottom nav tabs (Home,
 /// Discover, Reels, Activity, Profile) as branches under [AppShell], so
 /// switching tabs preserves each one's own navigation stack and scroll
-/// position (see spec 0001). Activity and Profile are both placeholder
-/// branches (`ComingSoonScreen`); Profile has no design of its own yet
-/// (spec 0004 moved sign in off this tab and onto the first launch welcome
-/// screen below, see `## Follow-up`).
+/// position (see spec 0001). Activity is still a placeholder branch
+/// (`ComingSoonScreen`); Profile is the real page from spec 0005 once
+/// Clerk is configured ([ProfileScreen] signed in, [ProfileAnonymousView]
+/// signed out), and falls back to the same placeholder when Clerk isn't
+/// configured at all (no `ClerkAuth` ancestor to read in that case).
 ///
-/// `/welcome` and `/sign-in` (spec 0004, AC-1, AC-2), plus product detail
-/// and the Reels full screen player, stay top level routes, outside the
-/// shell, so they open full screen without the bottom nav.
+/// `/welcome` and `/sign-in` (spec 0004, AC-1, AC-2), `/profile/edit`
+/// (spec 0005, AC-5), plus product detail and the Reels full screen
+/// player, stay top level routes, outside the shell, so they open full
+/// screen without the bottom nav.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: ref.watch(initialLocationProvider),
@@ -75,10 +82,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => const ComingSoonScreen(
-                  label: 'Profile',
-                  icon: Icons.person_outline,
-                ),
+                builder: (context, state) => ClerkConfig.isConfigured
+                    ? ClerkAuthBuilder(
+                        signedInBuilder: (context, authState) =>
+                            ProfileScreen(authState: authState),
+                        signedOutBuilder: (context, authState) =>
+                            const ProfileAnonymousView(),
+                      )
+                    : const ComingSoonScreen(
+                        label: 'Profile',
+                        icon: Icons.person_outline,
+                      ),
               ),
             ],
           ),
@@ -104,6 +118,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/sign-in',
         builder: (context, state) => const SignInPromptScreen(),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/product/:id',

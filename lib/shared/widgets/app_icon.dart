@@ -41,6 +41,9 @@ enum AppIconGlyph {
   category,
   name,
   document,
+  logout,
+  openExternal,
+  delete,
 }
 
 class AppIcon extends StatelessWidget {
@@ -83,6 +86,9 @@ class AppIcon extends StatelessWidget {
     AppIconGlyph.category: Icons.category_outlined,
     AppIconGlyph.name: Icons.badge_outlined,
     AppIconGlyph.document: Icons.content_copy,
+    AppIconGlyph.logout: Icons.logout,
+    AppIconGlyph.openExternal: Icons.open_in_new,
+    AppIconGlyph.delete: Icons.delete_outline,
   };
 
   @override

@@ -15,6 +15,7 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 | 2 | Reels screen | Unplanned | in-progress |
 | 3 | Supabase backend | Unplanned | in-progress |
 | 4 | Auth (Clerk) | Unplanned | in-progress |
+| 5 | Profile screen | Unplanned | in-progress |
 
 ## Features
 
@@ -114,3 +115,33 @@ Spec [0004](../specs/0004-clerk-authentication/index.md) · code:
 `supabase/functions/clerk-webhook/index.ts`, `lib/core/config/clerk_config.dart`,
 `lib/core/auth/active_supabase_client.dart`, `lib/core/auth/auth_session_controller.dart`,
 `lib/features/profile/`, `lib/core/router/app_router.dart`, `lib/main.dart`
+
+### 5. Profile screen · in-progress
+
+Replaces the empty Profile tab placeholder with the real page from the Figma design: a signed in
+person's name, photo, and stores followed count, editing name/username/bio, sign out, and delete
+account, plus a set of rows for features that don't exist yet in this buyer only app, shown as
+visual placeholders for now. An anonymous browser sees a short sign in message instead.
+**Done when:** the Profile tab shows the real signed in page or the anonymous message depending on
+session state, editing a profile works end to end, sign out and delete account are reachable there,
+and every not yet built row opens a coming soon placeholder instead of doing nothing (see spec 0005
+for the full acceptance criteria).
+- [x] Design it (spec): `/architect clone profile page`
+- [x] Build it: `/develop profile screen`
+   - [x] Data layer and the signed in Profile page: `UserProfileRepository.updateUserProfile`,
+     header (avatar, name, stores following count, Become a seller, Edit profile), Generals and Help
+     and Legal sections, Log out and Delete account rows, replacing `ComingSoonScreen` on `/profile`
+     for a signed in session (AC-1, AC-3, AC-4, AC-8, AC-9)
+   - [x] Anonymous view for the same `/profile` route: sign in message plus a button to the existing
+     sign in screen (AC-2)
+   - [x] Edit profile screen: name/username/bio form with inline validation for blank fields and a
+     taken username (AC-5, AC-6)
+   - [x] Wire every remaining row to the existing coming soon placeholder, and delete the old
+     unlinked `account_screen.dart` (AC-7, AC-8)
+- [ ] Verify it: `/check verify profile screen`
+- [x] Test it: `/test profile screen`
+
+Spec [0005](../specs/0005-profile-screen/index.md) · code: `lib/features/profile/profile_screen.dart`,
+`lib/features/profile/profile_anonymous_view.dart`, `lib/features/profile/edit_profile_screen.dart`,
+`lib/shared/widgets/settings_row.dart`, `lib/data/repositories/user_profile_repository.dart`,
+`lib/core/router/app_router.dart`

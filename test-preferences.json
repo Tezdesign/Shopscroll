@@ -1,0 +1,9 @@
+{
+  "tool": "flutter_test",
+  "gate": null,
+  "additionalTools": [],
+  "e2eTool": "none",
+  "testDir": "test/ (mirrors lib/ path per file)",
+  "filePattern": "*_test.dart",
+  "packageManager": "flutter"
+}
