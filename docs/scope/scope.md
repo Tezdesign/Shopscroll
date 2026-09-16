@@ -27,14 +27,14 @@ navigation shell so tab switching preserves each tab's state.
 **Done when:** Discover is reachable from the bottom nav, its search and category filters work
 live, and switching tabs preserves state (see spec 0001 for the full acceptance criteria).
 - [x] Design it (spec): `/architect discover screen`
-- [ ] Build it: `/develop discover screen`
-   - [ ] Navigation shell: `StatefulShellRoute` (Home/Discover branches + placeholder branches for
+- [x] Build it: `/develop discover screen`
+   - [x] Navigation shell: `StatefulShellRoute` (Home/Discover branches + placeholder branches for
      Reels/Activity/Profile), bottom nav wiring (AC-1)
-   - [ ] Discover screen shell: search field + category tabs, rendering the product feed live from
+   - [x] Discover screen shell: search field + category tabs, rendering the product feed live from
      the existing providers (AC-1, AC-3)
-   - [ ] Live client side search filter (AC-2)
-   - [ ] Store grid section, reusing `MostVisitedItem` (AC-4)
-   - [ ] Promo banner tiles, per section loading/error/empty states, and product tap-through to
+   - [x] Live client side search filter (AC-2)
+   - [x] Store grid section, reusing `MostVisitedItem` (AC-4)
+   - [x] Promo banner tiles, per section loading/error/empty states, and product tap-through to
      product detail (AC-5, AC-6, AC-7)
 - [ ] Verify it: `/check verify discover screen`
 - [ ] Test it: `/test discover screen`

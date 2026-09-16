@@ -1,7 +1,7 @@
 # 0001. Build the Discover screen
 
 **Date**: 2026-07-14
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 

@@ -5,9 +5,13 @@ import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/app_button.dart';
 
 /// What the Profile tab shows to an anonymous browser (spec 0005, AC-2):
-/// a short, friendly explanation plus one button to the existing sign in
-/// screen, instead of the signed in page from [ProfileScreen], which needs
-/// a real account's name, photo, and following count to mean anything.
+/// a short, friendly explanation plus one button into the first-launch
+/// onboarding flow (`lib/features/onboarding/`, spec 0004's welcome
+/// screen, Sign up/Log in/Skip), instead of the signed in page from
+/// [ProfileScreen], which needs a real account's name, photo, and
+/// following count to mean anything. Deliberately not a direct link to
+/// Clerk's prebuilt sign in card: every entry into sign in/up goes through
+/// the same onboarding screens, not a second, differently-styled path.
 class ProfileAnonymousView extends StatelessWidget {
   const ProfileAnonymousView({super.key});
 
@@ -45,7 +49,7 @@ class ProfileAnonymousView extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xl),
                 AppButton(
                   label: 'Sign up or log in',
-                  onPressed: () => context.push('/sign-in'),
+                  onPressed: () => context.push('/welcome'),
                 ),
               ],
             ),

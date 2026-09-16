@@ -34,6 +34,7 @@ class AppTextField extends StatelessWidget {
     this.textInputAction,
     this.enabled = true,
     this.maxLines = 1,
+    this.obscureText = false,
   });
 
   final TextEditingController? controller;
@@ -46,6 +47,7 @@ class AppTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final bool enabled;
   final int maxLines;
+  final bool obscureText;
 
   static const TextStyle _textStyle = TextStyle(
     fontFamily: AppTypography.fontFamilyDisplay,
@@ -84,6 +86,7 @@ class AppTextField extends StatelessWidget {
       textInputAction: textInputAction,
       enabled: enabled,
       maxLines: maxLines,
+      obscureText: obscureText,
       style: _textStyle,
       decoration: InputDecoration(
         isDense: true,

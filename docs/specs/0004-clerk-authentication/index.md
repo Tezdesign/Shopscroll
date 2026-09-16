@@ -135,11 +135,20 @@ browsing link. Shown before the main app shell, but only when both are true: the
 it before, and there is no already signed in real session. A small locally stored flag (e.g. through
 `shared_preferences`, a new dependency this adds) records "seen", set the moment any of Sign up, Log in,
 or Skip is chosen; once set, the app goes straight to the home screen on every later launch, signed in
-or not. Sign up and Log in both open the same Clerk prebuilt sign in/sign up card described below (it
-already has its own link to switch between the two modes); Skip goes straight to the home screen and
-sets the same "seen" flag. This screen is not part of the Profile tab and does not gate cart, checkout,
-or anything else; the Profile tab in the bottom navigation goes back to being the same empty placeholder
-it was before this feature, unrelated to this flow.
+or not. Log in opens the Clerk prebuilt sign in/sign up card described below. Sign up instead opens a
+hand-built form matching its own Figma frame (node 561:5289, "Sign up") — a later revision of this
+spec: the two buttons were originally meant to open that same prebuilt card in its two modes, before
+that frame existed. The hand-built form calls Clerk's headless sign up (`attemptSignUp`, two calls in
+sequence: password then `emailCode` to trigger the verification email — the same sequence
+`clerk_flutter`'s own prebuilt panel uses internally) and hands off to a code-entry step with no Figma
+frame of its own, since 561:5289 has none. It reproduces email + password (its two fields are both
+labelled "Enter your email" in the source frame, which can't be literal) and Google/Apple sign in, but
+drops the "Sign in using facebook" button the same frame also shows: Facebook is configured nowhere
+else in this spec, and that button's own icon asset is, byte for byte, the same file as another
+button's invisible spacer icon in the source frame, not a real Facebook mark. Skip goes straight to the
+home screen and sets the same "seen" flag. This screen is not part of the Profile tab and does not gate
+cart, checkout, or anything else; the Profile tab in the bottom navigation goes back to being the same
+empty placeholder it was before this feature, unrelated to this flow.
 
 **Error surfacing**: Clerk's prebuilt sign in/sign up card reports errors (validation failures, server
 side rejections) onto an error stream on the `ClerkAuthState`, but nothing in this app currently listens
@@ -375,6 +384,14 @@ production, not just at first code deploy.
   payment is added
 - [ ] A seller sign in flow (this spec covers buyer/shopper accounts only, matching the app's buyer
   side only scope) is a future decision
+- [ ] Sign up (`CreateAccountScreen`) is now hand-built against the Figma "Sign up" frame (node
+  561:5289), not the prebuilt card Log in still uses — this spec's original rationale ("almost no
+  custom auth UI has to be built") no longer fully holds for Sign up specifically, only Log in. Worth a
+  deliberate pass to decide whether Log in should match (a second hand-built form) or whether Sign up
+  should fold back onto the prebuilt card, rather than the two staying asymmetric by accident
+- [ ] The email verification code screen (`VerifyEmailScreen`) has no Figma frame anywhere in the
+  source file; it's built from this app's own design system tokens only. Worth a real design pass once
+  one exists
 
 ## Rationale
 

@@ -34,27 +34,38 @@ flutter test
 
 ## Specs
 
-Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. None written yet.
+Stored in `docs/specs/`. A standalone decision is one file, `docs/specs/NNNN-title.md` (e.g. 0001,
+0002); a decision with its own rationale/verify docs is a directory, `docs/specs/NNNN-title/index.md`
+https://www.nngroup.com/articles/ 
+governs which feature.
 
 ## Rules
 
-- No real backend: all data comes from `lib/data/mock/*` through `lib/data/providers/*`, using Riverpod `FutureProvider`/`FutureProvider.family` with an artificial delay (`network_delay.dart`, 300ms) to simulate a real `GET` round trip. Doc comments on each provider name the REST endpoint it stands in for (e.g. "as if fetched from `GET /products`") — keep that convention for new providers.
+- Two backends coexist: without `--dart-define` config, all data comes from `lib/data/mock/*` through `lib/data/providers/*` (Riverpod `FutureProvider`/`FutureProvider.family` with an artificial delay, `network_delay.dart`, 300ms, to simulate a real `GET` round trip); once `SupabaseConfig.isConfigured` (see `lib/core/auth/AGENTS.md`), the same providers read through `lib/data/repositories/` instead (see `lib/data/repositories/AGENTS.md`), which reaches the real Supabase backend (see `supabase/AGENTS.md`). Doc comments on each provider name the REST endpoint it stands in for (e.g. "as if fetched from `GET /products`") — keep that convention for new providers.
 - Models (`lib/data/models/*`) carry `fromJson`/`toJson`/`copyWith` even though nothing is serialized yet, so they're ready for a real API later.
 - Design tokens live in `lib/core/theme/app_theme.dart` (`AppColors`, `AppTypography`, `AppSpacing`, `AppRadius`), sourced from the Figma file's variable collection. Never write a literal `Color(0x...)` or raw size value in a screen/widget; use the tokens.
 - Screens and widgets document the Figma node they reproduce (e.g. "Figma node 791:7454") and explain any deviation from the source design in a doc comment above the widget. Follow this when adding new UI.
-- Feature code lives under `lib/features/<feature>/`; only `catalog` (home + product detail) is built out. `cart/`, `profile/`, and `reels/` exist as empty scaffold directories for planned features.
-- Routing is centralized in `lib/core/router/app_router.dart` (`go_router`); only `/` and `/product/:id` are registered so far.
+- Feature code lives under `lib/features/<feature>/`: `catalog` (home + product detail), `discover`, `reels`, `profile` (see `lib/features/profile/AGENTS.md`), and `onboarding` (see `lib/features/onboarding/AGENTS.md`) are built out; `cart` is still an empty scaffold directory for a planned feature; `activity` has no directory yet, still a nav placeholder.
+- Routing is centralized in `lib/core/router/app_router.dart` (`go_router`) — read that file for the current route list rather than relying on one enumerated here, it grows with every feature.
 - Shared, reusable UI lives in `lib/shared/widgets/`; screen-only one-off widgets stay private (`_Prefixed`) inside the screen file.
 - Widget tests wrap the widget under test in `MaterialApp(theme: AppTheme.light, home: Scaffold(...))` for realistic styling. When a widget depends on a mock provider's artificial delay, `pump()` past `mockNetworkDelay` rather than `pumpAndSettle()`, which never settles against animating spinners or network images.
 - Test files mirror the `lib/` path they cover under `test/` (e.g. `lib/shared/widgets/product_card.dart` → `test/shared/widgets/product_card_test.dart`).
+- Most icons render via `AppIcon` (`lib/shared/widgets/app_icon.dart`), mapping a Figma glyph to the semantically closest Material icon rather than embedding a short-lived Figma asset URL. A real brand mark with no Material equivalent (e.g. the Google/Apple OAuth button logos) is the exception: download and commit the actual asset under `assets/icons/` instead.
 
 ## Agent skills
 
+- [supabase](.agents/skills/supabase/): `supabase/agent-skills`, Supabase products/CLI/client-library conventions; load for any Supabase-touching task
+- [supabase-postgres-best-practices](.agents/skills/supabase-postgres-best-practices/): `supabase/agent-skills`, Postgres schema/query/RLS/migration best practices; load before writing or changing anything in `supabase/`
 MCP servers: Figma (connected)
 Declined: further Agent Skill / MCP discovery search
 
 ## Context files
 
 <!-- Nested AGENTS.md files are listed here as they are created -->
+- [lib/data/repositories/AGENTS.md](lib/data/repositories/AGENTS.md): the mock/Supabase repository pattern backing `lib/data/providers/*`
+- [lib/core/auth/AGENTS.md](lib/core/auth/AGENTS.md): the anonymous/Clerk dual Supabase-client switch and its configuration
+- [supabase/AGENTS.md](supabase/AGENTS.md): the real backend, schema/migrations/Edge Functions
+- [lib/features/onboarding/AGENTS.md](lib/features/onboarding/AGENTS.md): the first-launch welcome/sign-up/sign-in/verify flow
+- [lib/features/profile/AGENTS.md](lib/features/profile/AGENTS.md): the real Profile tab (signed-in page, anonymous view, edit profile)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

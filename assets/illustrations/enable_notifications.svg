@@ -1,0 +1,88 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      --illustration-primary: #0066FF;
+      --illustration-accent: #FF6B00;
+      --illustration-highlight: #FEFEFE;
+    }
+  </style>
+
+  <defs>
+    <linearGradient id="phoneFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="var(--illustration-highlight)" />
+      <stop offset="100%" stop-color="#E4E7F0" />
+    </linearGradient>
+
+    <radialGradient id="chipGloss" cx="30%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="var(--illustration-highlight)" />
+      <stop offset="100%" stop-color="#D7DCEB" />
+    </radialGradient>
+
+    <radialGradient id="bellGloss" cx="32%" cy="26%" r="80%">
+      <stop offset="0%" stop-color="var(--illustration-highlight)" />
+      <stop offset="38%" stop-color="var(--illustration-primary)" />
+      <stop offset="100%" stop-color="var(--illustration-primary)" />
+    </radialGradient>
+
+    <radialGradient id="accentGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="var(--illustration-accent)" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="var(--illustration-accent)" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- ambient shadow -->
+  <ellipse cx="205" cy="372" rx="120" ry="16" fill="url(#shadowGrad)" />
+
+  <!-- accent glow behind the bell -->
+  <circle cx="285" cy="296" r="88" fill="url(#accentGlow)" />
+
+  <!-- floating notification chip (subtle, echoes stacked-banner ref) -->
+  <g transform="rotate(-7 100 100)" opacity="0.55">
+    <rect x="52" y="84" width="98" height="32" rx="11" fill="url(#chipGloss)" stroke="var(--illustration-primary)" stroke-width="1.5" stroke-opacity="0.25" />
+    <circle cx="70" cy="100" r="8" fill="var(--illustration-accent)" />
+    <rect x="84" y="94" width="52" height="6" rx="3" fill="var(--illustration-primary)" opacity="0.5" />
+    <rect x="84" y="104" width="36" height="5" rx="2.5" fill="var(--illustration-primary)" opacity="0.3" />
+  </g>
+
+  <!-- phone body -->
+  <rect x="100" y="55" width="170" height="270" rx="34" fill="url(#phoneFill)" stroke="var(--illustration-primary)" stroke-width="9" />
+  <rect x="165" y="70" width="40" height="7" rx="3.5" fill="var(--illustration-primary)" opacity="0.25" />
+
+  <!-- toggle row 1 -->
+  <rect x="118" y="150" width="134" height="44" rx="14" fill="url(#chipGloss)" />
+  <circle cx="140" cy="172" r="12" fill="var(--illustration-accent)" />
+  <rect x="162" y="163" width="70" height="8" rx="4" fill="var(--illustration-primary)" opacity="0.55" />
+  <rect x="162" y="177" width="50" height="6" rx="3" fill="var(--illustration-primary)" opacity="0.3" />
+
+  <!-- toggle row 2 -->
+  <rect x="118" y="204" width="134" height="44" rx="14" fill="url(#chipGloss)" />
+  <circle cx="140" cy="226" r="12" fill="var(--illustration-primary)" />
+  <rect x="162" y="217" width="70" height="8" rx="4" fill="var(--illustration-accent)" opacity="0.55" />
+  <rect x="162" y="231" width="46" height="6" rx="3" fill="var(--illustration-primary)" opacity="0.3" />
+
+  <!-- glossy bell, overlapping the phone's bottom-right corner -->
+  <rect x="277" y="218" width="16" height="18" rx="8" fill="url(#bellGloss)" />
+  <path
+    d="M285 232
+       C 253 232 233 256 233 288
+       L 233 322
+       C 233 336 222 348 210 354
+       C 206 356 207 362 212 362
+       L 358 362
+       C 363 362 364 356 360 354
+       C 348 348 337 336 337 322
+       L 337 288
+       C 337 256 317 232 285 232 Z"
+    fill="url(#bellGloss)"
+  />
+  <path
+    d="M263 362 C 263 375 273 386 285 386 C 297 386 307 375 307 362 Z"
+    fill="url(#bellGloss)"
+  />
+  <ellipse cx="257" cy="260" rx="16" ry="24" fill="var(--illustration-highlight)" opacity="0.5" transform="rotate(-18 257 260)" />
+</svg>

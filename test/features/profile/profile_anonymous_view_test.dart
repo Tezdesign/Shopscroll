@@ -14,9 +14,9 @@ void main() {
           builder: (context, state) => const ProfileAnonymousView(),
         ),
         GoRoute(
-          path: '/sign-in',
+          path: '/welcome',
           builder: (context, state) =>
-              const Scaffold(body: Text('Sign in screen')),
+              const Scaffold(body: Text('Welcome screen')),
         ),
       ],
     );
@@ -36,12 +36,12 @@ void main() {
     expect(find.text('Sign up or log in'), findsOneWidget);
   });
 
-  testWidgets('tapping the CTA navigates to /sign-in', (tester) async {
+  testWidgets('tapping the CTA navigates to /welcome', (tester) async {
     await tester.pumpWidget(wrapWithRouter());
 
     await tester.tap(find.text('Sign up or log in'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in screen'), findsOneWidget);
+    expect(find.text('Welcome screen'), findsOneWidget);
   });
 }

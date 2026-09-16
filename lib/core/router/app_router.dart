@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/catalog/home_screen.dart';
 import '../../features/catalog/product_detail_screen.dart';
 import '../../features/discover/discover_screen.dart';
+import '../../features/onboarding/create_account_screen.dart';
 import '../../features/onboarding/sign_in_prompt_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
 import '../../features/profile/edit_profile_screen.dart';
@@ -34,10 +35,12 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// signed out), and falls back to the same placeholder when Clerk isn't
 /// configured at all (no `ClerkAuth` ancestor to read in that case).
 ///
-/// `/welcome` and `/sign-in` (spec 0004, AC-1, AC-2), `/profile/edit`
-/// (spec 0005, AC-5), plus product detail and the Reels full screen
-/// player, stay top level routes, outside the shell, so they open full
-/// screen without the bottom nav.
+/// `/welcome`, `/sign-in` (Log in, Clerk's prebuilt card), `/sign-up`
+/// (Sign up, the hand-built [CreateAccountScreen] — see its own doc
+/// comment for why this differs from `/sign-in`) (spec 0004, AC-1, AC-2),
+/// `/profile/edit` (spec 0005, AC-5), plus product detail and the Reels
+/// full screen player, stay top level routes, outside the shell, so they
+/// open full screen without the bottom nav.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: ref.watch(initialLocationProvider),
@@ -103,7 +106,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => WelcomeScreen(
           onSignUp: () {
             ref.read(onboardingPrefsProvider).markWelcomeSeen();
-            context.push('/sign-in');
+            context.push('/sign-up');
           },
           onLogIn: () {
             ref.read(onboardingPrefsProvider).markWelcomeSeen();
@@ -118,6 +121,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/sign-in',
         builder: (context, state) => const SignInPromptScreen(),
+      ),
+      GoRoute(
+        path: '/sign-up',
+        builder: (context, state) => const CreateAccountScreen(),
       ),
       GoRoute(
         path: '/profile/edit',
