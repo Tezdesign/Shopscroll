@@ -17,6 +17,8 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 | 4 | Auth (Clerk) | Unplanned | in-progress |
 | 5 | Profile screen | Unplanned | in-progress |
 | 6 | Log in | Unplanned | in-progress |
+| 7 | Search flow | Unplanned | in-progress |
+| 8 | Banner screens | Unplanned | planned |
 
 ## Features
 
@@ -175,3 +177,43 @@ their anonymous cart carries over as it does on sign up (see spec 0004, AC-3).
 From spec [0004](../specs/0004-clerk-authentication/index.md) · code:
 `lib/features/onboarding/log_in_screen.dart`,
 `lib/features/onboarding/sign_in_verification.dart`, `lib/core/router/app_router.dart`
+
+### 7. Search flow · in-progress
+
+A real search screen, opened by tapping the search field on Home or Discover, that walks a person from
+nothing typed, to suggestions as they type, to a result list, with a Stores tab for finding a seller.
+It searches on the device over the products and sellers the app already loads, and it replaces
+Discover's live inline filter.
+**Done when:** tapping the search field on Home or Discover opens the search screen, suggestions,
+results and the Stores tab work, every state (nothing typed, loading, error, no results) is handled, and
+Discover's own filter is gone (see spec 0006 for the full acceptance criteria).
+- [x] Design it (spec): `/architect search flow`
+- [ ] Build it: `/develop search flow`
+   - [ ] Entry points and routing: Home and Discover fields open the screen, Cancel and back, blank
+     start, Discover's inline filter removed (AC-1, AC-2, AC-12)
+   - [ ] Search logic and the results thread: matching, suggestion phrases, the result list, opening a
+     product (AC-5, AC-6, AC-7, AC-8, AC-13)
+   - [ ] Suggestions view, Items and Stores tabs, category chips and the nothing typed categories row
+     with its photos (AC-3, AC-4, AC-5, AC-11)
+   - [ ] Deals chip, the local add to cart toggle, and store tiles that open a store's results (AC-7,
+     AC-8, AC-9)
+   - [ ] Loading, error and no results states, the keyboard and tab bar check, accessibility, and
+     widget tests (AC-1, AC-10, AC-14)
+- [ ] Verify it: `/check verify search flow`
+- [ ] Test it: `/test search flow`
+
+Spec [0006](../specs/0006-search-flow.md) · code (filled by `/develop`)
+
+### 8. Banner screens · planned · needs a decision
+
+Make the promo banners tappable and design the screen a banner opens. The banners on Home and Discover
+are static tiles today, and nothing happens when one is tapped. Split out of the search flow work, which
+covers only search.
+**Done when:** tapping a promo banner opens a screen for that campaign, with its states handled (see the
+spec once it exists).
+- [ ] Design it (spec): `/architect banner screens`
+- [ ] Build it: `/develop banner screens`
+- [ ] Verify it: `/check verify banner screens`
+- [ ] Test it: `/test banner screens`
+
+From spec [0006](../specs/0006-search-flow.md)
