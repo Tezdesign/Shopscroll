@@ -16,6 +16,7 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 | 3 | Supabase backend | Unplanned | in-progress |
 | 4 | Auth (Clerk) | Unplanned | in-progress |
 | 5 | Profile screen | Unplanned | in-progress |
+| 6 | Log in | Unplanned | in-progress |
 
 ## Features
 
@@ -107,6 +108,12 @@ show a visible message, per the full acceptance criteria in spec 0004.
      number still needs to be turned off in the Clerk dashboard by hand (AC-2)
    - [x] Account deletion webhook (`clerk-webhook` Edge Function) (AC-8) — function written, not yet
      deployed or given its signing secret
+   - [x] Redesigned sign up screens (get started, phone number, email address, shared code entry),
+     reachable from Welcome's Sign up, with their own field checks and tests; their send and verify
+     actions do nothing yet (AC-2, AC-9, AC-13)
+   - [x] Wire the sign up screens to Clerk's code sign up: start and verify with the phone or email code,
+     carry the name and username, resend, and route Clerk errors to the error listener (AC-2, AC-9,
+     AC-12, AC-13, AC-14)
 - [ ] Verify it: `/check verify auth`
 - [ ] Test it: `/test auth`
 
@@ -145,3 +152,26 @@ Spec [0005](../specs/0005-profile-screen/index.md) · code: `lib/features/profil
 `lib/features/profile/profile_anonymous_view.dart`, `lib/features/profile/edit_profile_screen.dart`,
 `lib/shared/widgets/settings_row.dart`, `lib/data/repositories/user_profile_repository.dart`,
 `lib/core/router/app_router.dart`
+
+### 6. Log in · in-progress · ⚠ spec pending
+
+A way for people who already have an account to sign back in. The earlier Log in screen (Clerk's prebuilt
+card) was deleted, so Welcome's Log in opens a coming soon placeholder today and returning people
+cannot sign in. Probably reuses the same phone or email one time code as sign up, but its design and
+behaviour are undecided.
+**Done when:** Welcome's Log in lets a person with an existing account sign in with a one time code, and
+their anonymous cart carries over as it does on sign up (see spec 0004, AC-3).
+- [ ] Design it (spec): `/architect log in` — built ahead of its spec at the engineer's call, off the
+  six Figma frames. Spec 0004 explicitly excludes Log in ("Not in this pass"), so this screen has no
+  acceptance criteria of its own yet; backfill them.
+- [x] Build it: `/develop log in`
+   - [x] `LogInScreen`: two stages in place (identifier then one time code), the "Who are you"
+     toggle, email and phone channel switch, footer links
+   - [x] `SignInVerification`: Clerk `emailCode`/`phoneCode` sign in wired through the router at
+     `/sign-in`, replacing the `ComingSoonScreen` placeholder
+- [ ] Verify it: `/check verify log in`
+- [ ] Test it: `/test log in`
+
+From spec [0004](../specs/0004-clerk-authentication/index.md) · code:
+`lib/features/onboarding/log_in_screen.dart`,
+`lib/features/onboarding/sign_in_verification.dart`, `lib/core/router/app_router.dart`

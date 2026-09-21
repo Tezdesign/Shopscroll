@@ -9,14 +9,16 @@
 // injected automatically by the Edge Function runtime, no manual setup
 // needed for those two.
 //
-// Writes with the service role key, which bypasses RLS by design: this is
-// the one place in the app allowed to delete another identity's data
-// outright, and only ever the identity Clerk itself just told us was
-// deleted (proven by the verified signature above, not by anything the
-// request itself claims).
+// The rows it removes are the shared `deleteUserData`, which `delete-account`
+// also uses. This function stays necessary even with that one in place: it
+// covers deletions started outside the app, from the Clerk dashboard or the
+// Backend API, which the app never sees.
 
 import { Webhook } from "npm:svix@1.15.0";
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import {
+  deleteUserData,
+  serviceRoleClient,
+} from "../_shared/delete_user_data.ts";
 
 interface ClerkUserDeletedEvent {
   type: string;
@@ -56,24 +58,9 @@ Deno.serve(async (req) => {
     return new Response("Missing user id", { status: 400 });
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
-
-  const [cartResult, likesResult, savesResult, profileResult] =
-    await Promise.all([
-      supabase.from("cart_items").delete().eq("user_id", deletedUserId),
-      supabase.from("reel_likes").delete().eq("user_id", deletedUserId),
-      supabase.from("reel_saves").delete().eq("user_id", deletedUserId),
-      supabase.from("user_profiles").delete().eq("id", deletedUserId),
-    ]);
-
-  const failure = [cartResult, likesResult, savesResult, profileResult].find(
-    (result) => result.error,
-  );
-  if (failure?.error) {
-    console.error("clerk-webhook cleanup failed:", failure.error);
+  const error = await deleteUserData(serviceRoleClient(), deletedUserId);
+  if (error) {
+    console.error("clerk-webhook cleanup failed:", error);
     return new Response("Cleanup failed", { status: 500 });
   }
 

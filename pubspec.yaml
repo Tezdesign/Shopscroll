@@ -44,6 +44,7 @@ dependencies:
   clerk_flutter: ^0.0.18-beta
   clerk_auth: ^0.0.18-beta
   shared_preferences: ^2.5.3
+  logging: ^1.3.0
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +76,7 @@ flutter:
   assets:
     - assets/icons/
     - assets/illustrations/
+    - assets/interests/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

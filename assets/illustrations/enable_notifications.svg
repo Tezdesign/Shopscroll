@@ -1,88 +1,67 @@
-<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --illustration-primary: #0066FF;
-      --illustration-accent: #FF6B00;
-      --illustration-highlight: #FEFEFE;
-    }
-  </style>
-
-  <defs>
-    <linearGradient id="phoneFill" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="var(--illustration-highlight)" />
-      <stop offset="100%" stop-color="#E4E7F0" />
-    </linearGradient>
-
-    <radialGradient id="chipGloss" cx="30%" cy="25%" r="85%">
-      <stop offset="0%" stop-color="var(--illustration-highlight)" />
-      <stop offset="100%" stop-color="#D7DCEB" />
-    </radialGradient>
-
-    <radialGradient id="bellGloss" cx="32%" cy="26%" r="80%">
-      <stop offset="0%" stop-color="var(--illustration-highlight)" />
-      <stop offset="38%" stop-color="var(--illustration-primary)" />
-      <stop offset="100%" stop-color="var(--illustration-primary)" />
-    </radialGradient>
-
-    <radialGradient id="accentGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="var(--illustration-accent)" stop-opacity="0.55" />
-      <stop offset="100%" stop-color="var(--illustration-accent)" stop-opacity="0" />
-    </radialGradient>
-
-    <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#000000" stop-opacity="0.28" />
-      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
-    </radialGradient>
-  </defs>
-
-  <!-- ambient shadow -->
-  <ellipse cx="205" cy="372" rx="120" ry="16" fill="url(#shadowGrad)" />
-
-  <!-- accent glow behind the bell -->
-  <circle cx="285" cy="296" r="88" fill="url(#accentGlow)" />
-
-  <!-- floating notification chip (subtle, echoes stacked-banner ref) -->
-  <g transform="rotate(-7 100 100)" opacity="0.55">
-    <rect x="52" y="84" width="98" height="32" rx="11" fill="url(#chipGloss)" stroke="var(--illustration-primary)" stroke-width="1.5" stroke-opacity="0.25" />
-    <circle cx="70" cy="100" r="8" fill="var(--illustration-accent)" />
-    <rect x="84" y="94" width="52" height="6" rx="3" fill="var(--illustration-primary)" opacity="0.5" />
-    <rect x="84" y="104" width="36" height="5" rx="2.5" fill="var(--illustration-primary)" opacity="0.3" />
-  </g>
-
-  <!-- phone body -->
-  <rect x="100" y="55" width="170" height="270" rx="34" fill="url(#phoneFill)" stroke="var(--illustration-primary)" stroke-width="9" />
-  <rect x="165" y="70" width="40" height="7" rx="3.5" fill="var(--illustration-primary)" opacity="0.25" />
-
-  <!-- toggle row 1 -->
-  <rect x="118" y="150" width="134" height="44" rx="14" fill="url(#chipGloss)" />
-  <circle cx="140" cy="172" r="12" fill="var(--illustration-accent)" />
-  <rect x="162" y="163" width="70" height="8" rx="4" fill="var(--illustration-primary)" opacity="0.55" />
-  <rect x="162" y="177" width="50" height="6" rx="3" fill="var(--illustration-primary)" opacity="0.3" />
-
-  <!-- toggle row 2 -->
-  <rect x="118" y="204" width="134" height="44" rx="14" fill="url(#chipGloss)" />
-  <circle cx="140" cy="226" r="12" fill="var(--illustration-primary)" />
-  <rect x="162" y="217" width="70" height="8" rx="4" fill="var(--illustration-accent)" opacity="0.55" />
-  <rect x="162" y="231" width="46" height="6" rx="3" fill="var(--illustration-primary)" opacity="0.3" />
-
-  <!-- glossy bell, overlapping the phone's bottom-right corner -->
-  <rect x="277" y="218" width="16" height="18" rx="8" fill="url(#bellGloss)" />
-  <path
-    d="M285 232
-       C 253 232 233 256 233 288
-       L 233 322
-       C 233 336 222 348 210 354
-       C 206 356 207 362 212 362
-       L 358 362
-       C 363 362 364 356 360 354
-       C 348 348 337 336 337 322
-       L 337 288
-       C 337 256 317 232 285 232 Z"
-    fill="url(#bellGloss)"
-  />
-  <path
-    d="M263 362 C 263 375 273 386 285 386 C 297 386 307 375 307 362 Z"
-    fill="url(#bellGloss)"
-  />
-  <ellipse cx="257" cy="260" rx="16" ry="24" fill="var(--illustration-highlight)" opacity="0.5" transform="rotate(-18 257 260)" />
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="250" height="250" viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="enable_notifications 2">
+<path id="Vector" d="M128.125 242.5C169.546 242.5 203.125 238.023 203.125 232.5C203.125 226.977 169.546 222.5 128.125 222.5C86.7036 222.5 53.125 226.977 53.125 232.5C53.125 238.023 86.7036 242.5 128.125 242.5Z" fill="url(#paint0_radial_0_33)"/>
+<path id="Vector_2" d="M178.125 240C208.501 240 233.125 215.376 233.125 185C233.125 154.624 208.501 130 178.125 130C147.749 130 123.125 154.624 123.125 185C123.125 215.376 147.749 240 178.125 240Z" fill="url(#paint1_radial_0_33)"/>
+<g id="Group" opacity="0.55">
+<path id="Vector_3" d="M85.4746 49.604L38.3287 55.3928C34.56 55.8555 31.88 59.2857 32.3428 63.0544L33.1045 69.2578C33.5672 73.0264 36.9974 75.7064 40.7661 75.2437L87.912 69.4549C91.6807 68.9922 94.3606 65.5619 93.8979 61.7933L93.1362 55.5899C92.6735 51.8212 89.2433 49.1412 85.4746 49.604Z" fill="url(#paint2_radial_0_33)" stroke="black" stroke-opacity="0.25" stroke-width="1.5"/>
+<path id="Vector_4" d="M44.4991 69.7478C47.2399 69.4112 49.189 66.9165 48.8525 64.1757C48.516 61.4349 46.0213 59.4858 43.2804 59.8223C40.5396 60.1589 38.5905 62.6536 38.927 65.3944C39.2636 68.1352 41.7583 70.0843 44.4991 69.7478Z" fill="black"/>
+<path id="Vector_5" opacity="0.5" d="M82.5143 56.2644L53.9786 59.7681C52.9507 59.8943 52.2198 60.8299 52.346 61.8577C52.4722 62.8855 53.4077 63.6164 54.4356 63.4902L82.9713 59.9864C83.9991 59.8602 84.73 58.9247 84.6038 57.8969C84.4776 56.8691 83.5421 56.1382 82.5143 56.2644Z" fill="black"/>
+<path id="Vector_6" opacity="0.3" d="M73.6606 63.6484L54.4301 66.0096C53.5736 66.1148 52.9645 66.8944 53.0696 67.7509C53.1748 68.6074 53.9544 69.2165 54.8109 69.1113L74.0415 66.7501C74.898 66.645 75.5071 65.8654 75.4019 65.0089C75.2968 64.1523 74.5172 63.5433 73.6606 63.6484Z" fill="black"/>
+</g>
+<path id="Vector_7" d="M147.5 34.375H83.75C72.0139 34.375 62.5 43.8889 62.5 55.625V181.875C62.5 193.611 72.0139 203.125 83.75 203.125H147.5C159.236 203.125 168.75 193.611 168.75 181.875V55.625C168.75 43.8889 159.236 34.375 147.5 34.375Z" fill="url(#paint3_linear_0_33)" stroke="black" stroke-width="9"/>
+<path id="Vector_8" opacity="0.25" d="M125.938 43.75H105.312C104.104 43.75 103.125 44.7294 103.125 45.9375C103.125 47.1456 104.104 48.125 105.312 48.125H125.938C127.146 48.125 128.125 47.1456 128.125 45.9375C128.125 44.7294 127.146 43.75 125.938 43.75Z" fill="black"/>
+<path id="Vector_9" d="M148.75 93.75H82.5C77.6675 93.75 73.75 97.6675 73.75 102.5V112.5C73.75 117.332 77.6675 121.25 82.5 121.25H148.75C153.582 121.25 157.5 117.332 157.5 112.5V102.5C157.5 97.6675 153.582 93.75 148.75 93.75Z" fill="url(#paint4_radial_0_33)"/>
+<path id="Vector_10" d="M87.5 115C91.6421 115 95 111.642 95 107.5C95 103.358 91.6421 100 87.5 100C83.3579 100 80 103.358 80 107.5C80 111.642 83.3579 115 87.5 115Z" fill="black"/>
+<path id="Vector_11" opacity="0.55" d="M142.5 101.875H103.75C102.369 101.875 101.25 102.994 101.25 104.375C101.25 105.756 102.369 106.875 103.75 106.875H142.5C143.881 106.875 145 105.756 145 104.375C145 102.994 143.881 101.875 142.5 101.875Z" fill="black"/>
+<path id="Vector_12" opacity="0.3" d="M130.625 110.625H103.125C102.089 110.625 101.25 111.464 101.25 112.5C101.25 113.536 102.089 114.375 103.125 114.375H130.625C131.661 114.375 132.5 113.536 132.5 112.5C132.5 111.464 131.661 110.625 130.625 110.625Z" fill="black"/>
+<path id="Vector_13" d="M148.75 127.5H82.5C77.6675 127.5 73.75 131.418 73.75 136.25V146.25C73.75 151.082 77.6675 155 82.5 155H148.75C153.582 155 157.5 151.082 157.5 146.25V136.25C157.5 131.418 153.582 127.5 148.75 127.5Z" fill="url(#paint5_radial_0_33)"/>
+<path id="Vector_14" d="M87.5 148.75C91.6421 148.75 95 145.392 95 141.25C95 137.108 91.6421 133.75 87.5 133.75C83.3579 133.75 80 137.108 80 141.25C80 145.392 83.3579 148.75 87.5 148.75Z" fill="black"/>
+<path id="Vector_15" opacity="0.55" d="M142.5 135.625H103.75C102.369 135.625 101.25 136.744 101.25 138.125C101.25 139.506 102.369 140.625 103.75 140.625H142.5C143.881 140.625 145 139.506 145 138.125C145 136.744 143.881 135.625 142.5 135.625Z" fill="black"/>
+<path id="Vector_16" opacity="0.3" d="M128.125 144.375H103.125C102.089 144.375 101.25 145.214 101.25 146.25C101.25 147.286 102.089 148.125 103.125 148.125H128.125C129.161 148.125 130 147.286 130 146.25C130 145.214 129.161 144.375 128.125 144.375Z" fill="black"/>
+<path id="Vector_17" d="M183.125 141.25C183.125 138.489 180.886 136.25 178.125 136.25C175.364 136.25 173.125 138.489 173.125 141.25V142.5C173.125 145.261 175.364 147.5 178.125 147.5C180.886 147.5 183.125 145.261 183.125 142.5V141.25Z" fill="url(#paint6_radial_0_33)"/>
+<path id="Vector_18" d="M178.125 145C158.125 145 145.625 160 145.625 180V201.25C145.625 210 138.75 217.5 131.25 221.25C128.75 222.5 129.375 226.25 132.5 226.25H223.75C226.875 226.25 227.5 222.5 225 221.25C217.5 217.5 210.625 210 210.625 201.25V180C210.625 160 198.125 145 178.125 145Z" fill="url(#paint7_radial_0_33)"/>
+<path id="Vector_19" d="M164.375 226.25C164.375 234.375 170.625 241.25 178.125 241.25C185.625 241.25 191.875 234.375 191.875 226.25H164.375Z" fill="url(#paint8_radial_0_33)"/>
+<path id="Vector_20" opacity="0.5" d="M165.26 176.766C170.513 175.059 172.696 167.289 170.136 159.41C167.576 151.531 161.242 146.528 155.99 148.234C150.737 149.941 148.554 157.711 151.114 165.59C153.674 173.469 160.008 178.473 165.26 176.766Z" fill="black"/>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_33" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128.125 232.5) scale(75 10)">
+<stop stop-opacity="0.28"/>
+<stop offset="1" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="paint1_radial_0_33" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(178.125 185) scale(55)">
+<stop stop-opacity="0.55"/>
+<stop offset="1" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="paint2_radial_0_33" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(50.3523 58.954) rotate(-7) scale(52.0625 17)">
+<stop/>
+<stop offset="1" stop-color="#D7DCEB"/>
+</radialGradient>
+<linearGradient id="paint3_linear_0_33" x1="62.5" y1="34.375" x2="214.673" y2="130.188" gradientUnits="userSpaceOnUse">
+<stop/>
+<stop offset="1" stop-color="#E4E7F0"/>
+</linearGradient>
+<radialGradient id="paint4_radial_0_33" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(98.875 100.625) scale(71.1875 23.375)">
+<stop/>
+<stop offset="1" stop-color="#D7DCEB"/>
+</radialGradient>
+<radialGradient id="paint5_radial_0_33" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(98.875 134.375) scale(71.1875 23.375)">
+<stop/>
+<stop offset="1" stop-color="#D7DCEB"/>
+</radialGradient>
+<radialGradient id="paint6_radial_0_33" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(176.325 139.175) scale(8 9)">
+<stop/>
+<stop offset="0.38"/>
+<stop offset="1"/>
+</radialGradient>
+<radialGradient id="paint7_radial_0_33" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160.695 166.125) scale(77.4682 65)">
+<stop/>
+<stop offset="0.38"/>
+<stop offset="1"/>
+</radialGradient>
+<radialGradient id="paint8_radial_0_33" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(173.175 230.15) scale(22 12)">
+<stop/>
+<stop offset="0.38"/>
+<stop offset="1"/>
+</radialGradient>
+</defs>
 </svg>

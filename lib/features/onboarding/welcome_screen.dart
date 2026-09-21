@@ -6,11 +6,9 @@ import '../../shared/widgets/app_button.dart';
 /// The app's first launch screen (spec 0004, AC-1), reproducing Figma node
 /// 561:5267 ("iPhone 14 & 15 Pro - 56"). Shown once per device, before the
 /// main app shell, then never again (see `core/onboarding/onboarding_prefs.dart`
-/// and `core/router/app_router.dart`). "Log in" opens [SignInPromptScreen]
-/// (Clerk's own prebuilt card); "Sign up" opens [CreateAccountScreen], a
-/// hand-built form matching its own Figma frame (node 561:5289) — the two
-/// buttons lead to different screens, not the same prebuilt card in two
-/// modes (see [CreateAccountScreen]'s doc comment for why). "Skip for now"
+/// and `core/router/app_router.dart`). "Log in" opens `/sign-in` (a coming soon placeholder for now) and "Sign up"
+/// opens `/sign-up`, [GetStartedScreen], the first step of the redesigned
+/// sign up flow (see `lib/features/onboarding/AGENTS.md`). "Skip for now"
 /// goes straight to browsing, matching the copy already used for this
 /// exact choice elsewhere in the source Figma file. "Apply now" is left as
 /// a static label: seller onboarding is out of scope (see AGENTS.md, buyer

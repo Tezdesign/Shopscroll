@@ -155,15 +155,55 @@ card renders whatever sign in methods the Clerk dashboard has turned on; there i
 Turning Phone number off in the dashboard is both necessary and sufficient, the app's build plan step
 that used to say "phone/SMS" simply drops it.
 
+## Amendment: redesigned sign up flow (2026-09-18)
+
+> Premise note: this amendment turns phone sign in back on, which the first amendment turned off after a
+> real sign up hit "unsupported phone country". That failure comes back if the phone screen's country
+> list and Clerk's SMS country list drift apart. The screen now has a full country picker, which widens
+> the gap rather than closing it: the app offers every country, and only the Clerk dashboard decides
+> which ones can be texted. Anyone picking a country outside that setting gets a Clerk error.
+
+**Context.** The engineer redesigned onboarding in the Figma "Sign in" section and built the screens
+one at a time. The old hand built email and password form and Clerk's prebuilt Log in card were deleted
+as part of that. The new screens ask for a full name and username, then a phone number or an email
+address, then a one time code, with no password field and no Google or Apple button. Log in was
+deliberately left for later.
+
+**Options considered.**
+- *Codes only, phone and email (chosen).* Fewest fields and steps, and it matches the screens as built.
+  It removes a whole class of errors seen in the first build (a weak or breached password was one of
+  three real failures). The cost is no password fallback, and SMS cost and abuse exposure. Phone also
+  brings back the country limits.
+- *Codes plus a password.* A second way in and a familiar recovery story, but it adds a step and a
+  password rules error surface the designs do not have.
+- *Keep Google and Apple too.* Faster for people who prefer them, but the new flow has no place for the
+  buttons yet, and each provider means more dashboard setup and an OAuth cancel path to maintain. They
+  can return later without touching the schema.
+
+**Rationale.** The engineer chose the first option. It is also the smallest thing that satisfies the
+designs: the screens already exist, and every extra method is more surface to build, test, and
+explain. Two of the three failures from the first build (breached password, short username) either
+disappear or are caught by the field itself now; the third (phone country) is the reason for the
+premise note above. Keeping Log in for later is honest about scope: sign up is the part with designs
+today, and the spec says so rather than promising a sign in it cannot deliver (see Consequences and
+Follow-up in `index.md`).
+
+The name and username collected on the first screen are carried into Clerk's sign up call rather than
+saved separately in the app. Clerk already has fields for both, and the existing AC-4 upsert mirrors
+them into `user_profiles`, so no new table or column is needed and the person never types them twice.
+
 ## References
 
 **Project sources**:
+- The redesigned onboarding screens in `lib/features/onboarding/` and that folder's `AGENTS.md`
+- The Figma "Sign in" section (nodes listed in `index.md`, Feature design)
 - Spec 0003, the "Real auth ... is its own future decision" follow-up item this spec resolves
 - `supabase/schema.sql`, the exact columns and RLS policies this spec's data model section modifies
 - Installed community skills `supabase` and `supabase-postgres-best-practices`
   (`.claude/skills/supabase/`, `.claude/skills/supabase-postgres-best-practices/`)
 
 **Practices & standards**:
+- Ask for the minimum during sign up, and give an equal alternative when one channel is unwanted
 - Row Level Security as the enforcement point for per-user data, not application level filtering alone
 - `security definer` functions as the standard, narrowly scoped escape hatch for a mutation RLS
   structurally cannot express (cross-identity row reassignment)

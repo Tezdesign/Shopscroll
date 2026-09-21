@@ -17,9 +17,17 @@ clients, not one" and "State transitions" sections for the full reasoning).
   the switch), then flips `activeSupabaseClientProvider` to the Clerk-backed client, then upserts the
   buyer's `user_profiles` row. On sign out (or an expired session Clerk can't refresh): flips back to
   the anonymous client, minting a fresh anonymous session if none is persisted. This listens to
-  `ClerkAuthState` generically — any screen that changes sign-in state (the prebuilt card, or a
-  hand-built flow like `lib/features/onboarding/create_account_screen.dart`) triggers it the same way,
-  no per-screen wiring needed.
+  `ClerkAuthState` generically — any screen that changes sign-in state (Clerk's prebuilt card, or a
+  hand-built flow) triggers it the same way, no per-screen wiring needed.
+
+## Diagnosing Clerk calls
+
+`clerk_auth` logs failed HTTP calls through `package:logging` and then swallows them: `Api._delete`
+catches a non-200 or a thrown error, logs it, returns false, and every caller ignores that result.
+Nothing reaches `errorStream`, so a failed sign out or account deletion is indistinguishable from a
+successful one in the UI. `_printClerkLogs` in `main.dart` attaches a listener in debug builds so
+those records reach the console; release builds stay quiet. When a Clerk action appears to do
+nothing, run the app in debug and read the `[clerk]` lines.
 
 ## Configuration
 

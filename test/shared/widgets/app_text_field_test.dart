@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/app_text_field.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders the given hint text', (tester) async {
@@ -78,4 +81,137 @@ void main() {
     final field = tester.widget<TextFormField>(find.byType(TextFormField));
     expect(field.enabled, isFalse);
   });
+
+  // The four Figma states (component set node 5290:7177): Default, filling,
+  // Filled, error.
+  TextField innerField(WidgetTester tester) =>
+      tester.widget<TextField>(find.byType(TextField));
+
+  testWidgets('decoration carries the Figma border colors per state', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(const AppTextField()));
+
+    final decoration = innerField(tester).decoration!;
+    expect(
+      (decoration.border! as OutlineInputBorder).borderSide.color,
+      AppColors.neutral500,
+    );
+    expect(
+      (decoration.enabledBorder! as OutlineInputBorder).borderSide.color,
+      AppColors.neutral500,
+    );
+    expect(
+      (decoration.focusedBorder! as OutlineInputBorder).borderSide.color,
+      AppColors.primary500,
+    );
+    expect(
+      (decoration.errorBorder! as OutlineInputBorder).borderSide.color,
+      AppColors.error500,
+    );
+    expect(
+      (decoration.focusedErrorBorder! as OutlineInputBorder).borderSide.color,
+      AppColors.error500,
+    );
+  });
+
+  testWidgets('Default and Filled: black text; filling: blue text', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        Column(
+          children: const [
+            AppTextField(),
+            TextField(key: Key('other')),
+          ],
+        ),
+      ),
+    );
+
+    TextField first() => tester.widget<TextField>(find.byType(TextField).first);
+
+    expect(first().style!.color, AppColors.neutral1100);
+
+    await tester.tap(find.byType(TextField).first);
+    await tester.enterText(find.byType(TextField).first, 'Test');
+    await tester.pump();
+    expect(first().style!.color, AppColors.primary500);
+
+    await tester.tap(find.byKey(const Key('other')));
+    await tester.pump();
+    expect(first().style!.color, AppColors.neutral1100);
+  });
+
+  testWidgets('error: red message in Plus Jakarta Sans, text stays black '
+      'even while focused', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        const AppTextField(errorText: 'Please enter a valid email address.'),
+      ),
+    );
+
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+
+    expect(innerField(tester).style!.color, AppColors.neutral1100);
+    final message = tester.widget<Text>(
+      find.text('Please enter a valid email address.'),
+    );
+    expect(message.style!.color, AppColors.error500);
+    expect(message.style!.fontFamily, AppTypography.fontFamilyDisplay);
+  });
+
+  testWidgets('a validator error also turns the text black while focused', (
+    tester,
+  ) async {
+    final formKey = GlobalKey<FormState>();
+    await tester.pumpWidget(
+      wrap(
+        Form(
+          key: formKey,
+          child: AppTextField(
+            validator: (value) =>
+                (value == null || value.isEmpty) ? "Can't be empty" : null,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(innerField(tester).style!.color, AppColors.primary500);
+
+    formKey.currentState!.validate();
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text("Can't be empty"), findsOneWidget);
+    expect(innerField(tester).style!.color, AppColors.neutral1100);
+  });
+
+  testWidgets(
+    'geometry matches Figma: message flush left, 4px under a 48px box',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: AppTextField(
+              errorText: 'Please enter a valid email address.',
+            ),
+          ),
+        ),
+      );
+
+      final box = tester.getRect(find.byType(TextFormField));
+      final message = tester.getRect(
+        find.text('Please enter a valid email address.'),
+      );
+
+      expect(box.height, closeTo(48, 1)); // 17.5px line rounds up to 18
+      expect(message.left, box.left);
+      expect(message.top - box.bottom, 4);
+    },
+  );
 }

@@ -1,8 +1,10 @@
+import 'package:clerk_auth/clerk_auth.dart' as clerk;
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/auth/active_supabase_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/user_profile.dart';
 import '../../data/providers/user_profile_providers.dart';
@@ -35,10 +37,8 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: AppColors.neutral100,
       body: SafeArea(
         child: profileAsync.when(
-          data: (profile) => _ProfileContent(
-            authState: authState,
-            profile: profile,
-          ),
+          data: (profile) =>
+              _ProfileContent(authState: authState, profile: profile),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) => Center(
             child: Text(
@@ -54,7 +54,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _ProfileContent extends StatelessWidget {
+class _ProfileContent extends ConsumerWidget {
   const _ProfileContent({required this.authState, required this.profile});
 
   final ClerkAuthState authState;
@@ -65,9 +65,10 @@ class _ProfileContent extends StatelessWidget {
   final UserProfile? profile;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = authState.user!;
-    final name = profile?.name ??
+    final name =
+        profile?.name ??
         (user.hasName ? user.name : (user.username ?? 'Shopper'));
     final avatarUrl = profile?.avatarUrl ?? user.imageUrl;
     final followingCount = profile?.followingCount ?? 0;
@@ -82,8 +83,9 @@ class _ProfileContent extends StatelessWidget {
             CircleAvatar(
               radius: 50,
               backgroundColor: AppColors.primary100,
-              backgroundImage:
-                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl)
+                  : null,
               child: avatarUrl == null
                   ? Icon(Icons.person, size: 40, color: AppColors.primary400)
                   : null,
@@ -134,19 +136,12 @@ class _ProfileContent extends StatelessWidget {
           rows: [
             SettingsRow(
               label: 'Shopping in',
-              onTap: () => _openComingSoon(
-                context,
-                'Shopping in',
-                Icons.flag_outlined,
-              ),
+              onTap: () =>
+                  _openComingSoon(context, 'Shopping in', Icons.flag_outlined),
             ),
             SettingsRow(
               label: 'Language',
-              onTap: () => _openComingSoon(
-                context,
-                'Language',
-                Icons.language,
-              ),
+              onTap: () => _openComingSoon(context, 'Language', Icons.language),
             ),
             SettingsRow(
               label: 'Delivery addresses',
@@ -158,11 +153,8 @@ class _ProfileContent extends StatelessWidget {
             ),
             SettingsRow(
               label: 'Payments',
-              onTap: () => _openComingSoon(
-                context,
-                'Payments',
-                Icons.payment_outlined,
-              ),
+              onTap: () =>
+                  _openComingSoon(context, 'Payments', Icons.payment_outlined),
             ),
           ],
         ),
@@ -207,11 +199,7 @@ class _ProfileContent extends StatelessWidget {
             SettingsRow(
               label: 'FAQ',
               trailingIcon: AppIconGlyph.openExternal,
-              onTap: () => _openComingSoon(
-                context,
-                'FAQ',
-                Icons.help_outline,
-              ),
+              onTap: () => _openComingSoon(context, 'FAQ', Icons.help_outline),
             ),
           ],
         ),
@@ -226,7 +214,7 @@ class _ProfileContent extends StatelessWidget {
           label: 'Delete account',
           trailingIcon: AppIconGlyph.delete,
           labelColor: AppColors.error400,
-          onTap: () => _confirmDeleteAccount(context, authState),
+          onTap: () => _confirmDeleteAccount(context, ref, authState),
         ),
         const SizedBox(height: AppSpacing.xl),
       ],
@@ -241,8 +229,17 @@ class _ProfileContent extends StatelessWidget {
     );
   }
 
+  /// Deletes the account for real, through the `delete-account` Edge
+  /// Function: it removes the Clerk user with the Backend API and this app's
+  /// rows in the same call (see `supabase/functions/delete-account`).
+  ///
+  /// Not [ClerkAuthState.deleteUser], which cannot work on `clerk_auth`
+  /// 0.0.18-beta: it clears its own credentials before sending the request
+  /// that needs them and gets a `401 signed_out`, silently. See
+  /// `lib/features/profile/AGENTS.md`.
   Future<void> _confirmDeleteAccount(
     BuildContext context,
+    WidgetRef ref,
     ClerkAuthState authState,
   ) async {
     final confirmed = await showDialog<bool>(
@@ -265,9 +262,35 @@ class _ProfileContent extends StatelessWidget {
         ],
       ),
     );
-    if (confirmed == true) {
-      await authState.deleteUser();
-    }
+    if (confirmed != true || !context.mounted) return;
+
+    final deleted = await authState.safelyCall<bool>(
+      context,
+      () async {
+        await ref
+            .read(activeSupabaseClientProvider)
+            .functions
+            .invoke('delete-account');
+        return true;
+      },
+      // The raw failure is a Supabase FunctionException, which says nothing
+      // useful to the person holding the phone; keep it for the console and
+      // show plain words instead.
+      onError: (error) {
+        debugPrint('delete-account failed: $error');
+        authState.handleError(
+          clerk.ClerkError.clientAppError(
+            message: 'Your account could not be deleted. Please try again.',
+          ),
+        );
+      },
+    );
+    if (deleted != true) return;
+
+    // The account is gone, so this only clears what is held on the device.
+    // `Auth.signOut` empties its own client whatever the network says, so it
+    // works even though the session it would revoke no longer exists.
+    await authState.signOut();
   }
 }
 

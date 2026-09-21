@@ -15,11 +15,21 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
   (spec 0004): every ownership column `uuid`→`text` (Clerk's ids aren't UUIDs), drops the `auth.users`
   foreign keys, rewrites every RLS policy from `auth.uid()` to `(select auth.jwt()->>'sub')`, and
   redefines `merge_anonymous_identity` for the new text-based ids.
-- `functions/<name>/index.ts` — Supabase Edge Functions (Deno). `clerk-webhook`: handles Clerk's
-  `user.deleted` event (Svix signature verified before anything else), deletes that identity's cart/
-  likes/saves/profile via the service role key (bypasses RLS by design — the one place allowed to),
-  keeps order history. Deploy + `supabase secrets set CLERK_WEBHOOK_SIGNING_SECRET=...` are manual
-  steps, not run by this repo's tooling.
+- `functions/<name>/index.ts` — Supabase Edge Functions (Deno). Deploys and `supabase secrets set`
+  are manual steps, not run by this repo's tooling.
+  - `_shared/delete_user_data.ts` — removes one identity's cart, likes, saves and profile with the
+    service role key (bypasses RLS by design; this is the one place allowed to), keeping order
+    history. Idempotent. Both deletion paths below share it so they cannot drift.
+  - `clerk-webhook` — Clerk's `user.deleted` event, Svix signature verified before anything else.
+    Covers deletions started outside the app (the Clerk dashboard, the Backend API).
+    Needs `CLERK_WEBHOOK_SIGNING_SECRET`.
+  - `delete-account` — the buyer deleting their own account from the Profile tab. Verifies the
+    caller's Clerk session token against the instance's JWKS itself (pinned `CLERK_ISSUER`, never the
+    token's own `iss`), deletes the Clerk user through the Backend API, then the rows. Needs
+    `CLERK_SECRET_KEY` and `CLERK_ISSUER`. Deploy it with `--no-verify-jwt`: it does its own
+    verification and fails closed, so it must not also depend on the platform gateway accepting a
+    third-party token. This exists because `ClerkAuthState.deleteUser()` is broken in `clerk_auth`
+    0.0.18-beta — see `lib/features/profile/AGENTS.md`.
 
 ## Conventions
 

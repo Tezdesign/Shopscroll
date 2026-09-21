@@ -2,6 +2,7 @@ import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,20 +23,22 @@ import 'data/repositories/supabase/supabase_user_profile_repository.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  _printClerkLogs();
+
   // Whether the first launch welcome screen (spec 0004, AC-1) has already
   // been shown on this device; loaded up front so both early return
   // branches below can still override the provider, even though the
   // welcome screen itself only ever shows once Clerk is configured.
-  final onboardingPrefs = OnboardingPrefs(await SharedPreferences.getInstance());
+  final onboardingPrefs = OnboardingPrefs(
+    await SharedPreferences.getInstance(),
+  );
 
   // No SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY passed (see .env.example):
   // run entirely on mock data, same as before this feature existed.
   if (!SupabaseConfig.isConfigured) {
     runApp(
       ProviderScope(
-        overrides: [
-          onboardingPrefsProvider.overrideWithValue(onboardingPrefs),
-        ],
+        overrides: [onboardingPrefsProvider.overrideWithValue(onboardingPrefs)],
         child: const MarketplaceApp(),
       ),
     );
@@ -99,7 +102,8 @@ void main() async {
   // builds, always open on welcome instead, so the sign-in flow is there
   // to test on every run without clearing onboarding prefs or session
   // state by hand; release builds are unaffected.
-  final showWelcome = kDebugMode ||
+  final showWelcome =
+      kDebugMode ||
       (!onboardingPrefs.hasSeenWelcome && !clerkAuthState.isSignedIn);
 
   final clerkBackedClient = buildClerkBackedClient(
@@ -117,8 +121,9 @@ void main() async {
           showWelcome ? '/welcome' : '/',
         ),
         productRepositoryProvider.overrideWith(
-          (ref) =>
-              SupabaseProductRepository(ref.watch(activeSupabaseClientProvider)),
+          (ref) => SupabaseProductRepository(
+            ref.watch(activeSupabaseClientProvider),
+          ),
         ),
         reelRepositoryProvider.overrideWith(
           (ref) =>
@@ -145,6 +150,24 @@ void main() async {
       ),
     ),
   );
+}
+
+/// Prints `clerk_auth`'s own log records in debug builds.
+///
+/// The package logs every failed HTTP call through `package:logging` and
+/// otherwise swallows it: `Api._delete` in particular catches a non-200 or a
+/// thrown error, logs it, and returns false, which its callers ignore. Without
+/// a listener those records go nowhere, so a failed account deletion or sign
+/// out looks exactly like a successful one. Release builds stay quiet.
+void _printClerkLogs() {
+  if (!kDebugMode) return;
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    debugPrint(
+      '[clerk] ${record.level.name} ${record.loggerName}: ${record.message}'
+      '${record.error == null ? '' : ' | ${record.error}'}',
+    );
+  });
 }
 
 class MarketplaceApp extends ConsumerStatefulWidget {

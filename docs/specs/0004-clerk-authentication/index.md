@@ -14,6 +14,10 @@ with one policy tightened so real people's contact details are never public. Peo
 products and reels without signing in at all; a real account is offered once, the first time the app is
 opened, and can be skipped.
 
+Amended 2026-09-18: sign up is now a redesigned flow. A person enters a full name and username, then
+either a phone number or an email address, then a one time code Clerk sends to it. There are no
+passwords, no Google or Apple buttons, and Log in is still to be designed.
+
 ## Requirements
 
 **User stories**:
@@ -21,12 +25,15 @@ opened, and can be skipped.
   hit a login wall before I've decided to buy anything.
 - As a first time visitor, I want to be offered the choice to sign up or just continue browsing, so I'm
   never forced into an account before I've explored.
-- As a shopper, I want to create a real account (email, Google, or Apple) so my cart and orders are tied
-  to me across devices and after a reinstall.
+- As a shopper, I want to create a real account with my phone number or my email address, confirmed by
+  a one time code and with no password to remember, so my cart and orders are tied to me across devices
+  and after a reinstall.
+- As someone signing up, I want to switch between phone and email on the way, so I am never stuck if I
+  would rather not give one of them.
 - As a returning shopper, I want my anonymous cart to carry over automatically when I sign up, so I
   don't lose what I already added.
-- As someone filling in the sign up or sign in form, I want to see what went wrong when something is
-  rejected (a weak password, a taken username, and so on), so I'm not left guessing why nothing
+- As someone going through sign up, I want to see what went wrong when something is rejected (a taken
+  username, a number Clerk refuses, a wrong code, and so on), so I'm not left guessing why nothing
   happened.
 - As a signed in shopper, I want to sign out, and delete my account if I choose, so I control my own
   data.
@@ -41,8 +48,12 @@ opened, and can be skipped.
   the home screen. The Profile tab in the bottom navigation is not part of this flow; it stays the same
   empty placeholder it was before this feature (a real Profile screen, and where sign in/out lives day
   to day, is a future decision, see Follow-up).
-- **AC-2**: A person can sign up or sign in via Clerk using email + password (with email verification),
-  Google, or Apple. Phone number sign in is turned off; see Configuration required.
+- **AC-2**: A person can sign up through the redesigned flow: full name and username, then either a
+  phone number or an email address, then a one time code Clerk sends to it. Entering the right code
+  creates the account and signs them in. There is no password step, and Google, Apple, and password
+  sign in are not offered. Phone and email are equal choices, and each screen has a link to switch to
+  the other. Signing back in to an existing account (Log in) is not part of this pass, see the note
+  after the criteria.
 - **AC-3**: On first successful real sign in, the prior anonymous session's cart items and orders are
   reassigned to the new real account; if the real account already has cart items, matching products'
   quantities are added together rather than overwritten, and non matching items are combined into one
@@ -61,17 +72,30 @@ opened, and can be skipped.
 - **AC-8**: Deleting an account (from the Account screen, or directly in Clerk) removes that person's
   cart, likes, saves, and profile, but keeps their order history. (Same note as AC-6: the Account screen
   is currently unreached from navigation.)
-- **AC-9**: Cancelling an OAuth (Google/Apple) sign in returns silently to the sign in screen; no error
-  is shown.
+- **AC-9**: Leaving the sign up flow before the code is verified (the close button on the first screen,
+  or the back arrow on later ones) goes back to the previous screen, creates no account, and shows no
+  error.
 - **AC-10**: If the anonymous-to-real merge (AC-3) fails partway (e.g. the network drops mid merge), sign
   in still succeeds, the merge is retried once automatically, and if it still fails the person keeps
   their new account without the unmigrated anonymous data — never a partial or duplicated row.
 - **AC-11**: Sign in attempts are rate limited and lockable after repeated failures; this is Clerk's
   built in protection, not custom code in this app.
-- **AC-12**: Any error Clerk reports while someone is filling in or submitting the sign in or sign up
-  form (a rejected password, a username that's too short, a field left blank, a server side rejection,
-  and so on) is shown to them as a visible message; nothing fails silently or only shows up in developer
-  logs. A cancelled Google/Apple sign in is not an error and keeps behaving per AC-9.
+- **AC-12**: Any error Clerk reports while someone is signing up (a rejected username, a number or
+  address Clerk refuses, a wrong or expired code, a server side rejection, and so on) is shown to them
+  as a visible message; nothing fails silently or only shows up in developer logs. Mistakes the app can
+  catch itself (a blank name, a username with spaces, a number or address that is not valid, a code
+  that is not 6 digits) are shown by the field itself, in red under it.
+- **AC-13**: After a code is sent, Resend code is unavailable for 30 seconds while a countdown shows the
+  time left, then becomes a tappable link. Tapping it sends a new code and restarts the countdown. On
+  the phone screen the number is locked once the code is sent; on the email screen, editing the
+  address returns to the first step, since the old code would not match the new address.
+- **AC-14**: The full name and username entered on the first screen are saved on the new account
+  (Clerk's name and username, mirrored into `user_profiles` by AC-4's upsert), so the person never has
+  to enter them a second time.
+
+**Not in this pass**: Log in. The earlier Log in screen (Clerk's prebuilt card) was deleted. Until a new
+one is designed, Welcome's Log in opens a coming soon placeholder, and a person who already has an
+account has no way to sign back in. See Follow-up.
 
 ## Decision
 
@@ -80,6 +104,9 @@ opened, and can be skipped.
 Clerk becomes the real login system, connected to Supabase through native Third Party Auth, with the
 existing Postgres schema updated so ownership columns hold Clerk's text style ids instead of Postgres
 `uuid`s.
+
+**Sign in methods (amended 2026-09-18)**: a one time code sent to a phone number, or to an email
+address. No password, no Google, no Apple. Reasoning is in `rationale.md`.
 
 **Implementation skills**: `supabase` (`supabase/agent-skills`, `.claude/skills/supabase/`) ·
 `supabase-postgres-best-practices` (`supabase/agent-skills`,
@@ -132,38 +159,54 @@ resumes as a fully signed in real account with whatever had already migrated.
 **First launch welcome screen** (Figma node 561:5267, "ShopScroll UI" file): a full screen with the
 Shopscroll wordmark, a one line tagline, a Sign up button, a Log in button, and a Skip / continue
 browsing link. Shown before the main app shell, but only when both are true: the device has never seen
-it before, and there is no already signed in real session. A small locally stored flag (e.g. through
+it before, and there is no already signed in real session. A small locally stored flag (through
 `shared_preferences`, a new dependency this adds) records "seen", set the moment any of Sign up, Log in,
 or Skip is chosen; once set, the app goes straight to the home screen on every later launch, signed in
-or not. Log in opens the Clerk prebuilt sign in/sign up card described below. Sign up instead opens a
-hand-built form matching its own Figma frame (node 561:5289, "Sign up") — a later revision of this
-spec: the two buttons were originally meant to open that same prebuilt card in its two modes, before
-that frame existed. The hand-built form calls Clerk's headless sign up (`attemptSignUp`, two calls in
-sequence: password then `emailCode` to trigger the verification email — the same sequence
-`clerk_flutter`'s own prebuilt panel uses internally) and hands off to a code-entry step with no Figma
-frame of its own, since 561:5289 has none. It reproduces email + password (its two fields are both
-labelled "Enter your email" in the source frame, which can't be literal) and Google/Apple sign in, but
-drops the "Sign in using facebook" button the same frame also shows: Facebook is configured nowhere
-else in this spec, and that button's own icon asset is, byte for byte, the same file as another
-button's invisible spacer icon in the source frame, not a real Facebook mark. Skip goes straight to the
-home screen and sets the same "seen" flag. This screen is not part of the Profile tab and does not gate
-cart, checkout, or anything else; the Profile tab in the bottom navigation goes back to being the same
-empty placeholder it was before this feature, unrelated to this flow.
+or not. Skip goes straight to the home screen. Sign up opens the redesigned flow below. Log in opens a
+coming soon placeholder for now (see Follow-up). This screen does not gate cart, checkout, or anything
+else.
 
-**Error surfacing**: Clerk's prebuilt sign in/sign up card reports errors (validation failures, server
-side rejections) onto an error stream on the `ClerkAuthState`, but nothing in this app currently listens
-to it, so those errors were only printed to the developer console as an unhandled exception, never shown
-to the person filling in the form (AC-12). The fix is `clerk_flutter`'s own `ClerkErrorListener` widget,
-placed inside the `MaterialApp`'s widget tree (so it can find a `ScaffoldMessenger`) and wrapping
-whatever the router builds; it already turns every error on that stream into a plain snack bar showing
-Clerk's own message, with no bespoke error UI to design or maintain.
+**Redesigned sign up flow** (Figma "Sign in" section, nodes 5284:7789, 5284:9148, 5284:9424, 5284:9570,
+5284:9654, 5298:7977, 5298:8283): three steps, the last two advancing in place on one screen.
+1. **Get started**: full name and username. Continue checks both are filled and the username has no
+   spaces.
+2. **Phone number or Email address**: equal choices. "Use email instead" and "Use phone number
+   instead" switch between them. Continue checks the value, Clerk sends a code, and the same screen
+   moves to a verify step: a "Verification code" field with a 30 second resend countdown (AC-13). The
+   phone number locks at that point; the email address stays editable, and editing it returns to the
+   first step.
+3. **Verify**: the right code creates the account and signs the person in. That session change is what
+   triggers the merge and profile upsert (Build plan task 8), so the screens need no wiring for it.
+
+Sign up calls Clerk's headless sign up (`attemptSignUp`) with the code strategy for the chosen channel
+(`emailCode` or `phoneCode`): one call starts it and Clerk sends the code, a second call submits the
+code. It carries the full name and username from step 1 (AC-14) and no password. The exact parameters
+are to be confirmed against `clerk_flutter` when building. The phone screen sends the number in E.164,
+with the country taken from its own picker, so Clerk must allow SMS to every country that picker
+offers, or refuse the ones it does not with a visible error (AC-12).
+
+State of the build: the screens (`GetStartedScreen`, `PhoneNumberScreen`, `EmailAddressScreen`, and the
+shared `VerificationCodeSection`, in `lib/features/onboarding/`) exist and are reachable from Welcome's
+Sign up, but their send and verify actions do nothing yet because the Clerk calls are not wired (Build
+plan task 12). The earlier hand built email and password form and Clerk's prebuilt Log in card were
+deleted. `VerifyEmailScreen` is left over from that form and unused.
+
+**Error surfacing**: Clerk reports errors (validation failures, server side rejections) onto an error
+stream on the `ClerkAuthState`. Nothing listened to it at first, so those errors only reached the
+developer console and never the person filling in the form (AC-12). The fix is `clerk_flutter`'s own
+`ClerkErrorListener` widget, placed inside the `MaterialApp`'s widget tree (so it can find a
+`ScaffoldMessenger`) and wrapping whatever the router builds; it turns every error on that stream into
+a plain snack bar showing Clerk's own message, with no bespoke error UI to design. The sign up screens
+must make their Clerk calls in a way that lands failures on that same stream (Build plan task 12).
+Mistakes the screens can catch before calling Clerk are shown by the field itself instead.
 
 **API surface**:
 
 | Endpoint | Method | Key inputs | Key outputs | Auth | Key errors |
 |---|---|---|---|---|---|
-| Clerk Sign In component | (Clerk prebuilt UI) | email/password, Google, Apple, or phone+OTP | a Clerk session | public | invalid credentials, OTP mismatch |
-| Clerk Sign Up component | (Clerk prebuilt UI) | email/password, Google, Apple, or phone+OTP | a Clerk session, verification prompt | public | email/phone already in use |
+| Clerk sign up, start (`attemptSignUp`, `emailCode` or `phoneCode`) | client call | email address or phone number, username, first and last name | Clerk sends a code, sign up is pending | public | already in use, unsupported phone country, username rejected |
+| Clerk sign up, verify (the same call, with the code) | client call | the 6 digit code | a Clerk session | public | wrong code, expired code |
+| Clerk sign in (Log in) | not designed yet | not decided | not decided | public | not decided |
 | `merge_anonymous_identity(target_user_id text)` | Postgres RPC, called on the **anonymous** client | `target_user_id`: the new real account's id | void | caller's JWT must carry Supabase's `is_anonymous` claim | no-op if caller is not anonymous |
 | `/functions/v1/clerk-webhook` | POST | Clerk `user.deleted` webhook payload + Svix signature headers | 200 | Svix signature verification (service role inside) | 400 invalid signature |
 
@@ -231,19 +274,25 @@ anything.
 - Clerk dashboard: activate the native Supabase integration (Integrations > Supabase) — this is what
   makes Clerk add the `role: authenticated` claim its session tokens need for Supabase's `to
   authenticated` policies to apply; no custom JWT template needed
-- Clerk dashboard: create the application, enable email/password + Google + Apple sign in methods, and
-  add a webhook endpoint pointing at `/functions/v1/clerk-webhook` for the `user.deleted` event
-- Clerk dashboard: under User & Authentication > Email, Phone, Username, turn Phone number off. Clerk's
-  prebuilt sign up/sign in card always mirrors whatever the dashboard has turned on, so this is the only
-  place phone sign in can be removed; there is no app code flag for it (AC-2)
+- Clerk dashboard: create the application, and add a webhook endpoint pointing at
+  `/functions/v1/clerk-webhook` for the `user.deleted` event
+- Clerk dashboard: under User and Authentication, turn Email address on with the verification code
+  method, Phone number on with the verification code method, and Username on; turn Password off.
+  Google and Apple stay off. The prebuilt card is gone, so the app itself offers only what the
+  screens show, but Clerk still refuses a sign up whose method is not enabled here (AC-2)
+- Clerk dashboard: allow SMS to the countries the phone screen supports. Its picker offers every ISO
+  country, so this setting, not the app, is what decides which numbers actually work. An unsupported
+  country is what made phone sign in get dropped the first time (see `rationale.md`)
 
 **Critical test scenarios** (each maps to an acceptance criterion in ## Requirements):
-- Happy path: browse anonymously, add to cart, sign up with email, cart carries over onto the new real
-  account, verifies **AC-1**, **AC-2**, **AC-3**
+- Happy path: browse anonymously, add to cart, sign up with an email code, cart carries over onto the
+  new real account, verifies **AC-1**, **AC-2**, **AC-3**
 - Failure case: network drops mid merge on first real sign in; sign in still succeeds, one retry is
   attempted, and the account is usable either way, verifies **AC-10**
 - Auth/permission: one real account cannot read or write another real (or anonymous) account's cart or
   orders, verifies **AC-5**
+- Failure case: a wrong or expired code shows a visible message, creates no account, and leaves the
+  person on the verify step, where Resend code works after the countdown, verifies **AC-12**, **AC-13**
 
 ## Migration plan
 
@@ -303,8 +352,8 @@ production, not just at first code deploy.
    from `public` and granted to `authenticated` only), satisfies **AC-3**, **AC-10**
 3. Supabase dashboard: add Clerk as a Third Party Auth provider. Clerk dashboard: activate the native
    Supabase integration (adds the `role: authenticated` claim automatically), create the application,
-   enable email/password + Google + Apple sign in methods, turn Phone number off, satisfies **AC-2**,
-   **AC-11**
+   turn on email code, phone code, and username, turn password off, and allow SMS to the supported
+   countries, satisfies **AC-2**, **AC-11**
 4. Add the `clerk_flutter` dependency and `CLERK_PUBLISHABLE_KEY` `--dart-define` plumbing, satisfies
    **AC-2**
 5. Stand up a second `SupabaseClient` instance configured with an `accessToken` callback that returns
@@ -312,10 +361,11 @@ production, not just at first code deploy.
    the provider-level switch that points repositories at whichever client is currently active, satisfies
    **AC-1**, **AC-2**, **AC-6**, **AC-7**
 6. Build the first launch welcome screen (Figma node 561:5267: Sign up, Log in, Skip / continue
-   browsing) and wire Clerk's prebuilt Sign In / Sign Up card behind Sign up/Log in; add
-   `shared_preferences` and a "seen" flag so it only ever shows once per device, and is skipped outright
-   for an already signed in returning user; the Profile tab in the bottom navigation goes back to its
-   original empty placeholder, satisfies **AC-1**, **AC-2**, **AC-9**
+   browsing) and the redesigned sign up screens behind Sign up (get started, phone number, email
+   address, and the shared code entry); Log in opens a coming soon placeholder until it is designed.
+   Add `shared_preferences` and a "seen" flag so the welcome screen only ever shows once per device,
+   and is skipped outright for an already signed in returning user, satisfies **AC-1**, **AC-2**,
+   **AC-9**, **AC-13**
 7. Build the Account/Settings screen (sign out, delete account); not linked from navigation yet, see
    Follow-up, satisfies **AC-6**, **AC-8**
 8. On successful Clerk sign in: while still on the anonymous client, call `merge_anonymous_identity`
@@ -330,6 +380,10 @@ production, not just at first code deploy.
 11. Wrap the app in `clerk_flutter`'s `ClerkErrorListener` (inside `MaterialApp`'s `builder`, so it can
     reach a `ScaffoldMessenger`) so any sign in/up error shows as a visible message instead of failing
     silently, satisfies **AC-12**
+12. Wire the sign up screens to Clerk: start sign up with the chosen channel's code strategy, carrying
+    the name and username from the first screen; submit the code; send a new code on Resend and
+    restart the countdown; make sure Clerk failures land on the error listener from task 11, satisfies
+    **AC-2**, **AC-9**, **AC-12**, **AC-13**, **AC-14**
 
 ## Consequences
 
@@ -362,6 +416,13 @@ production, not just at first code deploy.
 - Sign out and delete account are built and working (Account screen) but not reachable from anywhere in
   the navigation right now, for the same reason; a signed in person currently has no in app way to leave
   their account
+- Until Log in is designed and built, a person who already has an account cannot sign back in. Sign up
+  is effectively one way today
+- Accounts have no password, so there is no fallback if someone loses the phone number or the email
+  address. Recovery is not designed yet
+- Phone codes cost money per SMS and are a known target for abuse (fake sign ups that trigger texts).
+  Clerk's built in limits (AC-11) and the short list of supported countries keep that small, but it is
+  a running cost the email only design did not have
 
 **Neutral**:
 - `user_profiles` rows for real accounts are now created lazily (on first real sign in) rather than
@@ -369,14 +430,12 @@ production, not just at first code deploy.
   Clerk accounts never appear in `auth.users` for a trigger to hook into
 - Existing seed seller `user_profiles` rows (uuid-looking strings) keep working unchanged: they simply
   become `text` values that happen to look like UUIDs
-- Phone number sign in is off for now; nothing about the schema, the merge function, or the webhook
-  depended on which sign in methods were enabled, so turning it back on later (or off again) is a Clerk
-  dashboard change only, no app or database change needed
+- Which sign in methods are on (email code, phone code, and others) is a Clerk dashboard setting.
+  Nothing about the schema, the merge function, or the webhook depends on it, so changing the set later
+  is a dashboard change plus the matching screens, not a database change
 
 ## Follow-up
 
-- [ ] No `docs/scope/` feature row currently links this decision; enroll one (e.g. via `/scope`) once
-  this spec is confirmed, so `/develop` has a tracked build plan to check off
 - [ ] Give the app a real, always available way to sign in, sign out, and delete an account once the
   Profile tab gets its own design and spec; right now that only happens once, on first launch, with no
   way back short of a reinstall (see Consequences)
@@ -384,14 +443,18 @@ production, not just at first code deploy.
   payment is added
 - [ ] A seller sign in flow (this spec covers buyer/shopper accounts only, matching the app's buyer
   side only scope) is a future decision
-- [ ] Sign up (`CreateAccountScreen`) is now hand-built against the Figma "Sign up" frame (node
-  561:5289), not the prebuilt card Log in still uses — this spec's original rationale ("almost no
-  custom auth UI has to be built") no longer fully holds for Sign up specifically, only Log in. Worth a
-  deliberate pass to decide whether Log in should match (a second hand-built form) or whether Sign up
-  should fold back onto the prebuilt card, rather than the two staying asymmetric by accident
-- [ ] The email verification code screen (`VerifyEmailScreen`) has no Figma frame anywhere in the
-  source file; it's built from this app's own design system tokens only. Worth a real design pass once
-  one exists
+- [ ] Design and build Log in. It probably reuses the same phone or email code step, but its screen and
+  behaviour are the engineer's to design; until then Welcome's Log in is a coming soon placeholder and
+  returning people cannot sign in (see Consequences)
+- [ ] Delete `VerifyEmailScreen`, which nothing uses now that the email screen has its own verify step
+- [x] Give the phone screen a real country picker (it was fixed to +1): `PhoneField`'s flag and prefix
+  open a searchable sheet over `countryDialCodes`, and the screen sends the number in E.164. Which of
+  those countries Clerk will actually text is still a dashboard setting, and a country it refuses
+  surfaces as a Clerk error, not as a greyed out row
+- [ ] Decide account recovery for code only accounts (what happens when the phone or email is lost)
+- [ ] Confirm the exact `attemptSignUp` parameters for the phone and email code strategies, and that
+  Clerk's username and name fields can be set in the same call, against `clerk_flutter` when building
+  task 12
 
 ## Rationale
 

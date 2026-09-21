@@ -7,16 +7,14 @@ import '../../shared/widgets/app_text_field.dart';
 /// Reproduces the Figma "Let's get started" screen (node 5284:7789, the
 /// first step of the redesigned onboarding flow drafted in the file's
 /// "Sign in" section — full name + username, collected before the
-/// phone/email identity step). Not yet wired into `app_router.dart` or
-/// spec 0004: [CreateAccountScreen] (node 561:5289) is still the live
-/// `/sign-up` route; this screen is being built ahead of the rest of the
-/// new flow, one screen at a time.
+/// phone/email identity step). Opened at `/sign-up` and continues to
+/// [PhoneNumberScreen]; not covered by spec 0004, which still describes the
+/// earlier, since deleted, email/password form.
 ///
-/// Close icon matches [CreateAccountScreen]'s own AppBar exactly (leading
-/// [IconButton], `centerTitle: true`, no actions) — the source frame's
-/// trailing nav icon (node 5284:7808) renders empty in the design, the same
-/// invisible-spacer pattern [CreateAccountScreen] already documents for its
-/// social buttons, so it's dropped rather than reproduced literally.
+/// The AppBar is a leading close [IconButton] with `centerTitle: true` and
+/// no actions — the source frame's trailing nav icon (node 5284:7808)
+/// renders empty in the design, so it's dropped rather than reproduced
+/// literally.
 ///
 /// Both fields are [AppTextField] (already the shared field component, with
 /// its own default/focused/error border states) inside a [Form] with

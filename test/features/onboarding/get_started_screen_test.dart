@@ -43,6 +43,9 @@ void main() {
 
       await tester.enterText(find.byType(TextFormField).first, 'Jane Doe');
       await tester.pump();
+      // The message follows the validator one frame later: validation runs
+      // during the rebuild, where AppTextField can't setState yet.
+      await tester.pump();
 
       expect(find.text('Please enter your full name.'), findsNothing);
       expect(find.text('Please enter a username.'), findsOneWidget);

@@ -36,7 +36,7 @@ flutter test
 
 Stored in `docs/specs/`. A standalone decision is one file, `docs/specs/NNNN-title.md` (e.g. 0001,
 0002); a decision with its own rationale/verify docs is a directory, `docs/specs/NNNN-title/index.md`
-https://www.nngroup.com/articles/ 
+   https://www.nngroup.com/articles/ 
 governs which feature.
 
 ## Rules
@@ -65,7 +65,8 @@ Declined: further Agent Skill / MCP discovery search
 - [lib/data/repositories/AGENTS.md](lib/data/repositories/AGENTS.md): the mock/Supabase repository pattern backing `lib/data/providers/*`
 - [lib/core/auth/AGENTS.md](lib/core/auth/AGENTS.md): the anonymous/Clerk dual Supabase-client switch and its configuration
 - [supabase/AGENTS.md](supabase/AGENTS.md): the real backend, schema/migrations/Edge Functions
-- [lib/features/onboarding/AGENTS.md](lib/features/onboarding/AGENTS.md): the first-launch welcome/sign-up/sign-in/verify flow
+- [lib/features/onboarding/AGENTS.md](lib/features/onboarding/AGENTS.md): the first-launch welcome screen and the redesigned sign up flow (name, phone or email, code verification, interests, notifications)
 - [lib/features/profile/AGENTS.md](lib/features/profile/AGENTS.md): the real Profile tab (signed-in page, anonymous view, edit profile)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
+`
