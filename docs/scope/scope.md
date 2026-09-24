@@ -189,20 +189,22 @@ results and the Stores tab work, every state (nothing typed, loading, error, no 
 Discover's own filter is gone (see spec 0006 for the full acceptance criteria).
 - [x] Design it (spec): `/architect search flow`
 - [ ] Build it: `/develop search flow`
-   - [ ] Entry points and routing: Home and Discover fields open the screen, Cancel and back, blank
+   - [x] Entry points and routing: Home and Discover fields open the screen, Cancel and back, blank
      start, Discover's inline filter removed (AC-1, AC-2, AC-12)
-   - [ ] Search logic and the results thread: matching, suggestion phrases, the result list, opening a
+   - [x] Search logic and the results thread: matching, suggestion phrases, the result list, opening a
      product (AC-5, AC-6, AC-7, AC-8, AC-13)
-   - [ ] Suggestions view, Items and Stores tabs, category chips and the nothing typed categories row
-     with its photos (AC-3, AC-4, AC-5, AC-11)
-   - [ ] Deals chip, the local add to cart toggle, and store tiles that open a store's results (AC-7,
+   - [x] Suggestions view, Items and Stores tabs, category chips and the nothing typed categories row,
+     with plain tinted tiles rather than photos (AC-3, AC-4, AC-5, AC-11)
+   - [x] Deals chip, the local add to cart toggle, and store tiles that open a store's results (AC-7,
      AC-8, AC-9)
-   - [ ] Loading, error and no results states, the keyboard and tab bar check, accessibility, and
-     widget tests (AC-1, AC-10, AC-14)
+   - [ ] Loading, error and no results states, accessibility, and widget tests are done; the keyboard
+     and tab bar check on a real device is still outstanding (AC-1, AC-10, AC-14)
 - [ ] Verify it: `/check verify search flow`
 - [ ] Test it: `/test search flow`
 
-Spec [0006](../specs/0006-search-flow.md) · code (filled by `/develop`)
+Spec [0006](../specs/0006-search-flow/index.md) · code: `lib/features/search/search_screen.dart`,
+`lib/features/search/search_logic.dart`, `lib/shared/widgets/search_field.dart`,
+`lib/core/router/app_router.dart`
 
 ### 8. Banner screens · planned · needs a decision
 
@@ -216,4 +218,4 @@ spec once it exists).
 - [ ] Verify it: `/check verify banner screens`
 - [ ] Test it: `/test banner screens`
 
-From spec [0006](../specs/0006-search-flow.md)
+From spec [0006](../specs/0006-search-flow/index.md)

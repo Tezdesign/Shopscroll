@@ -8,13 +8,13 @@ void main() {
       MaterialApp(theme: AppTheme.light, home: screen);
 
   EmailAddressScreen screen({
-    void Function(String)? onSendCode,
+    Future<bool> Function(String)? onSendCode,
     void Function(String, String)? onVerify,
     void Function(String)? onResendCode,
     VoidCallback? onUsePhoneInstead,
     Duration resendCooldown = const Duration(seconds: 30),
   }) => EmailAddressScreen(
-    onSendCode: onSendCode ?? (_) {},
+    onSendCode: onSendCode ?? (_) async => true,
     onVerify: onVerify ?? (_, _) {},
     onResendCode: onResendCode ?? (_) {},
     onUsePhoneInstead: onUsePhoneInstead ?? () {},
@@ -24,6 +24,7 @@ void main() {
   Future<void> reachVerifyStage(WidgetTester tester) async {
     await tester.enterText(find.byType(TextField).first, 'jane@example.com');
     await tester.tap(find.text('Continue'));
+    await tester.pump();
     await tester.pump();
   }
 
@@ -46,7 +47,9 @@ void main() {
       tester,
     ) async {
       var sent = false;
-      await tester.pumpWidget(wrap(screen(onSendCode: (_) => sent = true)));
+      await tester.pumpWidget(
+        wrap(screen(onSendCode: (_) async { sent = true; return true; })),
+      );
 
       await tester.enterText(find.byType(TextField), 'not-an-email');
       await tester.tap(find.text('Continue'));
@@ -89,13 +92,16 @@ void main() {
     testWidgets('a valid address sends it trimmed and reveals the code '
         'field with a countdown', (tester) async {
       String? sentTo;
-      await tester.pumpWidget(wrap(screen(onSendCode: (e) => sentTo = e)));
+      await tester.pumpWidget(
+        wrap(screen(onSendCode: (e) async { sentTo = e; return true; })),
+      );
 
       await tester.enterText(
         find.byType(TextField).first,
         '  jane@example.com  ',
       );
       await tester.tap(find.text('Continue'));
+      await tester.pump();
       await tester.pump();
 
       expect(sentTo, 'jane@example.com');
@@ -106,6 +112,23 @@ void main() {
 
       await disposeScreen(tester);
     });
+
+    testWidgets(
+      'onSendCode resolving false stays on the enter address stage '
+      '(regression: a failed send must not show a countdown for a code '
+      'that was never sent, or "Resend code" later fails)',
+      (tester) async {
+        await tester.pumpWidget(wrap(screen(onSendCode: (_) async => false)));
+
+        await tester.enterText(find.byType(TextField), 'jane@example.com');
+        await tester.tap(find.text('Continue'));
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.text('Verification code'), findsNothing);
+        expect(find.textContaining('Resend code'), findsNothing);
+      },
+    );
 
     testWidgets('the address stays editable, as in the Figma frame', (
       tester,

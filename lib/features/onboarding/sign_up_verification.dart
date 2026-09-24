@@ -89,7 +89,22 @@ class SignUpVerification {
 
   /// Creates the sign up from the draft plus [value] (an email address, or
   /// an E.164 number), which makes Clerk send the verification code.
-  Future<void> sendCode(String value) async {
+  ///
+  /// Returns whether a code actually went out. `safelyCall` swallows any
+  /// Clerk error into the app wide snackbar rather than rethrowing it, so
+  /// the caller can't tell success from failure just by awaiting this — it
+  /// has to check the pending sign up afterward. Without this, the screen
+  /// would move to its "enter the code" stage even when nothing was sent,
+  /// and "Resend code" would then fail with Clerk's own "No initial code
+  /// has been set up to resend".
+  Future<bool> sendCode(String value) async {
+    // Same as `SignInVerification.sendCode`: Clerk refuses a new sign up
+    // while a session exists, and debug builds can reach here signed in.
+    if (_authState.isSignedIn) {
+      await _authState.signOut();
+      if (!_context.mounted) return false;
+    }
+
     // Switching channels mid flow ("Use email instead" and back) leaves the
     // abandoned identifier on Clerk's pending sign up, where it stays
     // unverified and blocks completion. Start that sign up over instead.
@@ -97,7 +112,7 @@ class SignUpVerification {
     final abandoned = _isPhone ? pending?.emailAddress : pending?.phoneNumber;
     if (abandoned != null) {
       await _authState.safelyCall(_context, _authState.resetClient);
-      if (!_context.mounted) return;
+      if (!_context.mounted) return false;
     }
 
     final draft = _ref.read(signUpDraftProvider);
@@ -113,6 +128,7 @@ class SignUpVerification {
         lastName: name.lastName,
       ),
     );
+    return _authState.signUp?.isVerifying(_strategy) ?? false;
   }
 
   /// Verifies [code] against the pending sign up. On success the user is

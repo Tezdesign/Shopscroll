@@ -53,14 +53,35 @@ class SignInVerification {
 
   /// Creates the sign in for [identifier] (an email address, or an E.164
   /// number), which makes Clerk send the verification code.
-  Future<void> sendCode(LogInChannel channel, String identifier) async {
+  ///
+  /// Returns whether a code actually went out. `safelyCall` swallows any
+  /// Clerk error into the app wide snackbar rather than rethrowing it, so
+  /// the caller can't tell success from failure just by awaiting this — it
+  /// has to check the pending sign in afterward. Without this, the screen
+  /// would move to its "enter the code" stage even when nothing was sent,
+  /// and "Resend code" would then fail with Clerk's own "No initial code
+  /// has been set up to resend".
+  Future<bool> sendCode(LogInChannel channel, String identifier) async {
+    // Clerk refuses a new sign in while a session exists ("already signed
+    // in"). Debug builds always open on the welcome screen (see main.dart),
+    // so a session left from an earlier run gets here; release builds only
+    // reach this screen signed out. Starting a sign in means switching
+    // account, so end the old session first.
+    if (_authState.isSignedIn) {
+      await _authState.signOut();
+      if (!_context.mounted) return false;
+    }
+    final strategy = _strategyFor(channel);
     await _authState.safelyCall(
       _context,
       () => _authState.attemptSignIn(
-        strategy: _strategyFor(channel),
+        strategy: strategy,
         identifier: identifier,
       ),
     );
+    final signIn = _authState.signIn;
+    return signIn != null &&
+        clerk.Stage.values.any((stage) => signIn.isVerifying(stage, strategy));
   }
 
   /// Attempts [code] against the pending sign in. On success the person is

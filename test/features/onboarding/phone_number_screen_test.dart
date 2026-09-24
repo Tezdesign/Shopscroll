@@ -8,13 +8,13 @@ void main() {
       MaterialApp(theme: AppTheme.light, home: screen);
 
   PhoneNumberScreen screen({
-    void Function(String)? onSendCode,
+    Future<bool> Function(String)? onSendCode,
     void Function(String, String)? onVerify,
     void Function(String)? onResendCode,
     VoidCallback? onUseEmailInstead,
     Duration resendCooldown = const Duration(seconds: 30),
   }) => PhoneNumberScreen(
-    onSendCode: onSendCode ?? (_) {},
+    onSendCode: onSendCode ?? (_) async => true,
     onVerify: onVerify ?? (_, _) {},
     onResendCode: onResendCode ?? (_) {},
     onUseEmailInstead: onUseEmailInstead ?? () {},
@@ -25,6 +25,7 @@ void main() {
   Future<void> reachVerifyStage(WidgetTester tester) async {
     await tester.enterText(find.byType(TextField).first, '5551234567');
     await tester.tap(find.text('Continue'));
+    await tester.pump();
     await tester.pump();
   }
 
@@ -48,7 +49,9 @@ void main() {
       tester,
     ) async {
       var sent = false;
-      await tester.pumpWidget(wrap(screen(onSendCode: (_) => sent = true)));
+      await tester.pumpWidget(
+        wrap(screen(onSendCode: (_) async { sent = true; return true; })),
+      );
 
       await tester.enterText(find.byType(TextField), '123');
       await tester.tap(find.text('Continue'));
@@ -91,10 +94,13 @@ void main() {
     testWidgets('a valid number sends it in E.164 and reveals the code '
         'field with a countdown', (tester) async {
       String? sentTo;
-      await tester.pumpWidget(wrap(screen(onSendCode: (n) => sentTo = n)));
+      await tester.pumpWidget(
+        wrap(screen(onSendCode: (n) async { sentTo = n; return true; })),
+      );
 
       await tester.enterText(find.byType(TextField).first, '(555) 123-4567');
       await tester.tap(find.text('Continue'));
+      await tester.pump();
       await tester.pump();
 
       expect(sentTo, '+15551234567');
@@ -105,6 +111,25 @@ void main() {
 
       await disposeScreen(tester);
     });
+
+    testWidgets(
+      'onSendCode resolving false stays on the enter number stage '
+      '(regression: a failed send must not show a countdown for a code '
+      'that was never sent, or "Resend code" later fails)',
+      (tester) async {
+        await tester.pumpWidget(wrap(screen(onSendCode: (_) async => false)));
+
+        await tester.enterText(find.byType(TextField).first, '5551234567');
+        await tester.tap(find.text('Continue'));
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.text('Verification code'), findsNothing);
+        expect(find.textContaining('Resend code'), findsNothing);
+        final phone = tester.widget<TextField>(find.byType(TextField).first);
+        expect(phone.enabled, isTrue);
+      },
+    );
 
     testWidgets('the phone number locks once the code is sent', (tester) async {
       await tester.pumpWidget(wrap(screen()));

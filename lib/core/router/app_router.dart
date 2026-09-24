@@ -21,6 +21,7 @@ import '../../features/profile/profile_anonymous_view.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/reels/reel_player_screen.dart';
 import '../../features/reels/reels_screen.dart';
+import '../../features/search/search_screen.dart';
 import '../../shared/widgets/coming_soon_screen.dart';
 import '../config/clerk_config.dart';
 import '../onboarding/onboarding_prefs.dart';
@@ -50,6 +51,12 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// level routes, outside the shell, so they open full screen without the
 /// bottom nav.
 ///
+/// `/search` and `/discover/search` ([SearchScreen], spec 0006) are each a
+/// child route of their branch's own root route instead, so they stay
+/// inside the shell: the bottom nav bar keeps showing, with the tab you
+/// opened search from still highlighted, and `Cancel`/back just pops back
+/// to that tab's own stack.
+///
 /// Both sign up paths are wired to Clerk through [SignUpVerification] (spec
 /// 0004, AC-2): `/sign-up` stores the name and username in
 /// [signUpDraftProvider], and `/sign-up/phone` and `/sign-up/email` each
@@ -74,6 +81,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/',
                 builder: (context, state) => const HomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'search',
+                    builder: (context, state) => const SearchScreen(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -82,6 +95,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/discover',
                 builder: (context, state) => const DiscoverScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'search',
+                    builder: (context, state) => const SearchScreen(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -149,7 +168,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final signIn = SignInVerification.maybe(context, ref);
           return LogInScreen(
             onSendCode:
-                signIn?.sendCode ?? (channel, identifier) async {},
+                signIn?.sendCode ?? (channel, identifier) async => true,
             onVerify:
                 signIn?.verify ?? (channel, identifier, code) async {},
             onResendCode:
@@ -179,7 +198,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // only, advancing through its stages against no backend.
           final signUp = SignUpVerification.phone(context, ref);
           return PhoneNumberScreen(
-            onSendCode: signUp?.sendCode ?? (phoneNumber) {},
+            onSendCode: signUp?.sendCode ?? (phoneNumber) async => true,
             onVerify: signUp?.verify ?? (phoneNumber, code) {},
             onResendCode: signUp?.resendCode ?? (phoneNumber) {},
             onUseEmailInstead: () => context.push('/sign-up/email'),
@@ -191,7 +210,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final signUp = SignUpVerification.email(context, ref);
           return EmailAddressScreen(
-            onSendCode: signUp?.sendCode ?? (email) {},
+            onSendCode: signUp?.sendCode ?? (email) async => true,
             onVerify: signUp?.verify ?? (email, code) {},
             onResendCode: signUp?.resendCode ?? (email) {},
             onUsePhoneInstead: () => context.pop(),

@@ -11,6 +11,8 @@ import '../../core/theme/app_theme.dart';
 /// [onChanged], and [onSubmitted] drive real search behavior. [onTap] +
 /// [readOnly] support the common pattern of using this as a button that
 /// navigates to a dedicated search screen instead of editing in place.
+/// [autofocus] opens the keyboard as soon as the field appears (spec 0006,
+/// AC-1: the search screen focuses its field on open).
 class SearchField extends StatelessWidget {
   const SearchField({
     super.key,
@@ -20,6 +22,7 @@ class SearchField extends StatelessWidget {
     this.onSubmitted,
     this.onTap,
     this.readOnly = false,
+    this.autofocus = false,
   });
 
   final TextEditingController? controller;
@@ -28,6 +31,7 @@ class SearchField extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
   final VoidCallback? onTap;
   final bool readOnly;
+  final bool autofocus;
 
   // Layout constants intrinsic to this component (not shared design tokens).
   static const double _iconSize = 24;
@@ -75,6 +79,7 @@ class SearchField extends StatelessWidget {
             child: TextField(
               controller: controller,
               readOnly: readOnly,
+              autofocus: autofocus,
               onTap: onTap,
               onChanged: onChanged,
               onSubmitted: onSubmitted,

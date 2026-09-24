@@ -50,8 +50,11 @@ class PhoneNumberScreen extends StatefulWidget {
 
   /// Called with the number in E.164 (the picked country's dial code plus
   /// the entered digits, e.g. `+15551234567`) once it passes validation; the
-  /// caller sends the code. The screen then moves to the verify stage.
-  final void Function(String phoneNumber) onSendCode;
+  /// caller sends the code. The screen moves to the verify stage only if
+  /// this resolves `true` — a failed send (e.g. Clerk rejects the number)
+  /// stays on this stage instead of showing a countdown for a code that was
+  /// never sent.
+  final Future<bool> Function(String phoneNumber) onSendCode;
 
   /// Called with the number and the entered 6 digit code once the code
   /// passes validation; the caller checks it and decides what comes next,
@@ -117,18 +120,17 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
     }
   }
 
-  void _continue() {
+  void _continue() async {
     if (!_verifying) {
       final error = _validatePhone(_phoneController.text);
       if (error != null) {
         setState(() => _phoneError = error);
         return;
       }
-      setState(() {
-        _phoneError = null;
-        _verifying = true;
-      });
-      widget.onSendCode(_phoneNumber);
+      setState(() => _phoneError = null);
+      final sent = await widget.onSendCode(_phoneNumber);
+      if (!mounted || !sent) return;
+      setState(() => _verifying = true);
       return;
     }
 

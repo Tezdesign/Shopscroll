@@ -38,13 +38,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const _categories = ['Explore', 'Fashion', 'Tech', 'Sports', 'Makeup'];
 
   int _activeCategoryIndex = 0;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: AppColors.neutral100,
       body: Column(
         children: [
-          _HomeHeader(searchController: _searchController),
+          const _HomeHeader(),
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
@@ -101,9 +94,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 /// Extends behind the status bar like the source design, rather than being
 /// inset by [SafeArea].
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.searchController});
-
-  final TextEditingController searchController;
+  const _HomeHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +114,10 @@ class _HomeHeader extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.base,
               ),
-              child: SearchField(controller: searchController),
+              child: SearchField(
+                readOnly: true,
+                onTap: () => context.push('/search'),
+              ),
             ),
             const SizedBox(height: AppSpacing.base),
             const _CampaignBannerCarousel(),

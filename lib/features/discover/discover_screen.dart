@@ -37,8 +37,9 @@ import '../../shared/widgets/segmented_tabs.dart';
 ///   first product row, two side by side at the end); this reproduces all
 ///   3 positions, correcting spec 0001's "two banners" count against the
 ///   real design.
-/// - The search field live filters the product feed client side by title
-///   or store name; Figma only shows its empty placeholder state.
+/// - The search field opens the dedicated search screen (`/discover/search`,
+///   spec 0006) instead of live filtering this feed, which is spec 0006's
+///   AC-12: it replaces this screen's former inline filter.
 class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
 
@@ -50,25 +51,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   static const _categories = ['For you', 'Fashion', 'Tech', 'Sports', 'Makeup'];
 
   int _activeCategoryIndex = 0;
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  List<Product> _applySearch(List<Product> products) {
-    if (_searchQuery.isEmpty) return products;
-    return products
-        .where(
-          (p) =>
-              p.title.toLowerCase().contains(_searchQuery) ||
-              p.storeName.toLowerCase().contains(_searchQuery),
-        )
-        .toList();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,10 +70,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
               child: SearchField(
-                controller: _searchController,
-                onChanged: (value) => setState(
-                  () => _searchQuery = value.trim().toLowerCase(),
-                ),
+                readOnly: true,
+                onTap: () => context.push('/discover/search'),
               ),
             ),
             const SizedBox(height: AppSpacing.base),
@@ -113,11 +93,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 children: [
                   _StoreGridSection(sellersAsync: sellersAsync),
                   const SizedBox(height: AppSpacing.lg),
-                  _ProductFeed(
-                    productsAsync: productsAsync,
-                    applySearch: _applySearch,
-                    searchActive: _searchQuery.isNotEmpty,
-                  ),
+                  _ProductFeed(productsAsync: productsAsync),
                 ],
               ),
             ),
@@ -176,15 +152,9 @@ class _StoreGridSection extends StatelessWidget {
 /// [ProductCard] tiles with 3 static promotional banners mixed in, matching
 /// Figma's real layout (see this file's class doc).
 class _ProductFeed extends StatelessWidget {
-  const _ProductFeed({
-    required this.productsAsync,
-    required this.applySearch,
-    required this.searchActive,
-  });
+  const _ProductFeed({required this.productsAsync});
 
   final AsyncValue<List<Product>> productsAsync;
-  final List<Product> Function(List<Product>) applySearch;
-  final bool searchActive;
 
   static const List<_BannerSlide> _banners = [
     (
@@ -212,20 +182,16 @@ class _ProductFeed extends StatelessWidget {
     return productsAsync.when(
       loading: () => const _SectionLoading(height: 480),
       error: (error, stackTrace) => const _SectionError(),
-      data: (allProducts) {
-        final products = applySearch(allProducts);
-
+      data: (products) {
         if (products.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(
+          return const Padding(
+            padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.base,
               vertical: AppSpacing.xl,
             ),
             child: Text(
-              searchActive
-                  ? 'No products match your search.'
-                  : 'No products in this category yet.',
-              style: const TextStyle(
+              'No products in this category yet.',
+              style: TextStyle(
                 fontFamily: AppTypography.fontFamilyBody,
                 fontSize: AppTypography.sizeSm,
                 color: AppColors.neutral600,

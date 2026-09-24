@@ -1,21 +1,13 @@
 # 0006. Build the search flow
 
 **Date**: 2026-09-21
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 
 This adds a real search screen to the app. Tapping the search field on Home or Discover opens it, and it walks a person from nothing typed, to suggestions as they type, to a list of results, with a stores tab for finding a seller. It runs entirely on the phone against the products and sellers the app already loads, so it needs no database change. It replaces Discover's live filter (spec 0001, AC-2), and it does not cover the banner screens, which are a separate decision.
 
-## Context
-
-> ⚠️ Premise note: opening this screen from Discover takes away Discover's live inline filter, so spec 0001 AC-2 stops being true. The engineer chose this on purpose ("any search field"), and the recommendation was Home only. Spec 0001 needs a follow up edit (see Follow-up). Separately, the app has 18 mock products, so the search suggestions the engineer chose (phrases built from titles) will feel thin until the catalog grows.
-
-Search today is a plain field. Home's field does nothing when typed in. Discover's field filters its product feed live, on the device, by title or store name (spec 0001, AC-2). No screen exists for searching, so there are no suggestions, no result list, no store search, and no empty state for "nothing found".
-
-Figma now draws the whole flow in five frames (file `toOakybJ0DaJmU7vcEC0AW`): nothing typed (968:8943), typing (968:9652), the stores tab (968:9953), no results (972:6472) and a result list (972:6576). The frames disagree with the app in three ways that shape this build. The Popular categories are Men, Women, Accessories, Beauty and Tech, but the products only have Fashion, Tech, Sports and Makeup. The store grid shows brands (Amazon, Plex, Yale) that are not in the mock sellers (Bershka, Pull&Bear, Apple, Nike, Glossier). And every frame highlights the Home tab, although the screen is also opened from Discover.
-
-The project constraints that apply: the mock and Supabase backends must behave the same, all data comes through the Riverpod providers in `lib/data/providers/`, and every colour and size comes from the tokens in `lib/core/theme/app_theme.dart`. `CartRepository` only reads, so there is no real add to cart yet.
+Decision history (context, options considered, rationale): [rationale.md](rationale.md). Verify steps: [verify.md](verify.md).
 
 ## Requirements
 
@@ -41,59 +33,11 @@ The project constraints that apply: the mock and Supabase backends must behave t
 - **AC-13**: All searching runs on the device over `productsProvider` and `sellersProvider`. There is no new repository method and no database change, and the screen behaves the same on the mock and the Supabase backends.
 - **AC-14**: Every tappable row, chip, tile and the Cancel button has a spoken label and a tap area of at least 44 by 44 logical pixels.
 
-## Options considered
-
-### Option 1: A dedicated search screen inside each tab, searching on the device
-
-Register the same screen under the Home branch and the Discover branch of the tab shell, so the tab bar stays and the highlighted tab follows where you came from. Search runs in memory over the lists the providers already hold.
-
-**Pros**:
-- Matches the Figma frames, which draw the tab bar.
-- No new repository method, migration or Supabase index, and one code path for mock and Supabase.
-- Each tab keeps its own search state, the way the shell already keeps scroll state.
-
-**Cons**:
-- Two route registrations for one screen, and the tab bar may ride above the keyboard and eat vertical space.
-- Does not scale past a few hundred products, and has no typo tolerance.
-
-### Option 2: One full screen route outside the tab shell, like product detail
-
-A single `/search` route that hides the tab bar.
-
-**Pros**:
-- One route, one behaviour, and a tab bar never sits under the keyboard.
-- Cancel is a plain pop, and there is no question of which tab is highlighted.
-
-**Cons**:
-- Drops the tab bar the frames draw.
-- The person loses the tab bar for the whole search.
-
-### Option 3: Keep the inline filter and add a suggestions overlay
-
-Leave Discover's live filter as it is and float a suggestions panel over it.
-
-**Pros**:
-- Spec 0001 stays true, and Home is the only screen that changes.
-
-**Cons**:
-- Not what Figma draws, and it gives no stores tab, no result screen and no empty state.
-- Two search behaviours to maintain side by side.
-
 ## Decision
 
 **Chosen option**: Option 1: A dedicated search screen inside each tab, searching on the device
 
 Build one `SearchScreen`, registered under both the Home and Discover branches, that finds products and stores in memory from the existing providers, and remove Discover's inline filter.
-
-## Rationale
-
-The tab bar and the search location were the engineer's calls, and both go against the first recommendation. I recommended Option 2 because a tab bar under an open keyboard wastes space and one route is simpler, and product detail already works that way. The engineer chose to keep the tab bar as drawn, and Option 1 delivers that. It is a fair choice, at the cost of two route registrations and a check that the tab bar behaves with the keyboard open.
-
-Searching on the device follows spec 0001 AC-2 and the fact that the app holds 18 products. A server search would need a new repository method, a Supabase migration and a matching change to the mock repository, for a catalog that does not need it yet. The engineer chose it "for now", so the move to the server is a follow up, not a design goal.
-
-The suggestions are phrases built from titles, which the engineer picked over listing whole titles. With 18 products that will produce short lists with little variety, so the extraction rule in AC-5 is written out exactly, and titles are the fallback when no phrase fits. It is not the recommended option, and it needs revisiting once the catalog grows.
-
-The product detail screen already flips a local "added" state that is not saved, so the result rows reuse that pattern (AC-8) instead of inventing a cart write path that has no spec.
 
 ## Feature design
 
@@ -132,7 +76,7 @@ The product detail screen already flips a local "added" state that is not saved,
 **Deviations from the Figma frames** (each is a fix or a forced change):
 - The tab labels read "Items" and "Stores". Frame 2 has "stores" in lower case.
 - The field shows the chosen phrase in the results view. Frame 5 shows "Iphone" in the field but "Iphone 12 midnight" in the heading.
-- Popular categories use the real categories and their photos, not Men, Women, Accessories, Beauty and Tech.
+- Popular categories use the real categories, not Men, Women, Accessories, Beauty and Tech. This build ships them as plain tinted tiles rather than the photos noted below, a build time scope cut (see `_CategoryTile` in `search_screen.dart`).
 - The stores tab shows the real sellers, not Amazon, Plex and Yale, and not the repeated tiles.
 - The duplicate stacked "Popular categories" layers in frame 1 (968:9488 and 972:6720) are treated as one.
 - The filter button in frame 5 is not built (see Follow-up).
@@ -156,17 +100,17 @@ The product detail screen already flips a local "added" state that is not saved,
 
 This project has no recorded build approach (the scope header says Tracer Bullet is assumed). The plan stands up one thin thread through every layer first (open, type, see results, open a product), then thickens it.
 
-1. Add an `autofocus` option to `SearchField`. Make Home's and Discover's fields read only and open the screen, and remove Discover's inline filter code in the same change, satisfies **AC-1**, **AC-12**
-2. Register `/search` and `/discover/search` and add a `SearchScreen` shell with Cancel and back, focus on open, and a blank start, satisfies **AC-1**, **AC-2**, **AC-11**
-3. Write `search_logic.dart` (match, category list, phrase extraction, store match) with unit tests, satisfies **AC-5**, **AC-7**, **AC-13**
-4. Results thread: pressing Search shows the heading and result rows, and a tap opens `/product/:id`, satisfies **AC-6**, **AC-7**, **AC-8**
-5. Suggestions view, the Items and Stores tabs, the category chips, and the edit and clear transitions between views, satisfies **AC-4**, **AC-5**, **AC-11**
-6. Nothing typed view: the Popular categories row, with the exported photos in `assets/search/`, satisfies **AC-3**
-7. The Deals chip and the local added toggle on result rows, satisfies **AC-7**, **AC-8**
-8. Stores tab tiles that open a store's results, satisfies **AC-9**
-9. Loading, error and "No results found" states on every tab and in the results view, satisfies **AC-10**
-10. Check the tab bar with the keyboard open on a device. If it rides above the keyboard, hide it while the keyboard is up in `AppShell`, satisfies **AC-1**
-11. Accessibility labels and tap areas, and widget tests that mirror `lib/` under `test/features/search/`, satisfies **AC-14**
+1. [x] Add an `autofocus` option to `SearchField`. Make Home's and Discover's fields read only and open the screen, and remove Discover's inline filter code in the same change, satisfies **AC-1**, **AC-12**
+2. [x] Register `/search` and `/discover/search` and add a `SearchScreen` shell with Cancel and back, focus on open, and a blank start, satisfies **AC-1**, **AC-2**, **AC-11**
+3. [x] Write `search_logic.dart` (match, category list, phrase extraction, store match) with unit tests, satisfies **AC-5**, **AC-7**, **AC-13**
+4. [x] Results thread: pressing Search shows the heading and result rows, and a tap opens `/product/:id`, satisfies **AC-6**, **AC-7**, **AC-8**
+5. [x] Suggestions view, the Items and Stores tabs, the category chips, and the edit and clear transitions between views, satisfies **AC-4**, **AC-5**, **AC-11**
+6. [x] Nothing typed view: the Popular categories row. Built with plain tinted tiles, not the exported photos this task named (the engineer chose that cut for this build; see the class doc on `_CategoryTile`), satisfies **AC-3**
+7. [x] The Deals chip and the local added toggle on result rows, satisfies **AC-7**, **AC-8**
+8. [x] Stores tab tiles that open a store's results, satisfies **AC-9**
+9. [x] Loading, error and "No results found" states on every tab and in the results view, satisfies **AC-10**
+10. [ ] Check the tab bar with the keyboard open on a device. If it rides above the keyboard, hide it while the keyboard is up in `AppShell`, satisfies **AC-1** — not checked on a device this run; Flutter's default `Scaffold` behavior (the bottom nav rides up with the keyboard, staying visible) was left as is rather than guessed at
+11. [x] Accessibility labels and tap areas, and widget tests that mirror `lib/` under `test/features/search/`, satisfies **AC-14**
 
 ## Consequences
 
@@ -183,7 +127,7 @@ This project has no recorded build approach (the scope header says Tracer Bullet
 - Frame 5's filter button is missing until a filter sheet is designed.
 
 **Neutral**:
-- A new `lib/features/search/` folder and an `assets/search/` folder. The root `AGENTS.md` feature list will need a line for it (`/sync` owns that).
+- A new `lib/features/search/` folder. The root `AGENTS.md` feature list will need a line for it (`/sync` owns that). No `assets/search/` folder was added this run (plain tinted tiles, no exported photos).
 - The search screen keeps its state per tab while the app runs, so switching tabs and back can show the last search. Closing the screen always clears it.
 
 ## Follow-up
@@ -196,6 +140,6 @@ This project has no recorded build approach (the scope header says Tracer Bullet
 - [ ] Revisit the phrase suggestions once the catalog grows, since the engineer chose them over plain titles and 18 products give thin results
 - [ ] Give the app one category list. Figma uses Men, Women, Accessories, Beauty, Tech and Phones, Home's tabs use "Explore, Fashion, Tech, Sports, Makeup", Discover's use "For you, Fashion, Tech, Sports, Makeup", and the products use Fashion, Tech, Sports, Makeup
 - [ ] Design a store screen. Tapping a store tile only shows its products here
-- [ ] Supply a Sports photo, and fix the Figma frames (the mismatched field and heading, the "stores" label, the duplicate layer, the placeholder brands)
-- [ ] Verify the tab bar with the keyboard open on a small phone, before the last build task
-- [ ] Enroll this as a feature in `docs/scope/scope.md` (no row matches this topic yet)
+- [ ] Supply category photos and a Sports photo if the tinted tile fallback is ever replaced, and fix the Figma frames (the mismatched field and heading, the "stores" label, the duplicate layer, the placeholder brands)
+- [ ] Verify the tab bar with the keyboard open on a small phone (build plan task 10, still open)
+- [ ] Enroll this as a feature in `docs/scope/scope.md` (already enrolled as feature 7 by the time of this build; this line predates that)

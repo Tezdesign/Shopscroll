@@ -45,8 +45,11 @@ class EmailAddressScreen extends StatefulWidget {
   });
 
   /// Called with the trimmed address once it passes validation; the caller
-  /// sends the code. The screen then moves to the verify stage.
-  final void Function(String email) onSendCode;
+  /// sends the code. The screen moves to the verify stage only if this
+  /// resolves `true` — a failed send (e.g. Clerk rejects the address) stays
+  /// on this stage instead of showing a countdown for a code that was never
+  /// sent.
+  final Future<bool> Function(String email) onSendCode;
 
   /// Called with the address and the entered 6 digit code once the code
   /// passes validation; the caller checks it and decides what comes next.
@@ -113,18 +116,17 @@ class _EmailAddressScreenState extends State<EmailAddressScreen> {
     }
   }
 
-  void _continue() {
+  void _continue() async {
     if (!_verifying) {
       final error = _validateEmail(_emailController.text);
       if (error != null) {
         setState(() => _emailError = error);
         return;
       }
-      setState(() {
-        _emailError = null;
-        _verifying = true;
-      });
-      widget.onSendCode(_email);
+      setState(() => _emailError = null);
+      final sent = await widget.onSendCode(_email);
+      if (!mounted || !sent) return;
+      setState(() => _verifying = true);
       return;
     }
 

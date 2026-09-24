@@ -77,8 +77,11 @@ class LogInScreen extends StatefulWidget {
 
   /// Called with the validated identifier (an email address, or an E.164
   /// number) once Log in is pressed on the first stage; the caller asks
-  /// Clerk to send the code. The screen then moves to the verify stage.
-  final Future<void> Function(LogInChannel channel, String identifier)
+  /// Clerk to send the code. The screen moves to the verify stage only if
+  /// this resolves `true` — a failed send (e.g. no account for that
+  /// identifier) stays on this stage instead of showing a countdown for a
+  /// code that was never sent.
+  final Future<bool> Function(LogInChannel channel, String identifier)
   onSendCode;
 
   /// Called with the identifier and the entered 6 digit code once the code
@@ -198,11 +201,11 @@ class _LogInScreenState extends State<LogInScreen> {
         _identifierError = null;
         _busy = true;
       });
-      await widget.onSendCode(_channel, _identifier);
+      final sent = await widget.onSendCode(_channel, _identifier);
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _verifying = true;
+        if (sent) _verifying = true;
       });
       return;
     }
