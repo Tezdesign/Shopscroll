@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../data/models/product.dart';
+import '../../data/providers/cart_providers.dart';
 import '../../data/providers/product_providers.dart';
 import '../../shared/widgets/add_to_cart_toggle.dart';
 import '../../shared/widgets/app_button.dart';
@@ -13,6 +14,8 @@ import '../../shared/widgets/info_row.dart';
 import '../../shared/widgets/product_card.dart';
 import '../../shared/widgets/size_selector.dart';
 import '../../shared/widgets/spec_table.dart';
+import '../cart/add_to_cart.dart';
+import '../cart/cart_logic.dart';
 
 /// Reproduces the Figma "Product details" screen ("The design - user" page,
 /// node 166:2686): hero image, price/stock, store row, title/description,
@@ -33,7 +36,6 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _quantity = 1;
   String? _selectedSize;
-  bool _addedToCart = false;
   bool _saved = false;
 
   void _showSavedToast() {
@@ -75,6 +77,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final productAsync = ref.watch(productByIdProvider(widget.productId));
+    final cartLines = ref.watch(cartItemsProvider).value ?? const [];
 
     return Scaffold(
       backgroundColor: AppColors.neutral100,
@@ -160,17 +163,31 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         },
       ),
       bottomNavigationBar: productAsync.maybeWhen(
-        data: (product) => product == null
-            ? null
-            : _BottomActionBar(
-                quantity: _quantity,
-                onDecrement: _quantity > 1
-                    ? () => setState(() => _quantity--)
-                    : null,
-                onIncrement: () => setState(() => _quantity++),
-                addedToCart: _addedToCart,
-                onAddToCart: () => setState(() => _addedToCart = true),
-              ),
+        data: (product) {
+          if (product == null) return null;
+          // Product detail has no colour picker yet, so it adds the first one.
+          final color = firstColor(product);
+          final added =
+              findLine(cartLines, product.id, _selectedSize, color) != null;
+          return _BottomActionBar(
+            quantity: _quantity,
+            onDecrement: _quantity > 1
+                ? () => setState(() => _quantity--)
+                : null,
+            onIncrement: () =>
+                setState(() => _quantity = clampQuantity(_quantity + 1)),
+            addedToCart: added,
+            onAddToCart: added
+                ? () {}
+                : () => addToCart(
+                    context,
+                    product,
+                    quantity: _quantity,
+                    size: _selectedSize,
+                    color: color,
+                  ),
+          );
+        },
         orElse: () => null,
       ),
     );

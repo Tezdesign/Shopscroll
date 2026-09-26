@@ -12,6 +12,7 @@ import '../../shared/widgets/most_visited_item.dart';
 import '../../shared/widgets/product_card.dart';
 import '../../shared/widgets/search_field.dart';
 import '../../shared/widgets/segmented_tabs.dart';
+import '../cart/add_to_cart.dart';
 
 /// Reproduces the Figma "Discover" screen ("The design - user" page, node
 /// 228:3114): a search field, a category tab row, a grid of stores, and a
@@ -255,6 +256,8 @@ class _ProductWrap extends StatelessWidget {
             imageUrl: product.imageUrl,
             colorOptions: product.colorOptions.map(Color.new).toList(),
             onTap: () => context.push('/product/${product.id}'),
+            onAddToCart: () =>
+                addToCart(context, product, successMessage: 'Added to cart'),
           ),
       ],
     );

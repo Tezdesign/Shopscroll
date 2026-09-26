@@ -1,17 +1,20 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../data/models/product.dart';
 import '../../data/models/user_profile.dart';
+import '../../data/providers/cart_providers.dart';
 import '../../data/providers/product_providers.dart';
 import '../../data/providers/user_profile_providers.dart';
 import '../../shared/widgets/category_chip.dart';
 import '../../shared/widgets/most_visited_item.dart';
 import '../../shared/widgets/search_field.dart';
 import '../../shared/widgets/segmented_tabs.dart';
+import '../cart/add_to_cart.dart';
 import 'search_logic.dart';
 
 /// Reproduces the Figma search flow ("ShopScroll-UI" file `toOakybJ0DaJmU7vcEC0AW`,
@@ -23,8 +26,10 @@ import 'search_logic.dart';
 ///
 /// Everything here runs in memory over [productsProvider] and
 /// [sellersProvider] (AC-13) — no repository method exists for search.
-/// State (typed text, phase, tab, filters, the local "added" set) lives
-/// only in this widget and is never persisted (AC-11).
+/// State (typed text, phase, tab, filters) lives only in this widget and
+/// is never persisted (AC-11). A result row's cart icon adds to the saved
+/// cart, and shows its added state while the cart holds the product (spec
+/// 0007, AC-12).
 ///
 /// Deviations from the Figma frames (spec 0006's "Deviations" section):
 /// tab labels are "Items"/"Stores" not "stores"; the field shows the
@@ -48,7 +53,6 @@ enum _Tab { items, stores }
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _controller = TextEditingController();
-  final _addedProductIds = <String>{};
 
   _Phase _phase = _Phase.empty;
   _Tab _tab = _Tab.items;
@@ -109,10 +113,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   void _setDealsOnly(bool value) => setState(() => _dealsOnly = value);
 
-  void _toggleAdded(String productId) => setState(() {
-    if (!_addedProductIds.remove(productId)) _addedProductIds.add(productId);
-  });
-
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productsProvider);
@@ -148,7 +148,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : productsAsync.hasError || sellersAsync.hasError
                   ? const _Message("Couldn't load search results.")
-                  : _phaseBody(productsAsync.requireValue, sellersAsync.requireValue),
+                  : _phaseBody(
+                      productsAsync.requireValue,
+                      sellersAsync.requireValue,
+                    ),
             ),
           ],
         ),
@@ -171,10 +174,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           products: products,
           sellers: sellers,
           onTabChanged: _setTab,
-          onSuggestionTap: (suggestion) => _openResults(
-            heading: suggestion.text,
-            phrase: suggestion.text,
-          ),
+          onSuggestionTap: (suggestion) =>
+              _openResults(heading: suggestion.text, phrase: suggestion.text),
           onCategoryChipTap: (category) => _openResults(
             heading: _controller.text.trim(),
             phrase: _controller.text.trim(),
@@ -195,8 +196,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             storeId: _resultsStoreId,
             dealsOnly: _dealsOnly,
           ),
-          addedProductIds: _addedProductIds,
-          onAddToCartTap: _toggleAdded,
+          addedProductIds: {
+            for (final line in ref.watch(cartItemsProvider).value ?? const [])
+              line.product.id,
+          },
+          onAddToCartTap: (product) => addToCart(context, product),
         );
     }
   }
@@ -407,7 +411,7 @@ class _ResultsView extends StatelessWidget {
   final ValueChanged<bool> onDealsToggled;
   final List<Product> products;
   final Set<String> addedProductIds;
-  final ValueChanged<String> onAddToCartTap;
+  final ValueChanged<Product> onAddToCartTap;
 
   @override
   Widget build(BuildContext context) {
@@ -451,7 +455,7 @@ class _ResultsView extends StatelessWidget {
                         product: product,
                         added: addedProductIds.contains(product.id),
                         onTap: () => context.push('/product/${product.id}'),
-                        onAddToCartTap: () => onAddToCartTap(product.id),
+                        onAddToCartTap: () => onAddToCartTap(product),
                       ),
                   ],
                 ),
@@ -580,8 +584,9 @@ class _SuggestionRow extends StatelessWidget {
 }
 
 /// One result row (AC-8): image, store avatar + name, title, price, and a
-/// local add-to-cart toggle (nothing is saved — same limit
-/// [AddToCartToggle]'s other use on product detail already has).
+/// add-to-cart icon (spec 0007, AC-12). The added
+/// state is Figma node 976:6586 (a green cart with a check), committed as
+/// `assets/icons/added_to_cart.svg`: no Material glyph matches it.
 class _ResultRow extends StatelessWidget {
   const _ResultRow({
     required this.product,
@@ -684,12 +689,16 @@ class _ResultRow extends StatelessWidget {
                     height: 44,
                     child: IconButton(
                       onPressed: onAddToCartTap,
-                      icon: Icon(
-                        added ? Icons.check_circle : Icons.add_shopping_cart,
-                        color: added
-                            ? AppColors.success400
-                            : AppColors.neutral1000,
-                      ),
+                      icon: added
+                          ? SvgPicture.asset(
+                              'assets/icons/added_to_cart.svg',
+                              width: 24,
+                              height: 24,
+                            )
+                          : const Icon(
+                              Icons.add_shopping_cart,
+                              color: AppColors.neutral1000,
+                            ),
                     ),
                   ),
                 ),

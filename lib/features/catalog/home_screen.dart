@@ -14,6 +14,7 @@ import '../../shared/widgets/product_card.dart';
 import '../../shared/widgets/product_info_card.dart';
 import '../../shared/widgets/search_field.dart';
 import '../../shared/widgets/segmented_tabs.dart';
+import '../cart/add_to_cart.dart';
 
 /// Reproduces the Figma "Home" screen ("The design - user" page, node
 /// 791:7454): a dark header (logo/title, notification/cart icons, search),
@@ -130,7 +131,8 @@ class _HomeHeader extends StatelessWidget {
 }
 
 /// Logo + "Shopscroll" title, a "Become a seller" call-to-action, and
-/// notification/cart icons (Figma node 126:13166).
+/// notification/cart icons (Figma node 126:13166). The cart icon opens
+/// `/cart` (spec 0007, AC-1).
 ///
 /// The logo mark and notification bell aren't part of the formal Icons
 /// component set (node 443:2430), so they use the semantically-closest
@@ -170,11 +172,25 @@ class _TopBar extends StatelessWidget {
           color: AppColors.white100,
           size: 24,
         ),
-        const SizedBox(width: AppSpacing.sm),
-        const AppIcon(
-          AppIconGlyph.cart,
-          size: 24,
-          color: AppColors.white100,
+        Semantics(
+          button: true,
+          label: 'Cart',
+          excludeSemantics: true,
+          child: GestureDetector(
+            onTap: () => context.push('/cart'),
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: AppIcon(
+                  AppIconGlyph.cart,
+                  size: 24,
+                  color: AppColors.white100,
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -522,6 +538,11 @@ class _DealsSection extends ConsumerWidget {
                     size: ProductCardSize.medium,
                     colorOptions: product.colorOptions.map(Color.new).toList(),
                     onTap: () => context.push('/product/${product.id}'),
+                    onAddToCart: () => addToCart(
+                      context,
+                      product,
+                      successMessage: 'Added to cart',
+                    ),
                   );
                 },
               ),
@@ -603,6 +624,11 @@ class _RecommendedSection extends StatelessWidget {
                           .map(Color.new)
                           .toList(),
                       onTap: () => context.push('/product/${product.id}'),
+                      onAddToCart: () => addToCart(
+                        context,
+                        product,
+                        successMessage: 'Added to cart',
+                      ),
                     ),
                 ],
               ),

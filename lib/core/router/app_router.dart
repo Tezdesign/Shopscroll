@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/cart/cart_screen.dart';
 import '../../features/catalog/home_screen.dart';
 import '../../features/catalog/product_detail_screen.dart';
 import '../../features/discover/discover_screen.dart';
@@ -51,6 +52,10 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// level routes, outside the shell, so they open full screen without the
 /// bottom nav.
 ///
+/// `/cart` ([CartScreen], spec 0007) and its child `/cart/checkout` (a
+/// coming soon page) are child routes of the Home branch's root route, so
+/// the tab bar keeps showing with Home highlighted.
+///
 /// `/search` and `/discover/search` ([SearchScreen], spec 0006) are each a
 /// child route of their branch's own root route instead, so they stay
 /// inside the shell: the bottom nav bar keeps showing, with the tab you
@@ -85,6 +90,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'search',
                     builder: (context, state) => const SearchScreen(),
+                  ),
+                  GoRoute(
+                    path: 'cart',
+                    builder: (context, state) => const CartScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'checkout',
+                        builder: (context, state) => const ComingSoonScreen(
+                          label: 'Checkout',
+                          icon: Icons.shopping_bag_outlined,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

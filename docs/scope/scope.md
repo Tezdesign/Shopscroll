@@ -19,6 +19,7 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 | 6 | Log in | Unplanned | in-progress |
 | 7 | Search flow | Unplanned | in-progress |
 | 8 | Banner screens | Unplanned | planned |
+| 9 | Cart interface | Unplanned | in-progress |
 
 ## Features
 
@@ -219,3 +220,30 @@ spec once it exists).
 - [ ] Test it: `/test banner screens`
 
 From spec [0006](../specs/0006-search-flow/index.md)
+
+### 9. Cart interface · in-progress
+
+A real cart screen opened from the cart icon on Home, inside the Home tab, that lists each item with a
+quantity stepper and a trash icon (with Undo), shows the total, and leads to a coming soon checkout page.
+It also makes every Add to cart button (product detail, product cards, search rows) really add to the
+saved cart, on both the mock and Supabase backends.
+**Done when:** the cart opens from Home, quantities change and items remove with Undo, the total is
+right, every Add to cart button adds to the same saved cart, and the empty, loading, error and out of
+stock states are handled (see spec 0007 for the full acceptance criteria).
+- [x] Design it (spec): `/architect the cart interface`
+- [x] Build it: `/develop cart interface`
+   - [x] Cart data layer: repository write methods (mock and Supabase), cart helper functions, and the
+     `CartNotifier` with optimistic updates (AC-4, AC-5, AC-6, AC-13, AC-15, AC-16)
+   - [x] Cart screen thread: `/cart` route under Home, header cart icon, item list and total, product
+     detail Add to cart wired (AC-1, AC-2, AC-3, AC-10)
+   - [x] Steppers, trash with Undo, empty, loading and error states, checkout coming soon page (AC-4,
+     AC-5, AC-6, AC-7, AC-8, AC-9)
+   - [x] Product card and search row Add to cart wired, out of stock and failure messages, `ItemCard`
+     size label and colour dot (AC-2, AC-11, AC-12, AC-14, AC-15)
+   - [x] Accessibility and widget tests (AC-17, AC-18)
+- [ ] Verify it: `/check verify cart interface`
+- [ ] Test it: `/test cart interface`
+
+Spec [0007](../specs/0007-cart-interface/index.md) · code: `lib/features/cart/`,
+`lib/data/providers/cart_providers.dart`, `lib/data/repositories/cart_repository.dart` (mock and
+Supabase), `lib/shared/widgets/item_card.dart`, `lib/core/router/app_router.dart`

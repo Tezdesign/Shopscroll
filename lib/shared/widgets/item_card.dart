@@ -23,6 +23,8 @@ class ItemCard extends StatelessWidget {
     this.storeName,
     this.storeAvatarUrl,
     this.imageUrl,
+    this.sizeLabel,
+    this.colorDot,
     this.trailing = ItemCardTrailing.quantityStepper,
     this.quantity = 1,
     this.onIncrement,
@@ -36,6 +38,11 @@ class ItemCard extends StatelessWidget {
   final String? storeName;
   final String? storeAvatarUrl;
   final String? imageUrl;
+
+  /// Chosen size and colour of a cart line, so two lines of one product can
+  /// be told apart. Not in the Figma component (spec 0007's deviations).
+  final String? sizeLabel;
+  final Color? colorDot;
   final ItemCardTrailing trailing;
   final int quantity;
   final VoidCallback? onIncrement;
@@ -45,6 +52,7 @@ class ItemCard extends StatelessWidget {
 
   static const double _mediaSize = 90;
   static const double _avatarSize = 14;
+  static const double _dotSize = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +89,30 @@ class ItemCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (sizeLabel != null || colorDot != null) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (sizeLabel != null)
+                              Text(sizeLabel!, style: _storeNameStyle),
+                            if (sizeLabel != null && colorDot != null)
+                              const SizedBox(width: AppSpacing.sm),
+                            if (colorDot != null)
+                              Container(
+                                width: _dotSize,
+                                height: _dotSize,
+                                decoration: BoxDecoration(
+                                  color: colorDot,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.neutral300,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         price,
@@ -219,9 +251,6 @@ class _QuantityStepper extends StatelessWidget {
   final VoidCallback? onDecrement;
   final VoidCallback? onDelete;
 
-  // Figma's own gap here (10) isn't a shared spacing token — kept local,
-  // consistent with the other one-off gaps found elsewhere in this file.
-  static const double _gap = 10;
   static const double _deleteIconSize = 18.75;
 
   static const TextStyle _stepStyle = TextStyle(
@@ -237,19 +266,24 @@ class _QuantityStepper extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GestureDetector(
+        _Control(
+          label: 'Decrease quantity',
           onTap: onDecrement,
           child: const Text('-', style: _stepStyle),
         ),
-        const SizedBox(width: _gap),
-        Text('$quantity', style: _stepStyle),
-        const SizedBox(width: _gap),
-        GestureDetector(
+        Semantics(
+          label: 'Quantity',
+          value: '$quantity',
+          excludeSemantics: true,
+          child: Text('$quantity', style: _stepStyle),
+        ),
+        _Control(
+          label: 'Increase quantity',
           onTap: onIncrement,
           child: const Text('+', style: _stepStyle),
         ),
-        const SizedBox(width: _gap),
-        GestureDetector(
+        _Control(
+          label: 'Remove from cart',
           onTap: onDelete,
           child: const Icon(
             Icons.delete_outline,
@@ -258,6 +292,44 @@ class _QuantityStepper extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// One stepper control: a spoken label and a 44 by 44 tap area (spec 0007,
+/// AC-17), dimmed when it has no action. The Figma controls are smaller and
+/// separated by a 10 gap, the tap area now supplies that space.
+class _Control extends StatelessWidget {
+  const _Control({
+    required this.label,
+    required this.onTap,
+    required this.child,
+  });
+
+  final String label;
+  final VoidCallback? onTap;
+  final Widget child;
+
+  static const double _tapSize = 44;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: _tapSize,
+          height: _tapSize,
+          child: Center(
+            child: Opacity(opacity: onTap == null ? 0.4 : 1, child: child),
+          ),
+        ),
+      ),
     );
   }
 }

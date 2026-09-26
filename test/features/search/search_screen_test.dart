@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marketplace_app/core/theme/app_theme.dart';
@@ -28,9 +29,8 @@ void main() {
         ),
         GoRoute(
           path: '/product/:id',
-          builder: (context, state) => Scaffold(
-            body: Text('Product ${state.pathParameters['id']}'),
-          ),
+          builder: (context, state) =>
+              Scaffold(body: Text('Product ${state.pathParameters['id']}')),
         ),
       ],
     );
@@ -52,37 +52,57 @@ void main() {
     expect(find.text('Tech'), findsOneWidget);
   });
 
-  testWidgets('typing shows the Items/Stores tabs and suggestions (AC-4, AC-5)', (
-    tester,
-  ) async {
-    await tester.pumpWidget(wrapWithRouter());
-    await tester.tap(find.text('Open search'));
-    await tester.pump();
-    await tester.pump(mockNetworkDelay);
+  testWidgets(
+    'typing shows the Items/Stores tabs and suggestions (AC-4, AC-5)',
+    (tester) async {
+      await tester.pumpWidget(wrapWithRouter());
+      await tester.tap(find.text('Open search'));
+      await tester.pump();
+      await tester.pump(mockNetworkDelay);
 
-    await tester.enterText(find.byType(TextField), 'air');
-    await tester.pump();
+      await tester.enterText(find.byType(TextField), 'air');
+      await tester.pump();
 
-    expect(find.text('Items'), findsOneWidget);
-    expect(find.text('Stores'), findsOneWidget);
-    expect(find.text('Air Max 270', findRichText: true), findsOneWidget);
-  });
+      expect(find.text('Items'), findsOneWidget);
+      expect(find.text('Stores'), findsOneWidget);
+      expect(find.text('Air Max 270', findRichText: true), findsOneWidget);
+    },
+  );
 
-  testWidgets('typing text that matches nothing shows the no results message (AC-10)', (
-    tester,
-  ) async {
-    await tester.pumpWidget(wrapWithRouter());
-    await tester.tap(find.text('Open search'));
-    await tester.pump();
-    await tester.pump(mockNetworkDelay);
+  testWidgets(
+    'typing text that matches nothing shows the no results message (AC-10)',
+    (tester) async {
+      await tester.pumpWidget(wrapWithRouter());
+      await tester.tap(find.text('Open search'));
+      await tester.pump();
+      await tester.pump(mockNetworkDelay);
 
-    await tester.enterText(find.byType(TextField), 'zzznotfound');
-    await tester.pump();
+      await tester.enterText(find.byType(TextField), 'zzznotfound');
+      await tester.pump();
 
-    expect(find.text('No results found for "zzznotfound"'), findsOneWidget);
-  });
+      expect(find.text('No results found for "zzznotfound"'), findsOneWidget);
+    },
+  );
 
-  testWidgets('tapping a suggestion opens the results view with a heading (AC-6, AC-7)', (
+  testWidgets(
+    'tapping a suggestion opens the results view with a heading (AC-6, AC-7)',
+    (tester) async {
+      await tester.pumpWidget(wrapWithRouter());
+      await tester.tap(find.text('Open search'));
+      await tester.pump();
+      await tester.pump(mockNetworkDelay);
+
+      await tester.enterText(find.byType(TextField), 'air');
+      await tester.pump();
+      await tester.tap(find.text('Air Max 270', findRichText: true));
+      await tester.pump();
+      await tester.pump(mockNetworkDelay); // the cart the rows read loads
+
+      expect(find.text('Results for "Air Max 270"'), findsOneWidget);
+    },
+  );
+
+  testWidgets('tapping a result row cart icon adds to the cart (AC-12)', (
     tester,
   ) async {
     await tester.pumpWidget(wrapWithRouter());
@@ -94,8 +114,15 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Air Max 270', findRichText: true));
     await tester.pump();
+    await tester.pump(mockNetworkDelay); // the cart the rows read loads
+    await tester.pump();
 
-    expect(find.text('Results for "Air Max 270"'), findsOneWidget);
+    expect(find.byType(SvgPicture), findsNothing);
+    await tester.tap(find.byIcon(Icons.add_shopping_cart).first);
+    await tester.pump();
+
+    expect(find.byType(SvgPicture), findsOneWidget);
+    await tester.pump(mockNetworkDelay); // let the save finish
   });
 
   testWidgets('Cancel returns to the screen it was opened from (AC-2)', (

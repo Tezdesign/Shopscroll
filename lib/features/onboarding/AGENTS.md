@@ -67,6 +67,13 @@ picks up on its own. Two details worth keeping:
   the picked country's dial code to the digits. Nothing here hardcodes a country, and its length check
   is `CountryDialCode.isPlausibleNationalNumber` (the E.164 range for that country's prefix), not a
   fixed minimum. Clerk still does the real validation.
+- `sendCode` (both `SignUpVerification` and `SignInVerification`) returns `Future<bool>`: whether Clerk
+  really has a pending verification for that channel afterward. `safelyCall` swallows every Clerk error
+  into the snack bar and never rethrows, so awaiting it cannot tell success from failure. The three
+  screens (`PhoneNumberScreen`, `EmailAddressScreen`, `LogInScreen`) move to their verify stage only on
+  `true`; otherwise "Resend code" would fail with Clerk's "No initial code has been set up to resend".
+  Both `sendCode`s also sign out an existing Clerk session first, because Clerk refuses a new sign in
+  or sign up while one exists and debug builds always open on Welcome (see `main.dart`).
 - Switching channels mid flow leaves the abandoned identifier on Clerk's pending sign up, unverified,
   where it blocks completion; `sendCode` calls `resetClient()` first when it sees one.
 - A code can verify without the sign up completing, when Clerk is still waiting on another field

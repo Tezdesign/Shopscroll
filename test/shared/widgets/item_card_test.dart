@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/item_card.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders title, price and store name', (tester) async {
@@ -28,9 +31,7 @@ void main() {
   });
 
   testWidgets('hides the store row when storeName is null', (tester) async {
-    await tester.pumpWidget(
-      wrap(const ItemCard(title: 'Item', price: r'$10')),
-    );
+    await tester.pumpWidget(wrap(const ItemCard(title: 'Item', price: r'$10')));
 
     expect(find.text('Bershka'), findsNothing);
   });
@@ -94,5 +95,47 @@ void main() {
 
     expect(find.text('+'), findsNothing);
     expect(find.byIcon(Icons.bookmark), findsNothing);
+  });
+
+  testWidgets('shows a size label and a colour dot when given', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        const ItemCard(
+          title: 'Item',
+          price: r'$10',
+          sizeLabel: 'Size M',
+          colorDot: Color(0xFF0066FF),
+        ),
+      ),
+    );
+
+    expect(find.text('Size M'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration as BoxDecoration).color == const Color(0xFF0066FF),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('stepper controls have labels and 44 pixel tap areas', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(ItemCard(title: 'Item', price: r'$10', onIncrement: () {})),
+    );
+
+    for (final label in [
+      'Increase quantity',
+      'Decrease quantity',
+      'Remove from cart',
+    ]) {
+      final size = tester.getSize(find.bySemanticsLabel(label));
+      expect(size.width, greaterThanOrEqualTo(44), reason: label);
+      expect(size.height, greaterThanOrEqualTo(44), reason: label);
+    }
   });
 }

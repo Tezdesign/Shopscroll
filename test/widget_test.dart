@@ -26,4 +26,20 @@ void main() {
 
     expect(find.text('You may also like'), findsOneWidget);
   });
+
+  testWidgets('the Home header cart icon opens the cart, tab bar kept (AC-1)', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MarketplaceApp()));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(find.bySemanticsLabel('Cart').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Items price'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget); // the tab bar is still there
+  });
 }
