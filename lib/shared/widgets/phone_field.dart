@@ -213,6 +213,9 @@ class _PhoneFieldState extends State<PhoneField> {
                       : AppColors.primary500,
                   decoration: InputDecoration(
                     isCollapsed: true,
+                    // The app theme fills inputs grey, this field sits on its
+                    // own white bordered box (Figma component 5290:7177).
+                    filled: false,
                     border: InputBorder.none,
                     hintText: widget.hintText,
                     hintStyle: _textStyle(AppColors.neutral500),

@@ -24,8 +24,10 @@ void main() {
     );
   }
 
-  Widget wrap(Widget child) =>
-      MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+  Widget wrap(Widget child) => MaterialApp(
+    theme: AppTheme.light,
+    home: Scaffold(body: child),
+  );
 
   final watch = line('Apple watch serie 5', 'Bershka', 20, qty: 2);
 

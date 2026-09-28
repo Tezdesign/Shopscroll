@@ -1,5 +1,6 @@
 import '../models/cart_item.dart';
 import '../models/order.dart';
+import '../models/shipping_address.dart';
 import 'mock_products.dart';
 
 /// A few mocked past orders, one per [OrderStatus].
@@ -23,7 +24,11 @@ final List<Order> mockOrders = [
     totalAmount: 62,
     deliveryFee: 0,
     deliveryMethod: 'Standard delivery',
-    shippingAddress: '13 Bahloul Street, Tunis, Tunisia',
+    shippingAddress: const ShippingAddress(
+      city: 'Tunis',
+      address: '13 Bahloul Street',
+      zip: '1000',
+    ),
     paymentMethod: 'Visa •••• 4242',
     createdAt: DateTime(2026, 6, 15),
     estimatedDelivery: DateTime(2026, 6, 18),
@@ -42,7 +47,11 @@ final List<Order> mockOrders = [
     totalAmount: 150,
     deliveryFee: 5,
     deliveryMethod: 'Express delivery',
-    shippingAddress: '13 Bahloul Street, Tunis, Tunisia',
+    shippingAddress: const ShippingAddress(
+      city: 'Tunis',
+      address: '13 Bahloul Street',
+      zip: '1000',
+    ),
     paymentMethod: 'Visa •••• 4242',
     createdAt: DateTime(2026, 7, 2),
     estimatedDelivery: DateTime(2026, 7, 10),
@@ -61,7 +70,11 @@ final List<Order> mockOrders = [
     totalAmount: 42,
     deliveryFee: 0,
     deliveryMethod: 'Standard delivery',
-    shippingAddress: '13 Bahloul Street, Tunis, Tunisia',
+    shippingAddress: const ShippingAddress(
+      city: 'Tunis',
+      address: '13 Bahloul Street',
+      zip: '1000',
+    ),
     paymentMethod: 'Cash on delivery',
     createdAt: DateTime(2026, 6, 25),
   ),

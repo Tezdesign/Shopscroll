@@ -74,10 +74,8 @@ class SignInVerification {
     final strategy = _strategyFor(channel);
     await _authState.safelyCall(
       _context,
-      () => _authState.attemptSignIn(
-        strategy: strategy,
-        identifier: identifier,
-      ),
+      () =>
+          _authState.attemptSignIn(strategy: strategy, identifier: identifier),
     );
     final signIn = _authState.signIn;
     return signIn != null &&
@@ -98,10 +96,8 @@ class SignInVerification {
   ) async {
     await _authState.safelyCall(
       _context,
-      () => _authState.attemptSignIn(
-        strategy: _strategyFor(channel),
-        code: code,
-      ),
+      () =>
+          _authState.attemptSignIn(strategy: _strategyFor(channel), code: code),
     );
     if (!_context.mounted) return;
 

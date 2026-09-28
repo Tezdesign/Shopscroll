@@ -221,7 +221,7 @@ class _Footer extends StatelessWidget {
             width: double.infinity,
             child: AppButton(
               label: 'Proceed to checkout',
-              onPressed: () => context.push('/cart/checkout'),
+              onPressed: () => context.push('/checkout'),
             ),
           ),
         ],

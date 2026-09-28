@@ -79,7 +79,10 @@ class _ReelPlayerScreenState extends ConsumerState<ReelPlayerScreen> {
         if (r.isAvailable) r.id: r,
     };
     final ids = widget.orderedReelIds ?? available.keys.toList();
-    return [for (final id in ids) if (available[id] != null) available[id]!];
+    return [
+      for (final id in ids)
+        if (available[id] != null) available[id]!,
+    ];
   }
 
   bool _isLiked(Reel reel) => _likedIds.contains(reel.id);
@@ -196,9 +199,8 @@ class _ReelPlayerScreenState extends ConsumerState<ReelPlayerScreen> {
       body: reelsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator(color: Colors.white)),
-        error: (error, stackTrace) => const _CenteredMessage(
-          text: "Couldn't load this reel.",
-        ),
+        error: (error, stackTrace) =>
+            const _CenteredMessage(text: "Couldn't load this reel."),
         data: (allReels) {
           final reels = _resolvePageableReels(allReels);
           if (reels.isEmpty) {
@@ -319,7 +321,8 @@ class _ReelPage extends StatelessWidget {
           CachedNetworkImage(
             imageUrl: reel.thumbnailUrl,
             fit: BoxFit.cover,
-            placeholder: (context, url) => const ColoredBox(color: Colors.black),
+            placeholder: (context, url) =>
+                const ColoredBox(color: Colors.black),
             errorWidget: (context, url, error) =>
                 const ColoredBox(color: Colors.black),
           ),
@@ -335,9 +338,7 @@ class _ReelPage extends StatelessWidget {
               ),
             ),
           if (!ready && entry?.failed != true)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            )
+            const Center(child: CircularProgressIndicator(color: Colors.white))
           else if (ready)
             ValueListenableBuilder<VideoPlayerValue>(
               valueListenable: videoController!,

@@ -35,7 +35,9 @@ List<CategoryCount> popularCategories(List<Product> products) {
       final byCount = b.value.compareTo(a.value);
       return byCount != 0 ? byCount : a.key.compareTo(b.key);
     });
-  return [for (final entry in entries) (category: entry.key, count: entry.value)];
+  return [
+    for (final entry in entries) (category: entry.key, count: entry.value),
+  ];
 }
 
 /// The categories of the products that match [query] (AC-4's category
@@ -102,7 +104,8 @@ List<Suggestion> suggestionsFor(List<Product> products, String query) {
     });
 
   return [
-    for (final entry in ranked.take(8)) (text: entry.text, category: entry.category),
+    for (final entry in ranked.take(8))
+      (text: entry.text, category: entry.category),
   ];
 }
 

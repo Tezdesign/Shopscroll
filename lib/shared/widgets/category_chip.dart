@@ -43,9 +43,7 @@ class CategoryChip extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: selected ? AppColors.primary400 : AppColors.neutral100,
-          border: selected
-              ? null
-              : Border.all(color: AppColors.neutral1100),
+          border: selected ? null : Border.all(color: AppColors.neutral1100),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(

@@ -85,9 +85,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       backgroundColor: AppColors.neutral100,
       body: productAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => const Center(
-          child: Text("Couldn't load this product."),
-        ),
+        error: (error, stackTrace) =>
+            const Center(child: Text("Couldn't load this product.")),
         data: (product) {
           if (product == null) {
             return const Center(child: Text('Product not found.'));
@@ -929,9 +928,7 @@ class _BottomActionBar extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.neutral200),
-            ),
+            border: Border(top: BorderSide(color: AppColors.neutral200)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

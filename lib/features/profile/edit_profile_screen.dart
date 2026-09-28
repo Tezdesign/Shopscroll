@@ -133,7 +133,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     });
 
     try {
-      await ref.read(userProfileRepositoryProvider).updateUserProfile(
+      await ref
+          .read(userProfileRepositoryProvider)
+          .updateUserProfile(
             userId,
             name: _nameController.text.trim(),
             username: _usernameController.text.trim(),

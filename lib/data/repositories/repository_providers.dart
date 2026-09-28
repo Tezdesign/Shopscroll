@@ -36,7 +36,7 @@ final cartRepositoryProvider = Provider<CartRepository>(
 );
 
 final orderRepositoryProvider = Provider<OrderRepository>(
-  (ref) => MockOrderRepository(),
+  (ref) => MockOrderRepository(cart: ref.watch(cartRepositoryProvider)),
 );
 
 final savedProductRepositoryProvider = Provider<SavedProductRepository>(

@@ -14,7 +14,6 @@ import 'package:marketplace_app/data/repositories/repository_providers.dart';
 import 'package:marketplace_app/features/cart/add_to_cart.dart';
 import 'package:marketplace_app/features/cart/cart_logic.dart';
 import 'package:marketplace_app/features/cart/cart_screen.dart';
-import 'package:marketplace_app/shared/widgets/coming_soon_screen.dart';
 
 /// A repository that starts empty, can fail to load, and can fail writes.
 class _FlakyRepo extends MockCartRepository {
@@ -49,17 +48,13 @@ void main() {
             GoRoute(
               path: 'cart',
               builder: (context, state) => const CartScreen(),
-              routes: [
-                GoRoute(
-                  path: 'checkout',
-                  builder: (context, state) => const ComingSoonScreen(
-                    label: 'Checkout',
-                    icon: Icons.shopping_bag_outlined,
-                  ),
-                ),
-              ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/checkout',
+          builder: (context, state) =>
+              const Scaffold(body: Text('Checkout page')),
         ),
         GoRoute(
           path: '/product/:id',
@@ -193,7 +188,7 @@ void main() {
     expect(find.text('Try again'), findsOneWidget);
   });
 
-  testWidgets('Proceed to checkout opens the coming soon page (AC-9)', (
+  testWidgets('Proceed to checkout opens /checkout (spec 0009, AC-1)', (
     tester,
   ) async {
     await openCart(tester, MockCartRepository());
@@ -201,7 +196,7 @@ void main() {
     await tester.tap(find.text('Proceed to checkout'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Checkout coming soon'), findsOneWidget);
+    expect(find.text('Checkout page'), findsOneWidget);
   });
 
   testWidgets('tapping a card opens its product (AC-2)', (tester) async {

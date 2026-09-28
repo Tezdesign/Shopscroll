@@ -62,9 +62,8 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
               child: SearchField(
                 controller: _searchController,
-                onChanged: (value) => setState(
-                  () => _searchQuery = value.trim().toLowerCase(),
-                ),
+                onChanged: (value) =>
+                    setState(() => _searchQuery = value.trim().toLowerCase()),
               ),
             ),
             const SizedBox(height: AppSpacing.base),
@@ -84,9 +83,8 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
             Expanded(
               child: reelsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stackTrace) => const _CenteredMessage(
-                  text: "Couldn't load reels.",
-                ),
+                error: (error, stackTrace) =>
+                    const _CenteredMessage(text: "Couldn't load reels."),
                 data: (allReels) {
                   final reels = _applySearch(allReels);
                   if (reels.isEmpty) {

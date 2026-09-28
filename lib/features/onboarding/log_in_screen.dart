@@ -136,12 +136,14 @@ class _LogInScreenState extends State<LogInScreen> {
 
   bool get _isPhone => _channel == LogInChannel.phone;
 
-  String get _phoneDigits => _phoneController.text.replaceAll(RegExp(r'\D'), '');
+  String get _phoneDigits =>
+      _phoneController.text.replaceAll(RegExp(r'\D'), '');
 
   /// What Clerk receives: an E.164 number (country code included) or a
   /// trimmed email address.
-  String get _identifier =>
-      _isPhone ? '${_country.dialCode}$_phoneDigits' : _emailController.text.trim();
+  String get _identifier => _isPhone
+      ? '${_country.dialCode}$_phoneDigits'
+      : _emailController.text.trim();
 
   String? _validateIdentifier() {
     if (_isPhone) {
@@ -350,9 +352,7 @@ class _AccountTypeToggle extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppRadius.full),
       child: Row(
         children: [
-          Expanded(
-            child: _half(AccountType.buyer, AppIconGlyph.user, 'Buyer'),
-          ),
+          Expanded(child: _half(AccountType.buyer, AppIconGlyph.user, 'Buyer')),
           Expanded(
             child: _half(
               AccountType.storeOwner,

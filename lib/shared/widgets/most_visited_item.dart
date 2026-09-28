@@ -71,8 +71,7 @@ class MostVisitedItem extends StatelessWidget {
                     : CachedNetworkImage(
                         imageUrl: iconUrl!,
                         fit: BoxFit.contain,
-                        placeholder: (context, url) =>
-                            const SizedBox.shrink(),
+                        placeholder: (context, url) => const SizedBox.shrink(),
                         errorWidget: (context, url, error) => const Icon(
                           Icons.storefront_outlined,
                           size: _iconSize,

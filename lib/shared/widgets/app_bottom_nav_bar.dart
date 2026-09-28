@@ -81,9 +81,7 @@ class AppBottomNavBar extends StatelessWidget {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              for (final item in AppTabItem.values) _buildTab(item),
-            ],
+            children: [for (final item in AppTabItem.values) _buildTab(item)],
           ),
         ),
       ),
@@ -98,9 +96,7 @@ class AppBottomNavBar extends StatelessWidget {
       child: InkWell(
         onTap: () => onItemSelected(item),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: _itemVerticalPadding,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: _itemVerticalPadding),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

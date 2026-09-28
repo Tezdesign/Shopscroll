@@ -298,9 +298,7 @@ class _PromoBannerTile extends StatelessWidget {
               errorWidget: (context, url, error) =>
                   const ColoredBox(color: AppColors.neutral1000),
             ),
-            Container(
-              color: AppColors.neutral1100.withValues(alpha: 0.45),
-            ),
+            Container(color: AppColors.neutral1100.withValues(alpha: 0.45)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Column(

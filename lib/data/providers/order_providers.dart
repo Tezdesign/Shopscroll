@@ -11,7 +11,10 @@ final ordersProvider = FutureProvider<List<Order>>(
   retry: (retryCount, error) => null,
 );
 
-/// A single order by id, as if fetched from `GET /orders/:id`.
-final orderByIdProvider = FutureProvider.family<Order?, String>((ref, id) {
-  return ref.watch(orderRepositoryProvider).getOrderById(id);
-});
+/// A single order by id, as if fetched from `GET /orders/:id`. No automatic
+/// retry, so a failed load reaches the confirmation as an error with its own
+/// "Try again" (spec 0009, AC-22).
+final orderByIdProvider = FutureProvider.family<Order?, String>(
+  (ref, id) => ref.watch(orderRepositoryProvider).getOrderById(id),
+  retry: (retryCount, error) => null,
+);

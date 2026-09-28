@@ -112,9 +112,7 @@ class _HomeHeader extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.base),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.base,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
               child: SearchField(
                 readOnly: true,
                 onTap: () => context.push('/search'),
@@ -146,11 +144,7 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(
-          Icons.shopping_bag,
-          color: AppColors.primary400,
-          size: 24,
-        ),
+        const Icon(Icons.shopping_bag, color: AppColors.primary400, size: 24),
         const SizedBox(width: AppSpacing.sm),
         const Expanded(
           child: Text(
@@ -502,11 +496,7 @@ class _DealsSection extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _TwoToneSectionTitle(leading: 'Big ', trailing: 'deals'),
-              Icon(
-                Icons.chevron_right,
-                size: 16,
-                color: AppColors.neutral1000,
-              ),
+              Icon(Icons.chevron_right, size: 16, color: AppColors.neutral1000),
             ],
           ),
         ),
@@ -606,9 +596,7 @@ class _RecommendedSection extends StatelessWidget {
             }
 
             return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.base,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
               child: Wrap(
                 spacing: AppSpacing.md,
                 runSpacing: AppSpacing.base,
@@ -662,8 +650,14 @@ class _TwoToneSectionTitle extends StatelessWidget {
           letterSpacing: 0.36,
         ),
         children: [
-          TextSpan(text: leading, style: const TextStyle(color: AppColors.neutral1000)),
-          TextSpan(text: trailing, style: const TextStyle(color: AppColors.primary400)),
+          TextSpan(
+            text: leading,
+            style: const TextStyle(color: AppColors.neutral1000),
+          ),
+          TextSpan(
+            text: trailing,
+            style: const TextStyle(color: AppColors.primary400),
+          ),
         ],
       ),
     );

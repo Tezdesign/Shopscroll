@@ -23,6 +23,9 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 | 10 | Activity screens | Unplanned | in-progress |
 | 11 | Order details | Unplanned | planned |
 | 12 | Chat | Unplanned | planned |
+| 13 | Purchasing flow | Unplanned | in-progress |
+| 14 | Card payment | Unplanned | planned |
+| 15 | Discount codes | Unplanned | planned |
 
 ## Features
 
@@ -303,3 +306,56 @@ messages with a store, with its states handled (see the spec once it exists).
 - [ ] Test it: `/test chat`
 
 From spec [0008](../specs/0008-activity-screens/index.md)
+
+### 13. Purchasing flow · in-progress
+
+A full screen Checkout (shipping items, contact, delivery address, delivery type, order summary, payment
+method), two bottom sheets for contact and address, and an Order confirmation screen. A buyer, signed in or
+not, pays on delivery and a real order is made on the server from their cart. Card payment, discount codes
+and "use my location" are drawn but do nothing yet.
+**Done when:** "Proceed to checkout" opens Checkout, a completed Pay on delivery order creates one priced
+order, empties the cart, shows the confirmation and appears in Purchases, and buyers can no longer write
+orders directly (see spec 0009 for the full acceptance criteria).
+- [x] Design it (spec): `/architect purchasing flow`
+- [x] Build it: `/develop purchasing flow`
+   - [x] Models, checkout logic and the shared checkout widgets (AC-4, AC-6, AC-7, AC-8, AC-9, AC-15, AC-23)
+   - [x] Contact and address sheets, the Checkout screen and Place order on the mock backend (AC-1, AC-2,
+     AC-3, AC-5, AC-10, AC-11, AC-12, AC-13, AC-16)
+   - [x] Order confirmation screen, routes, discard dialog (AC-14, AC-17, AC-18, AC-19, AC-22)
+   - [x] Migration `0003_place_order.sql` and the Supabase `placeOrder`, plus the Purchases fix for signed in
+     buyers (AC-12, AC-15, AC-16, AC-20, AC-21)
+   - [x] Accessibility, states and widget tests (AC-22, AC-23, AC-24, AC-25)
+- [ ] Verify it: `/check verify purchasing flow`
+- [ ] Test it: `/test purchasing flow`
+
+Spec [0009](../specs/0009-purchasing-flow/index.md) · code: `lib/features/checkout/`,
+`lib/data/providers/checkout_providers.dart`, `lib/data/models/place_order_request.dart`,
+`lib/data/repositories/order_repository.dart` (mock and Supabase), `lib/shared/widgets/checkout_section.dart`,
+`lib/shared/widgets/shipping_items_section.dart`, `supabase/migrations/0003_place_order.sql` (applied),
+`lib/core/router/app_router.dart`
+
+### 14. Card payment · planned · needs a decision
+
+Make "Pay by Credit Card" real: the card sheet (Figma 3001:10507 and 3001:10527), the "card added" state, and
+a payment provider with a hosted card form so card numbers never touch this app or database.
+**Done when:** a buyer can pay by card at checkout and the order records it as paid (see the spec once it
+exists).
+- [ ] Design it (spec): `/architect card payment`
+- [ ] Build it: `/develop card payment`
+- [ ] Verify it: `/check verify card payment`
+- [ ] Test it: `/test card payment`
+
+From spec [0009](../specs/0009-purchasing-flow/index.md)
+
+### 15. Discount codes · planned · needs a decision
+
+Make the discount code field at checkout real: a codes table, a percent per store, the "Discount from a store"
+line and the crossed out price (Figma 3001:10221 and 3001:10085).
+**Done when:** a valid code lowers the price to pay, checked on the server, and an invalid one shows a message
+(see the spec once it exists).
+- [ ] Design it (spec): `/architect discount codes`
+- [ ] Build it: `/develop discount codes`
+- [ ] Verify it: `/check verify discount codes`
+- [ ] Test it: `/test discount codes`
+
+From spec [0009](../specs/0009-purchasing-flow/index.md)

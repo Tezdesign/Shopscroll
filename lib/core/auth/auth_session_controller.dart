@@ -61,8 +61,7 @@ class AuthSessionController {
       // Only now does the app start reading/writing through the Clerk
       // backed client; the merge above ran while still on the anonymous
       // one, exactly as its own caller check requires.
-      ref.read(activeSupabaseClientProvider.notifier).state =
-          clerkBackedClient;
+      ref.read(activeSupabaseClientProvider.notifier).state = clerkBackedClient;
 
       await _upsertBuyerProfile(user, targetUserId);
     } finally {
@@ -72,10 +71,12 @@ class AuthSessionController {
 
   Future<void> _mergeAnonymousIdentity(String targetUserId) async {
     const timeout = Duration(seconds: 10);
-    Future<void> attempt() => anonymousClient.rpc(
-      'merge_anonymous_identity',
-      params: {'target_user_id': targetUserId},
-    ).timeout(timeout);
+    Future<void> attempt() => anonymousClient
+        .rpc(
+          'merge_anonymous_identity',
+          params: {'target_user_id': targetUserId},
+        )
+        .timeout(timeout);
 
     try {
       await attempt();

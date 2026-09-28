@@ -187,109 +187,109 @@ class AppTypography {
   }
 
   static TextStyle get displayLarge => _style(
-        family: fontFamilyDisplay,
-        size: size4xl,
-        height: lineHeight4xl,
-        weight: FontWeight.w600,
-      );
+    family: fontFamilyDisplay,
+    size: size4xl,
+    height: lineHeight4xl,
+    weight: FontWeight.w600,
+  );
 
   static TextStyle get displayMedium => _style(
-        family: fontFamilyDisplay,
-        size: size3xl,
-        height: lineHeight3xl,
-        weight: FontWeight.w600,
-      );
+    family: fontFamilyDisplay,
+    size: size3xl,
+    height: lineHeight3xl,
+    weight: FontWeight.w600,
+  );
 
   static TextStyle get displaySmall => _style(
-        family: fontFamilyDisplay,
-        size: size2xl,
-        height: lineHeight2xl,
-        weight: FontWeight.w600,
-      );
+    family: fontFamilyDisplay,
+    size: size2xl,
+    height: lineHeight2xl,
+    weight: FontWeight.w600,
+  );
 
   static TextStyle get headlineLarge => _style(
-        family: fontFamilyDisplay,
-        size: sizeXl,
-        height: lineHeightXl,
-        weight: FontWeight.w600,
-      );
+    family: fontFamilyDisplay,
+    size: sizeXl,
+    height: lineHeightXl,
+    weight: FontWeight.w600,
+  );
 
   static TextStyle get headlineMedium => _style(
-        family: fontFamilyBody,
-        size: sizeLg,
-        height: lineHeightLg,
-        weight: FontWeight.w700,
-      );
+    family: fontFamilyBody,
+    size: sizeLg,
+    height: lineHeightLg,
+    weight: FontWeight.w700,
+  );
 
   static TextStyle get headlineSmall => _style(
-        family: fontFamilyBody,
-        size: sizeBase,
-        height: lineHeightBase,
-        weight: FontWeight.w700,
-      );
+    family: fontFamilyBody,
+    size: sizeBase,
+    height: lineHeightBase,
+    weight: FontWeight.w700,
+  );
 
   static TextStyle get titleLarge => _style(
-        family: fontFamilyBody,
-        size: sizeLg,
-        height: lineHeightLg,
-        weight: FontWeight.w600,
-      );
+    family: fontFamilyBody,
+    size: sizeLg,
+    height: lineHeightLg,
+    weight: FontWeight.w600,
+  );
 
   static TextStyle get titleMedium => _style(
-        family: fontFamilyBody,
-        size: sizeBase,
-        height: lineHeightBase,
-        weight: FontWeight.w600,
-      );
+    family: fontFamilyBody,
+    size: sizeBase,
+    height: lineHeightBase,
+    weight: FontWeight.w600,
+  );
 
   static TextStyle get titleSmall => _style(
-        family: fontFamilyBody,
-        size: sizeSm,
-        height: lineHeightSm,
-        weight: FontWeight.w600,
-      );
+    family: fontFamilyBody,
+    size: sizeSm,
+    height: lineHeightSm,
+    weight: FontWeight.w600,
+  );
 
   static TextStyle get bodyLarge => _style(
-        family: fontFamilyBody,
-        size: sizeBase,
-        height: lineHeightBase,
-        weight: FontWeight.w400,
-      );
+    family: fontFamilyBody,
+    size: sizeBase,
+    height: lineHeightBase,
+    weight: FontWeight.w400,
+  );
 
   static TextStyle get bodyMedium => _style(
-        family: fontFamilyBody,
-        size: sizeSm,
-        height: lineHeightSm,
-        weight: FontWeight.w400,
-      );
+    family: fontFamilyBody,
+    size: sizeSm,
+    height: lineHeightSm,
+    weight: FontWeight.w400,
+  );
 
   static TextStyle get bodySmall => _style(
-        family: fontFamilyBody,
-        size: sizeXs,
-        height: lineHeightXs,
-        weight: FontWeight.w400,
-      );
+    family: fontFamilyBody,
+    size: sizeXs,
+    height: lineHeightXs,
+    weight: FontWeight.w400,
+  );
 
   static TextStyle get labelLarge => _style(
-        family: fontFamilyBody,
-        size: sizeSm,
-        height: lineHeightSm,
-        weight: FontWeight.w500,
-      );
+    family: fontFamilyBody,
+    size: sizeSm,
+    height: lineHeightSm,
+    weight: FontWeight.w500,
+  );
 
   static TextStyle get labelMedium => _style(
-        family: fontFamilyBody,
-        size: sizeXs,
-        height: lineHeightXs,
-        weight: FontWeight.w500,
-      );
+    family: fontFamilyBody,
+    size: sizeXs,
+    height: lineHeightXs,
+    weight: FontWeight.w500,
+  );
 
   static TextStyle get labelSmall => _style(
-        family: fontFamilyBody,
-        size: sizeXs,
-        height: lineHeightXs,
-        weight: FontWeight.w500,
-      );
+    family: fontFamilyBody,
+    size: sizeXs,
+    height: lineHeightXs,
+    weight: FontWeight.w500,
+  );
 }
 
 /// Spacing scale derived from the Figma "Spacing" variable (base unit = 4)
@@ -326,157 +326,157 @@ class AppTheme {
   AppTheme._();
 
   static ColorScheme get _lightColorScheme => ColorScheme.light(
-        primary: AppColors.primary400,
-        onPrimary: AppColors.neutral100,
-        primaryContainer: AppColors.primary100,
-        onPrimaryContainer: AppColors.primary600,
-        secondary: AppColors.secondary400,
-        onSecondary: AppColors.neutral100,
-        secondaryContainer: AppColors.secondary100,
-        onSecondaryContainer: AppColors.secondary600,
-        tertiary: AppColors.accent400,
-        onTertiary: AppColors.neutral100,
-        tertiaryContainer: AppColors.accent100,
-        onTertiaryContainer: AppColors.accent600,
-        error: AppColors.error400,
-        onError: AppColors.neutral100,
-        errorContainer: AppColors.error100,
-        onErrorContainer: AppColors.error600,
-        surface: AppColors.neutral100,
-        onSurface: AppColors.neutral1000,
-        outline: AppColors.neutral400,
-        outlineVariant: AppColors.neutral300,
-      );
+    primary: AppColors.primary400,
+    onPrimary: AppColors.neutral100,
+    primaryContainer: AppColors.primary100,
+    onPrimaryContainer: AppColors.primary600,
+    secondary: AppColors.secondary400,
+    onSecondary: AppColors.neutral100,
+    secondaryContainer: AppColors.secondary100,
+    onSecondaryContainer: AppColors.secondary600,
+    tertiary: AppColors.accent400,
+    onTertiary: AppColors.neutral100,
+    tertiaryContainer: AppColors.accent100,
+    onTertiaryContainer: AppColors.accent600,
+    error: AppColors.error400,
+    onError: AppColors.neutral100,
+    errorContainer: AppColors.error100,
+    onErrorContainer: AppColors.error600,
+    surface: AppColors.neutral100,
+    onSurface: AppColors.neutral1000,
+    outline: AppColors.neutral400,
+    outlineVariant: AppColors.neutral300,
+  );
 
   // The Figma file's "Mode" variant of Global Tokens duplicates the light
   // values rather than defining a real dark palette, so dark theme reuses
   // the same brand colors with inverted surfaces.
   static ColorScheme get _darkColorScheme => ColorScheme.dark(
-        primary: AppColors.primary300,
-        onPrimary: AppColors.primary600,
-        primaryContainer: AppColors.primary500,
-        onPrimaryContainer: AppColors.primary100,
-        secondary: AppColors.secondary300,
-        onSecondary: AppColors.secondary600,
-        secondaryContainer: AppColors.secondary500,
-        onSecondaryContainer: AppColors.secondary100,
-        tertiary: AppColors.accent300,
-        onTertiary: AppColors.accent600,
-        tertiaryContainer: AppColors.accent500,
-        onTertiaryContainer: AppColors.accent100,
-        error: AppColors.error300,
-        onError: AppColors.error600,
-        errorContainer: AppColors.error500,
-        onErrorContainer: AppColors.error100,
-        surface: AppColors.neutral1100,
-        onSurface: AppColors.neutral100,
-        outline: AppColors.neutral700,
-        outlineVariant: AppColors.neutral800,
-      );
+    primary: AppColors.primary300,
+    onPrimary: AppColors.primary600,
+    primaryContainer: AppColors.primary500,
+    onPrimaryContainer: AppColors.primary100,
+    secondary: AppColors.secondary300,
+    onSecondary: AppColors.secondary600,
+    secondaryContainer: AppColors.secondary500,
+    onSecondaryContainer: AppColors.secondary100,
+    tertiary: AppColors.accent300,
+    onTertiary: AppColors.accent600,
+    tertiaryContainer: AppColors.accent500,
+    onTertiaryContainer: AppColors.accent100,
+    error: AppColors.error300,
+    onError: AppColors.error600,
+    errorContainer: AppColors.error500,
+    onErrorContainer: AppColors.error100,
+    surface: AppColors.neutral1100,
+    onSurface: AppColors.neutral100,
+    outline: AppColors.neutral700,
+    outlineVariant: AppColors.neutral800,
+  );
 
   static TextTheme get _textTheme => TextTheme(
-        displayLarge: AppTypography.displayLarge,
-        displayMedium: AppTypography.displayMedium,
-        displaySmall: AppTypography.displaySmall,
-        headlineLarge: AppTypography.headlineLarge,
-        headlineMedium: AppTypography.headlineMedium,
-        headlineSmall: AppTypography.headlineSmall,
-        titleLarge: AppTypography.titleLarge,
-        titleMedium: AppTypography.titleMedium,
-        titleSmall: AppTypography.titleSmall,
-        bodyLarge: AppTypography.bodyLarge,
-        bodyMedium: AppTypography.bodyMedium,
-        bodySmall: AppTypography.bodySmall,
-        labelLarge: AppTypography.labelLarge,
-        labelMedium: AppTypography.labelMedium,
-        labelSmall: AppTypography.labelSmall,
-      );
+    displayLarge: AppTypography.displayLarge,
+    displayMedium: AppTypography.displayMedium,
+    displaySmall: AppTypography.displaySmall,
+    headlineLarge: AppTypography.headlineLarge,
+    headlineMedium: AppTypography.headlineMedium,
+    headlineSmall: AppTypography.headlineSmall,
+    titleLarge: AppTypography.titleLarge,
+    titleMedium: AppTypography.titleMedium,
+    titleSmall: AppTypography.titleSmall,
+    bodyLarge: AppTypography.bodyLarge,
+    bodyMedium: AppTypography.bodyMedium,
+    bodySmall: AppTypography.bodySmall,
+    labelLarge: AppTypography.labelLarge,
+    labelMedium: AppTypography.labelMedium,
+    labelSmall: AppTypography.labelSmall,
+  );
 
   static ThemeData get light => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        colorScheme: _lightColorScheme,
-        scaffoldBackgroundColor: AppColors.neutral100,
-        textTheme: _textTheme.apply(
-          bodyColor: AppColors.neutral1000,
-          displayColor: AppColors.neutral1000,
+    useMaterial3: true,
+    brightness: Brightness.light,
+    colorScheme: _lightColorScheme,
+    scaffoldBackgroundColor: AppColors.neutral100,
+    textTheme: _textTheme.apply(
+      bodyColor: AppColors.neutral1000,
+      displayColor: AppColors.neutral1000,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary400,
+        foregroundColor: AppColors.neutral100,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.md,
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary400,
-            foregroundColor: AppColors.neutral100,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.md,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            textStyle: AppTypography.labelLarge,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.neutral200,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.base,
-            vertical: AppSpacing.md,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: AppColors.neutral100,
-          surfaceTintColor: AppColors.neutral100,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-        ),
-      );
+        textStyle: AppTypography.labelLarge,
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.neutral200,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.base,
+        vertical: AppSpacing.md,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      color: AppColors.neutral100,
+      surfaceTintColor: AppColors.neutral100,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+    ),
+  );
 
   static ThemeData get dark => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: _darkColorScheme,
-        scaffoldBackgroundColor: AppColors.neutral1100,
-        textTheme: _textTheme.apply(
-          bodyColor: AppColors.neutral100,
-          displayColor: AppColors.neutral100,
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: _darkColorScheme,
+    scaffoldBackgroundColor: AppColors.neutral1100,
+    textTheme: _textTheme.apply(
+      bodyColor: AppColors.neutral100,
+      displayColor: AppColors.neutral100,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary300,
+        foregroundColor: AppColors.primary600,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.md,
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary300,
-            foregroundColor: AppColors.primary600,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.md,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            textStyle: AppTypography.labelLarge,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.neutral900,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.base,
-            vertical: AppSpacing.md,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: AppColors.neutral900,
-          surfaceTintColor: AppColors.neutral900,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-        ),
-      );
+        textStyle: AppTypography.labelLarge,
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.neutral900,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.base,
+        vertical: AppSpacing.md,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      color: AppColors.neutral900,
+      surfaceTintColor: AppColors.neutral900,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+    ),
+  );
 }
