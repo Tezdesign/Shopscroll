@@ -14,8 +14,13 @@ class OrderStatusBadge extends StatelessWidget {
 
   final OrderStatus status;
 
-  // Fixed width matching every real instance in Figma.
-  static const double _width = 86;
+  // Figma's three instances (node 706:3032) all sit at a fixed 86, so every
+  // badge lines up in the right-aligned Activity column. That number is a
+  // Figma-font measurement (Inter, which isn't bundled here — see
+  // AppTypography.fontFamilyBody's doc comment); the OS font this actually
+  // renders in is wider, so 86 is a minimum, not a hard cap: "In progress"
+  // grows the pill enough to stay on one line instead of wrapping into it.
+  static const double _minWidth = 86;
   // Figma tracks this label at 0.28 letterspacing; no shared tracking
   // token exists yet, so it's kept local like elsewhere in this project.
   static const double _letterSpacing = 0.28;
@@ -48,7 +53,7 @@ class OrderStatusBadge extends StatelessWidget {
     final spec = _spec;
 
     return Container(
-      width: _width,
+      constraints: const BoxConstraints(minWidth: _minWidth),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
@@ -60,8 +65,12 @@ class OrderStatusBadge extends StatelessWidget {
       child: Text(
         spec.label,
         textAlign: TextAlign.center,
+        maxLines: 1,
         style: TextStyle(
-          fontFamily: AppTypography.fontFamilyDisplay,
+          // Figma node 706:3032 sets this label in Inter (see
+          // AppTypography.fontFamilyBody's doc comment for why that isn't
+          // what actually renders yet).
+          fontFamily: AppTypography.fontFamilyBody,
           fontSize: AppTypography.sizeSm,
           height: AppTypography.lineHeightSm,
           fontWeight: FontWeight.w600,

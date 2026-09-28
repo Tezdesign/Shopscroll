@@ -5,6 +5,7 @@ import '../../models/cart_item.dart';
 import '../../models/product.dart';
 import '../cart_repository.dart';
 import 'row_mappers.dart';
+import 'session_user_id.dart';
 
 class SupabaseCartRepository implements CartRepository {
   SupabaseCartRepository(this._client);
@@ -15,11 +16,11 @@ class SupabaseCartRepository implements CartRepository {
 
   /// Row level security already limits every call below to the caller's own
   /// rows (spec 0004), and `user_id` is only ever read from the session.
-  String? get _userId => _client.auth.currentUser?.id;
+  Future<String?> get _userId => currentSessionUserId(_client);
 
   @override
   Future<List<CartItem>> getCartItems() async {
-    final userId = _userId;
+    final userId = await _userId;
     // No session yet (auth bootstrap hasn't run): nothing is owned yet.
     if (userId == null) return const [];
 
@@ -38,7 +39,7 @@ class SupabaseCartRepository implements CartRepository {
     String? size,
     int? color,
   }) async {
-    final userId = _userId;
+    final userId = await _userId;
     if (userId == null) throw StateError('No session to add to a cart');
 
     var match = _client

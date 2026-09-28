@@ -26,6 +26,12 @@ class AuthSessionController {
   }) {
     _wasSignedIn = clerkAuth.isSignedIn;
     clerkAuth.addListener(_onClerkAuthChanged);
+    // A session Clerk restored from disk is already signed in when this is
+    // built, so no transition ever fires for it. Without this the app would
+    // show the signed in buyer but keep reading and writing (cart, orders)
+    // through the anonymous client. The profile upsert is skipped: it would
+    // overwrite the buyer's own profile edits on every launch.
+    if (_wasSignedIn) _handleSignedIn(upsertProfile: false);
   }
 
   final WidgetRef ref;
@@ -48,7 +54,7 @@ class AuthSessionController {
     }
   }
 
-  Future<void> _handleSignedIn() async {
+  Future<void> _handleSignedIn({bool upsertProfile = true}) async {
     if (_isHandlingSignIn) return;
     _isHandlingSignIn = true;
     try {
@@ -63,7 +69,7 @@ class AuthSessionController {
       // one, exactly as its own caller check requires.
       ref.read(activeSupabaseClientProvider.notifier).state = clerkBackedClient;
 
-      await _upsertBuyerProfile(user, targetUserId);
+      if (upsertProfile) await _upsertBuyerProfile(user, targetUserId);
     } finally {
       _isHandlingSignIn = false;
     }

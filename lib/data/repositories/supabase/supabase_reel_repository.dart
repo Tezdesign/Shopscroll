@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/reel.dart';
 import '../../models/saved_reel.dart';
 import '../reel_repository.dart';
+import 'session_user_id.dart';
 
 class SupabaseReelRepository implements ReelRepository {
   SupabaseReelRepository(this._client);
@@ -15,7 +16,7 @@ class SupabaseReelRepository implements ReelRepository {
   /// [Reel.isSaved]. reel_saves has no row at all until someone saves a
   /// reel, so this is a plain lookup set, not a join with a default.
   Future<Set<String>> _savedReelIds() async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = await currentSessionUserId(_client);
     if (userId == null) return const {};
     final rows = await _client
         .from('reel_saves')
@@ -75,7 +76,7 @@ class SupabaseReelRepository implements ReelRepository {
 
   @override
   Future<List<SavedReel>> getSavedReels() async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = await currentSessionUserId(_client);
     // No session yet (auth bootstrap hasn't run): nothing is owned yet.
     if (userId == null) return const [];
 
@@ -96,7 +97,7 @@ class SupabaseReelRepository implements ReelRepository {
 
   @override
   Future<SavedReel> saveReel(Reel reel, {DateTime? savedAt}) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = await currentSessionUserId(_client);
     if (userId == null) throw StateError('No session to save a reel');
 
     final at = savedAt ?? DateTime.now();
@@ -117,7 +118,7 @@ class SupabaseReelRepository implements ReelRepository {
 
   @override
   Future<void> unsaveReel(String reelId) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = await currentSessionUserId(_client);
     if (userId == null) throw StateError('No session to unsave a reel');
 
     await _client

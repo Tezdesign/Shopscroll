@@ -4,6 +4,7 @@ import '../../models/product.dart';
 import '../../models/saved_product.dart';
 import '../saved_product_repository.dart';
 import 'row_mappers.dart';
+import 'session_user_id.dart';
 
 class SupabaseSavedProductRepository implements SavedProductRepository {
   SupabaseSavedProductRepository(this._client);
@@ -12,11 +13,11 @@ class SupabaseSavedProductRepository implements SavedProductRepository {
 
   /// Row level security already limits every call below to the caller's own
   /// rows (spec 0008), and `user_id` is only ever read from the session.
-  String? get _userId => _client.auth.currentUser?.id;
+  Future<String?> get _userId => currentSessionUserId(_client);
 
   @override
   Future<List<SavedProduct>> getSavedProducts() async {
-    final userId = _userId;
+    final userId = await _userId;
     // No session yet (auth bootstrap hasn't run): nothing is owned yet.
     if (userId == null) return const [];
 
@@ -38,7 +39,7 @@ class SupabaseSavedProductRepository implements SavedProductRepository {
 
   @override
   Future<SavedProduct> saveProduct(Product product, {DateTime? savedAt}) async {
-    final userId = _userId;
+    final userId = await _userId;
     if (userId == null) throw StateError('No session to save a product');
 
     final at = savedAt ?? DateTime.now();
@@ -59,7 +60,7 @@ class SupabaseSavedProductRepository implements SavedProductRepository {
 
   @override
   Future<void> unsaveProduct(String productId) async {
-    final userId = _userId;
+    final userId = await _userId;
     if (userId == null) throw StateError('No session to unsave a product');
 
     await _client
