@@ -138,4 +138,28 @@ void main() {
       expect(size.height, greaterThanOrEqualTo(44), reason: label);
     }
   });
+
+  testWidgets('the saved bookmark calls onUnsave and has a 44 tap area', (
+    tester,
+  ) async {
+    var removed = false;
+    await tester.pumpWidget(
+      wrap(
+        ItemCard(
+          title: 'Item',
+          price: r'$10',
+          trailing: ItemCardTrailing.saved,
+          onUnsave: () => removed = true,
+        ),
+      ),
+    );
+
+    final control = find.ancestor(
+      of: find.byIcon(Icons.bookmark),
+      matching: find.byType(SizedBox),
+    );
+    expect(tester.getSize(control.first).width, greaterThanOrEqualTo(44));
+    await tester.tap(find.byIcon(Icons.bookmark));
+    expect(removed, isTrue);
+  });
 }

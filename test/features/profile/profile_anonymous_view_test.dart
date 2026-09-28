@@ -29,10 +29,7 @@ void main() {
     await tester.pumpWidget(wrapWithRouter());
 
     expect(find.text('Sign in to see your profile'), findsOneWidget);
-    expect(
-      find.textContaining('once you have signed in'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('once you have signed in'), findsOneWidget);
     expect(find.text('Sign up or log in'), findsOneWidget);
   });
 

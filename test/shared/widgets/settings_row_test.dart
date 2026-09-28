@@ -6,11 +6,16 @@ import 'package:marketplace_app/shared/widgets/settings_row.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders the given label', (tester) async {
-    await tester.pumpWidget(wrap(const SettingsRow(label: 'Delivery addresses')));
+    await tester.pumpWidget(
+      wrap(const SettingsRow(label: 'Delivery addresses')),
+    );
 
     expect(find.text('Delivery addresses'), findsOneWidget);
   });
@@ -76,9 +81,7 @@ void main() {
     expect(icon.color, AppColors.error400);
   });
 
-  testWidgets('does nothing when tapped with no onTap handler', (
-    tester,
-  ) async {
+  testWidgets('does nothing when tapped with no onTap handler', (tester) async {
     await tester.pumpWidget(wrap(const SettingsRow(label: 'Language')));
 
     await tester.tap(find.text('Language'));

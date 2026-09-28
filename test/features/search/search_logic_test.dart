@@ -29,7 +29,11 @@ UserProfile _seller(String id, String name) {
 }
 
 void main() {
-  final airMax = _product(id: 'p1', title: 'Air Max 270 Sneakers', category: 'Sports');
+  final airMax = _product(
+    id: 'p1',
+    title: 'Air Max 270 Sneakers',
+    category: 'Sports',
+  );
   final airPods = _product(
     id: 'p2',
     title: 'AirPods Pro',
@@ -37,8 +41,17 @@ void main() {
     storeId: 'store-2',
     storeName: 'Apple',
   );
-  final hoodie = _product(id: 'p3', title: 'Graphic Print Hoodie', category: 'Fashion');
-  final deal = _product(id: 'p4', title: 'Windrunner Jacket', category: 'Fashion', isDeal: true);
+  final hoodie = _product(
+    id: 'p3',
+    title: 'Graphic Print Hoodie',
+    category: 'Fashion',
+  );
+  final deal = _product(
+    id: 'p4',
+    title: 'Windrunner Jacket',
+    category: 'Fashion',
+    isDeal: true,
+  );
 
   final products = [airMax, airPods, hoodie, deal];
   final sellers = [_seller('store-1', 'Nike'), _seller('store-2', 'Apple')];
@@ -103,10 +116,7 @@ void main() {
     });
 
     test('narrows a phrase match by category and deals', () {
-      expect(
-        resultsFor(products, phrase: 'fashion', dealsOnly: true),
-        [deal],
-      );
+      expect(resultsFor(products, phrase: 'fashion', dealsOnly: true), [deal]);
     });
 
     test('a storeId ignores the phrase and lists that store only', () {

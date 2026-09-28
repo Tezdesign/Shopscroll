@@ -37,6 +37,7 @@ export async function deleteUserData(
     supabase.from("cart_items").delete().eq("user_id", userId),
     supabase.from("reel_likes").delete().eq("user_id", userId),
     supabase.from("reel_saves").delete().eq("user_id", userId),
+    supabase.from("product_saves").delete().eq("user_id", userId),
     supabase.from("user_profiles").delete().eq("id", userId),
   ]);
 

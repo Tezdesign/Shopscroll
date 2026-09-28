@@ -9,10 +9,7 @@ final productsProvider = FutureProvider<List<Product>>((ref) {
 });
 
 /// A single product by id, as if fetched from `GET /products/:id`.
-final productByIdProvider = FutureProvider.family<Product?, String>((
-  ref,
-  id,
-) {
+final productByIdProvider = FutureProvider.family<Product?, String>((ref, id) {
   return ref.watch(productRepositoryProvider).getProductById(id);
 });
 

@@ -1,14 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'cart_repository.dart';
+import 'conversation_repository.dart';
 import 'mock/mock_cart_repository.dart';
+import 'mock/mock_conversation_repository.dart';
 import 'mock/mock_order_repository.dart';
 import 'mock/mock_product_repository.dart';
 import 'mock/mock_reel_repository.dart';
+import 'mock/mock_saved_product_repository.dart';
 import 'mock/mock_user_profile_repository.dart';
 import 'order_repository.dart';
 import 'product_repository.dart';
 import 'reel_repository.dart';
+import 'saved_product_repository.dart';
 import 'user_profile_repository.dart';
 
 /// Every provider here defaults to its mock implementation, so the app,
@@ -33,4 +37,12 @@ final cartRepositoryProvider = Provider<CartRepository>(
 
 final orderRepositoryProvider = Provider<OrderRepository>(
   (ref) => MockOrderRepository(),
+);
+
+final savedProductRepositoryProvider = Provider<SavedProductRepository>(
+  (ref) => MockSavedProductRepository(),
+);
+
+final conversationRepositoryProvider = Provider<ConversationRepository>(
+  (ref) => MockConversationRepository(),
 );

@@ -22,13 +22,7 @@ void main() {
 
   testWidgets('applies the given size and color', (tester) async {
     await tester.pumpWidget(
-      wrap(
-        const AppIcon(
-          AppIconGlyph.saveFilled,
-          size: 32,
-          color: Colors.red,
-        ),
-      ),
+      wrap(const AppIcon(AppIconGlyph.saveFilled, size: 32, color: Colors.red)),
     );
 
     final icon = tester.widget<Icon>(find.byType(Icon));

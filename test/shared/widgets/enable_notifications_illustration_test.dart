@@ -5,14 +5,13 @@ import 'package:marketplace_app/core/theme/app_theme.dart';
 import 'package:marketplace_app/shared/widgets/enable_notifications_illustration.dart';
 
 void main() {
-  testWidgets('renders the bell illustration at the requested size',
-      (tester) async {
+  testWidgets('renders the bell illustration at the requested size', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
-        home: const Scaffold(
-          body: EnableNotificationsIllustration(size: 200),
-        ),
+        home: const Scaffold(body: EnableNotificationsIllustration(size: 200)),
       ),
     );
     await tester.pump();

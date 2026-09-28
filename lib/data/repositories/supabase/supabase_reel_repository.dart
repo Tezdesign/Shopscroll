@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/reel.dart';
+import '../../models/saved_reel.dart';
 import '../reel_repository.dart';
 
 class SupabaseReelRepository implements ReelRepository {
@@ -70,5 +71,59 @@ class SupabaseReelRepository implements ReelRepository {
         .select(_selectWithProducts)
         .eq('store_id', storeId);
     return rows.map((r) => _fromRow(r, saved)).toList();
+  }
+
+  @override
+  Future<List<SavedReel>> getSavedReels() async {
+    final userId = _client.auth.currentUser?.id;
+    // No session yet (auth bootstrap hasn't run): nothing is owned yet.
+    if (userId == null) return const [];
+
+    final rows = await _client
+        .from('reel_saves')
+        .select('created_at, reel:reels($_selectWithProducts)')
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+
+    return rows.map((row) {
+      final reelRow = row['reel'] as Map<String, dynamic>;
+      return SavedReel(
+        _fromRow(reelRow, {reelRow['id'] as String}),
+        DateTime.parse(row['created_at'] as String),
+      );
+    }).toList();
+  }
+
+  @override
+  Future<SavedReel> saveReel(Reel reel, {DateTime? savedAt}) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('No session to save a reel');
+
+    final at = savedAt ?? DateTime.now();
+    // Idempotent: a repeat save of the same reel changes nothing.
+    await _client
+        .from('reel_saves')
+        .upsert(
+          {
+            'user_id': userId,
+            'reel_id': reel.id,
+            'created_at': at.toUtc().toIso8601String(),
+          },
+          onConflict: 'user_id,reel_id',
+          ignoreDuplicates: true,
+        );
+    return SavedReel(reel.copyWith(isSaved: true), at);
+  }
+
+  @override
+  Future<void> unsaveReel(String reelId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('No session to unsave a reel');
+
+    await _client
+        .from('reel_saves')
+        .delete()
+        .eq('user_id', userId)
+        .eq('reel_id', reelId);
   }
 }

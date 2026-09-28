@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/add_to_cart_toggle.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('shows "Add to cart" when not added', (tester) async {
@@ -26,10 +29,7 @@ void main() {
   testWidgets('hides the label in iconOnly display', (tester) async {
     await tester.pumpWidget(
       wrap(
-        const AddToCartToggle(
-          added: false,
-          display: AddToCartDisplay.iconOnly,
-        ),
+        const AddToCartToggle(added: false, display: AddToCartDisplay.iconOnly),
       ),
     );
 

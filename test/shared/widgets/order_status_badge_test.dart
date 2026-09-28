@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/order_status_badge.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders the label for each status', (tester) async {

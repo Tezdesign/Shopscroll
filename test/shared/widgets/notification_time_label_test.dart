@@ -5,21 +5,20 @@ import 'package:marketplace_app/shared/widgets/notification_time_label.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders the given text', (tester) async {
-    await tester.pumpWidget(
-      wrap(const NotificationTimeLabel(text: 'Now')),
-    );
+    await tester.pumpWidget(wrap(const NotificationTimeLabel(text: 'Now')));
 
     expect(find.text('Now'), findsOneWidget);
   });
 
   testWidgets('uses neutral500 when not checked', (tester) async {
-    await tester.pumpWidget(
-      wrap(const NotificationTimeLabel(text: 'Now')),
-    );
+    await tester.pumpWidget(wrap(const NotificationTimeLabel(text: 'Now')));
 
     final text = tester.widget<Text>(find.text('Now'));
     expect(text.style?.color, AppColors.neutral500);

@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/app_button.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders the label', (tester) async {
@@ -83,9 +86,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      wrap(
-        const AppButton(label: 'Back', variant: AppButtonVariant.secondary),
-      ),
+      wrap(const AppButton(label: 'Back', variant: AppButtonVariant.secondary)),
     );
 
     final container = tester.widget<Container>(find.byType(Container).first);

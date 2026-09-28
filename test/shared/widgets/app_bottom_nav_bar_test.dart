@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/app_bottom_nav_bar.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders all five tab labels', (tester) async {

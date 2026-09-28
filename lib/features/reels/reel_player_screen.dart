@@ -10,7 +10,9 @@ import '../../data/models/product.dart';
 import '../../data/models/reel.dart';
 import '../../data/providers/product_providers.dart';
 import '../../data/providers/reel_providers.dart';
+import '../../data/providers/saved_providers.dart';
 import '../../shared/widgets/app_icon.dart';
+import '../activity/save_actions.dart';
 
 /// The full screen, swipeable Reels video player. Reproduces the Figma frame
 /// "Scrolling reels" (node 238:2202), found after this screen's first build
@@ -34,9 +36,11 @@ import '../../shared/widgets/app_icon.dart';
 /// Only a three wide window of `VideoPlayerController`/`ChewieController`
 /// instances (current page, one before, one after) is ever alive at once —
 /// bounded memory regardless of feed length, matching this spec's Option 1.
-/// Like/save state lives once here, in this screen's own [State] (not per
-/// page), so it survives swiping away and back within the same session and
-/// only resets when this screen is left and reopened (AC-7).
+/// Like state lives once here, in this screen's own [State] (not per page),
+/// so it survives swiping away and back within the same session and only
+/// resets when this screen is left and reopened (AC-7). Save is real since
+/// spec 0008: it lives in `savedReelsProvider`, shared with Activity's My
+/// collection.
 class ReelPlayerScreen extends ConsumerStatefulWidget {
   const ReelPlayerScreen({
     super.key,
@@ -59,7 +63,6 @@ class _ReelPlayerScreenState extends ConsumerState<ReelPlayerScreen> {
 
   final Map<int, _ReelControllerEntry> _controllers = {};
   final Set<String> _likedIds = {};
-  final Set<String> _savedToggled = {};
 
   @override
   void dispose() {
@@ -81,8 +84,10 @@ class _ReelPlayerScreenState extends ConsumerState<ReelPlayerScreen> {
 
   bool _isLiked(Reel reel) => _likedIds.contains(reel.id);
 
+  // Saving is real and shared with Activity's My collection (spec 0008), so
+  // the state comes from the provider, not from this screen.
   bool _isSaved(Reel reel) =>
-      _savedToggled.contains(reel.id) ? !reel.isSaved : reel.isSaved;
+      ref.read(savedReelsProvider.notifier).isSaved(reel.id);
 
   int _likeCount(Reel reel) => reel.likeCount + (_isLiked(reel) ? 1 : 0);
 
@@ -92,11 +97,7 @@ class _ReelPlayerScreenState extends ConsumerState<ReelPlayerScreen> {
     });
   }
 
-  void _toggleSave(Reel reel) {
-    setState(() {
-      if (!_savedToggled.add(reel.id)) _savedToggled.remove(reel.id);
-    });
-  }
+  void _toggleSave(Reel reel) => toggleReelSave(context, reel);
 
   void _toggleMute() {
     setState(() => _muted = !_muted);
@@ -187,6 +188,8 @@ class _ReelPlayerScreenState extends ConsumerState<ReelPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final reelsAsync = ref.watch(reelsProvider);
+    // Rebuilds when a save changes; _isSaved reads the notifier for the value.
+    ref.watch(savedReelsProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,

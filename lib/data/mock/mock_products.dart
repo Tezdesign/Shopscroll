@@ -226,8 +226,7 @@ final List<Product> mockProducts = [
   Product(
     id: 'prod-011',
     title: 'Dri-FIT Running Shorts',
-    description:
-        'Lightweight, sweat-wicking shorts built for your daily run.',
+    description: 'Lightweight, sweat-wicking shorts built for your daily run.',
     price: 35,
     category: 'Sports',
     storeId: 'seller-nike',
@@ -281,8 +280,7 @@ final List<Product> mockProducts = [
   Product(
     id: 'prod-013',
     title: 'Cloud Paint Blush',
-    description:
-        'A buildable, gel-cream blush that blends like a second skin.',
+    description: 'A buildable, gel-cream blush that blends like a second skin.',
     price: 22,
     category: 'Makeup',
     storeId: 'seller-glossier',

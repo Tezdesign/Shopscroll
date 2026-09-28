@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/segmented_tabs.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders all labels', (tester) async {
@@ -64,9 +67,7 @@ void main() {
     expect(inactiveText.style?.color, AppColors.neutral600);
   });
 
-  testWidgets('equal distribution wraps each tab in Expanded', (
-    tester,
-  ) async {
+  testWidgets('equal distribution wraps each tab in Expanded', (tester) async {
     await tester.pumpWidget(
       wrap(
         SegmentedTabs(
@@ -79,5 +80,26 @@ void main() {
     );
 
     expect(find.byType(Expanded), findsNWidgets(2));
+  });
+
+  testWidgets('tapHeight gives each tab at least that tall a tap area', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        SegmentedTabs(
+          labels: const ['Products', 'Reels'],
+          activeIndex: 0,
+          onChanged: (_) {},
+          tapHeight: 44,
+        ),
+      ),
+    );
+
+    final tab = find.ancestor(
+      of: find.text('Reels'),
+      matching: find.byType(Container),
+    );
+    expect(tester.getSize(tab.first).height, greaterThanOrEqualTo(44));
   });
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/activity/activity_screen.dart';
 import '../../features/cart/cart_screen.dart';
 import '../../features/catalog/home_screen.dart';
 import '../../features/catalog/product_detail_screen.dart';
@@ -38,9 +39,9 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// Root router. A [StatefulShellRoute] holds the 5 bottom nav tabs (Home,
 /// Discover, Reels, Activity, Profile) as branches under [AppShell], so
 /// switching tabs preserves each one's own navigation stack and scroll
-/// position (see spec 0001). Activity is still a placeholder branch
-/// (`ComingSoonScreen`); Profile is the real page from spec 0005 once
-/// Clerk is configured ([ProfileScreen] signed in, [ProfileAnonymousView]
+/// position (see spec 0001). Activity is [ActivityScreen] (spec 0008), with
+/// its `orders/:id` and `chat/:id` children as coming soon pages; Profile is
+/// the real page from spec 0005 once Clerk is configured ([ProfileScreen] signed in, [ProfileAnonymousView]
 /// signed out), and falls back to the same placeholder when Clerk isn't
 /// configured at all (no `ClerkAuth` ancestor to read in that case).
 ///
@@ -134,10 +135,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/activity',
-                builder: (context, state) => const ComingSoonScreen(
-                  label: 'Activity',
-                  icon: Icons.receipt_long_outlined,
-                ),
+                builder: (context, state) => const ActivityScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'orders/:id',
+                    builder: (context, state) => const ComingSoonScreen(
+                      label: 'Order details',
+                      icon: Icons.receipt_long_outlined,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'chat/:id',
+                    builder: (context, state) => const ComingSoonScreen(
+                      label: 'Chat',
+                      icon: Icons.chat_bubble_outline,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -185,12 +199,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // only, advancing through its stages against no backend.
           final signIn = SignInVerification.maybe(context, ref);
           return LogInScreen(
-            onSendCode:
-                signIn?.sendCode ?? (channel, identifier) async => true,
-            onVerify:
-                signIn?.verify ?? (channel, identifier, code) async {},
-            onResendCode:
-                signIn?.resendCode ?? (channel, identifier) async {},
+            onSendCode: signIn?.sendCode ?? (channel, identifier) async => true,
+            onVerify: signIn?.verify ?? (channel, identifier, code) async {},
+            onResendCode: signIn?.resendCode ?? (channel, identifier) async {},
             onSignUp: () => context.push('/sign-up'),
           );
         },

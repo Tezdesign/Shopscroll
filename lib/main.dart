@@ -15,9 +15,11 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'data/repositories/repository_providers.dart';
 import 'data/repositories/supabase/supabase_cart_repository.dart';
+import 'data/repositories/supabase/supabase_conversation_repository.dart';
 import 'data/repositories/supabase/supabase_order_repository.dart';
 import 'data/repositories/supabase/supabase_product_repository.dart';
 import 'data/repositories/supabase/supabase_reel_repository.dart';
+import 'data/repositories/supabase/supabase_saved_product_repository.dart';
 import 'data/repositories/supabase/supabase_user_profile_repository.dart';
 
 void main() async {
@@ -81,6 +83,12 @@ void main() async {
           orderRepositoryProvider.overrideWithValue(
             SupabaseOrderRepository(anonymousClient),
           ),
+          savedProductRepositoryProvider.overrideWithValue(
+            SupabaseSavedProductRepository(anonymousClient),
+          ),
+          conversationRepositoryProvider.overrideWithValue(
+            SupabaseConversationRepository(),
+          ),
         ],
         child: const MarketplaceApp(),
       ),
@@ -141,6 +149,14 @@ void main() async {
         orderRepositoryProvider.overrideWith(
           (ref) =>
               SupabaseOrderRepository(ref.watch(activeSupabaseClientProvider)),
+        ),
+        savedProductRepositoryProvider.overrideWith(
+          (ref) => SupabaseSavedProductRepository(
+            ref.watch(activeSupabaseClientProvider),
+          ),
+        ),
+        conversationRepositoryProvider.overrideWithValue(
+          SupabaseConversationRepository(),
         ),
       ],
       child: MarketplaceApp(

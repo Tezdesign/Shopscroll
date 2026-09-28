@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/product_info_card.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders store name and description', (tester) async {
@@ -25,13 +28,9 @@ void main() {
     );
   });
 
-  testWidgets('does not render a price or add-to-cart button', (
-    tester,
-  ) async {
+  testWidgets('does not render a price or add-to-cart button', (tester) async {
     await tester.pumpWidget(
-      wrap(
-        const ProductInfoCard(storeName: 'Pull&bear', description: 'Item'),
-      ),
+      wrap(const ProductInfoCard(storeName: 'Pull&bear', description: 'Item')),
     );
 
     expect(find.text('Add to cart'), findsNothing);

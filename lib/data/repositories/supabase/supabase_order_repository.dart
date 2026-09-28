@@ -18,7 +18,10 @@ class SupabaseOrderRepository implements OrderRepository {
   // still requires a full Product, so the fields order_items never
   // snapshotted (description, category, storeId) are filled with an empty
   // placeholder here; nothing in the order history UI reads them today.
-  CartItem _orderItemToCartItem(Map<String, dynamic> row, DateTime orderCreatedAt) {
+  CartItem _orderItemToCartItem(
+    Map<String, dynamic> row,
+    DateTime orderCreatedAt,
+  ) {
     return CartItem(
       id: row['id'] as String,
       product: Product(

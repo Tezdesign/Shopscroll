@@ -30,6 +30,7 @@ class ItemCard extends StatelessWidget {
     this.onIncrement,
     this.onDecrement,
     this.onDelete,
+    this.onUnsave,
     this.onTap,
   });
 
@@ -48,6 +49,9 @@ class ItemCard extends StatelessWidget {
   final VoidCallback? onIncrement;
   final VoidCallback? onDecrement;
   final VoidCallback? onDelete;
+
+  /// Tapped on the filled bookmark of the [ItemCardTrailing.saved] variant.
+  final VoidCallback? onUnsave;
   final VoidCallback? onTap;
 
   static const double _mediaSize = 90;
@@ -65,7 +69,7 @@ class ItemCard extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                _Media(imageUrl: imageUrl, size: _mediaSize),
+                ItemMedia(imageUrl: imageUrl, size: _mediaSize),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
@@ -76,7 +80,7 @@ class ItemCard extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _Avatar(url: storeAvatarUrl, size: _avatarSize),
+                            ItemAvatar(url: storeAvatarUrl, size: _avatarSize),
                             const SizedBox(width: AppSpacing.xs),
                             Text(storeName!, style: _storeNameStyle),
                           ],
@@ -143,9 +147,13 @@ class ItemCard extends StatelessWidget {
           onDelete: onDelete,
         );
       case ItemCardTrailing.saved:
-        return const AppIcon(
-          AppIconGlyph.saveFilled,
-          color: AppColors.neutral1100,
+        return _Control(
+          label: 'Remove from saved',
+          onTap: onUnsave,
+          child: const AppIcon(
+            AppIconGlyph.saveFilled,
+            color: AppColors.neutral1100,
+          ),
         );
       case ItemCardTrailing.none:
         return const SizedBox.shrink();
@@ -177,8 +185,8 @@ class ItemCard extends StatelessWidget {
   );
 }
 
-class _Media extends StatelessWidget {
-  const _Media({required this.imageUrl, required this.size});
+class ItemMedia extends StatelessWidget {
+  const ItemMedia({super.key, required this.imageUrl, required this.size});
 
   final String? imageUrl;
   final double size;
@@ -210,8 +218,8 @@ class _Media extends StatelessWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.url, required this.size});
+class ItemAvatar extends StatelessWidget {
+  const ItemAvatar({super.key, required this.url, required this.size});
 
   final String? url;
   final double size;

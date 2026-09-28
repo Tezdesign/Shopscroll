@@ -48,7 +48,14 @@ void main() {
     ) async {
       var sent = false;
       await tester.pumpWidget(
-        wrap(screen(onSendCode: (_) async { sent = true; return true; })),
+        wrap(
+          screen(
+            onSendCode: (_) async {
+              sent = true;
+              return true;
+            },
+          ),
+        ),
       );
 
       await tester.enterText(find.byType(TextField), 'not-an-email');
@@ -93,7 +100,14 @@ void main() {
         'field with a countdown', (tester) async {
       String? sentTo;
       await tester.pumpWidget(
-        wrap(screen(onSendCode: (e) async { sentTo = e; return true; })),
+        wrap(
+          screen(
+            onSendCode: (e) async {
+              sentTo = e;
+              return true;
+            },
+          ),
+        ),
       );
 
       await tester.enterText(
@@ -113,22 +127,19 @@ void main() {
       await disposeScreen(tester);
     });
 
-    testWidgets(
-      'onSendCode resolving false stays on the enter address stage '
-      '(regression: a failed send must not show a countdown for a code '
-      'that was never sent, or "Resend code" later fails)',
-      (tester) async {
-        await tester.pumpWidget(wrap(screen(onSendCode: (_) async => false)));
+    testWidgets('onSendCode resolving false stays on the enter address stage '
+        '(regression: a failed send must not show a countdown for a code '
+        'that was never sent, or "Resend code" later fails)', (tester) async {
+      await tester.pumpWidget(wrap(screen(onSendCode: (_) async => false)));
 
-        await tester.enterText(find.byType(TextField), 'jane@example.com');
-        await tester.tap(find.text('Continue'));
-        await tester.pump();
-        await tester.pump();
+      await tester.enterText(find.byType(TextField), 'jane@example.com');
+      await tester.tap(find.text('Continue'));
+      await tester.pump();
+      await tester.pump();
 
-        expect(find.text('Verification code'), findsNothing);
-        expect(find.textContaining('Resend code'), findsNothing);
-      },
-    );
+      expect(find.text('Verification code'), findsNothing);
+      expect(find.textContaining('Resend code'), findsNothing);
+    });
 
     testWidgets('the address stays editable, as in the Figma frame', (
       tester,

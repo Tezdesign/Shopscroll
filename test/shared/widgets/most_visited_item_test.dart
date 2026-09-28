@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/most_visited_item.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders the store name', (tester) async {
@@ -25,9 +28,7 @@ void main() {
   testWidgets('invokes onTap when tapped', (tester) async {
     var tapped = false;
     await tester.pumpWidget(
-      wrap(
-        MostVisitedItem(storeName: 'Yale', onTap: () => tapped = true),
-      ),
+      wrap(MostVisitedItem(storeName: 'Yale', onTap: () => tapped = true)),
     );
 
     await tester.tap(find.byType(MostVisitedItem));

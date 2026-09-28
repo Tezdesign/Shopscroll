@@ -16,29 +16,35 @@ void main() {
     expect(mockSellers.length, 5);
   });
 
-  test('productsProvider resolves all mock products after the network delay', () async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+  test(
+    'productsProvider resolves all mock products after the network delay',
+    () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-    final result = await container.read(productsProvider.future);
+      final result = await container.read(productsProvider.future);
 
-    expect(result, mockProducts);
-  });
+      expect(result, mockProducts);
+    },
+  );
 
-  test('productByIdProvider resolves a known product and null for unknown', () async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+  test(
+    'productByIdProvider resolves a known product and null for unknown',
+    () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-    final found = await container.read(
-      productByIdProvider('prod-001').future,
-    );
-    final missing = await container.read(
-      productByIdProvider('does-not-exist').future,
-    );
+      final found = await container.read(
+        productByIdProvider('prod-001').future,
+      );
+      final missing = await container.read(
+        productByIdProvider('does-not-exist').future,
+      );
 
-    expect(found?.id, 'prod-001');
-    expect(missing, isNull);
-  });
+      expect(found?.id, 'prod-001');
+      expect(missing, isNull);
+    },
+  );
 
   test('productsByCategoryProvider filters by category', () async {
     final container = ProviderContainer();
@@ -52,15 +58,18 @@ void main() {
     expect(result.every((p) => p.category == 'Tech'), isTrue);
   });
 
-  test('dealsProductsProvider only returns products marked as a deal', () async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+  test(
+    'dealsProductsProvider only returns products marked as a deal',
+    () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-    final result = await container.read(dealsProductsProvider.future);
+      final result = await container.read(dealsProductsProvider.future);
 
-    expect(result, isNotEmpty);
-    expect(result.every((p) => p.isDeal), isTrue);
-  });
+      expect(result, isNotEmpty);
+      expect(result.every((p) => p.isDeal), isTrue);
+    },
+  );
 
   test('reelsProvider resolves all mock reels', () async {
     final container = ProviderContainer();

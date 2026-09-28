@@ -25,7 +25,8 @@ class AppShell extends StatelessWidget {
         currentItem: AppTabItem.values[navigationShell.currentIndex],
         onItemSelected: (item) => navigationShell.goBranch(
           AppTabItem.values.indexOf(item),
-          initialLocation: item == AppTabItem.values[navigationShell.currentIndex],
+          initialLocation:
+              item == AppTabItem.values[navigationShell.currentIndex],
         ),
       ),
     );

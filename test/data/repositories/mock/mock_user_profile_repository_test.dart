@@ -83,20 +83,17 @@ void main() {
       expect(updated?.role, UserRole.seller);
     });
 
-    test(
-      'throws UsernameTakenException when the username belongs to a '
-      'different existing profile',
-      () async {
-        expect(
-          () => repository.updateUserProfile(
-            'seller-nike',
-            name: 'Nike',
-            username: '@apple',
-          ),
-          throwsA(isA<UsernameTakenException>()),
-        );
-      },
-    );
+    test('throws UsernameTakenException when the username belongs to a '
+        'different existing profile', () async {
+      expect(
+        () => repository.updateUserProfile(
+          'seller-nike',
+          name: 'Nike',
+          username: '@apple',
+        ),
+        throwsA(isA<UsernameTakenException>()),
+      );
+    });
 
     test('allows keeping the same username on the same profile', () async {
       await repository.updateUserProfile(
@@ -111,17 +108,20 @@ void main() {
       expect(updated?.bio, 'Still Apple.');
     });
 
-    test('does not create a duplicate row when updating an existing id', () async {
-      final before = (await repository.getSellers()).length;
+    test(
+      'does not create a duplicate row when updating an existing id',
+      () async {
+        final before = (await repository.getSellers()).length;
 
-      await repository.updateUserProfile(
-        'seller-nike',
-        name: 'Nike',
-        username: '@nike',
-      );
+        await repository.updateUserProfile(
+          'seller-nike',
+          name: 'Nike',
+          username: '@nike',
+        );
 
-      final after = (await repository.getSellers()).length;
-      expect(after, before);
-    });
+        final after = (await repository.getSellers()).length;
+        expect(after, before);
+      },
+    );
   });
 }

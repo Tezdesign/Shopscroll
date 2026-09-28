@@ -16,11 +16,25 @@ import '../../data/models/reel.dart';
 /// An unavailable reel (`isAvailable: false`, see spec 0002 AC-3) renders
 /// dimmed and grayscale with a "No longer available" label, and [onTap] is
 /// never invoked for it regardless of whether a callback was supplied.
+///
+/// [onSaveTap] adds a bookmark at the right of the store row (Activity's My
+/// collection, spec 0008), filled when [saved]. It works even for an
+/// unavailable reel, so it can be cleared. It is off by default, so the
+/// Reels grid is unchanged. The row grows to a 44 pixel tap area when the
+/// bookmark shows, a small deviation from the frame.
 class ReelCard extends StatelessWidget {
-  const ReelCard({super.key, required this.reel, this.onTap});
+  const ReelCard({
+    super.key,
+    required this.reel,
+    this.onTap,
+    this.saved = false,
+    this.onSaveTap,
+  });
 
   final Reel reel;
   final VoidCallback? onTap;
+  final bool saved;
+  final VoidCallback? onSaveTap;
 
   static const double _width = 172.5;
   // Figma's thumbnail is 160x300 (a 8:15 ratio), scaled to this card's width.
@@ -28,10 +42,26 @@ class ReelCard extends StatelessWidget {
 
   // Standard luminance weighted grayscale matrix (ITU-R BT.709 coefficients).
   static const List<double> _grayscaleMatrix = [
-    0.2126, 0.7152, 0.0722, 0, 0,
-    0.2126, 0.7152, 0.0722, 0, 0,
-    0.2126, 0.7152, 0.0722, 0, 0,
-    0, 0, 0, 1, 0,
+    0.2126,
+    0.7152,
+    0.0722,
+    0,
+    0,
+    0.2126,
+    0.7152,
+    0.0722,
+    0,
+    0,
+    0.2126,
+    0.7152,
+    0.0722,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
   ];
 
   @override
@@ -47,8 +77,13 @@ class ReelCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _StoreRow(reel: reel, dimmed: unavailable),
-            const SizedBox(height: AppSpacing.xs),
+            _StoreRow(
+              reel: reel,
+              dimmed: unavailable,
+              saved: saved,
+              onSaveTap: onSaveTap,
+            ),
+            if (onSaveTap == null) const SizedBox(height: AppSpacing.xs),
             _Thumbnail(reel: reel, unavailable: unavailable),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -73,17 +108,25 @@ class ReelCard extends StatelessWidget {
 }
 
 class _StoreRow extends StatelessWidget {
-  const _StoreRow({required this.reel, required this.dimmed});
+  const _StoreRow({
+    required this.reel,
+    required this.dimmed,
+    required this.saved,
+    required this.onSaveTap,
+  });
 
   final Reel reel;
   final bool dimmed;
+  final bool saved;
+  final VoidCallback? onSaveTap;
 
   static const double _avatarSize = 14;
 
   @override
   Widget build(BuildContext context) {
+    final hasBookmark = onSaveTap != null;
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: hasBookmark ? MainAxisSize.max : MainAxisSize.min,
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.full),
@@ -103,16 +146,43 @@ class _StoreRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.xs),
-        Text(
-          reel.storeName,
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamilyBody,
-            fontSize: AppTypography.sizeXs,
-            height: AppTypography.lineHeightXs,
-            fontWeight: FontWeight.w500,
-            color: dimmed ? AppColors.neutral500 : AppColors.neutral1000,
+        Flexible(
+          child: Text(
+            reel.storeName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamilyBody,
+              fontSize: AppTypography.sizeXs,
+              height: AppTypography.lineHeightXs,
+              fontWeight: FontWeight.w500,
+              color: dimmed ? AppColors.neutral500 : AppColors.neutral1000,
+            ),
           ),
         ),
+        if (hasBookmark) ...[
+          const Spacer(),
+          Semantics(
+            button: true,
+            label: saved ? 'Remove from saved' : 'Save',
+            excludeSemantics: true,
+            child: GestureDetector(
+              onTap: onSaveTap,
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Center(
+                  child: Icon(
+                    saved ? Icons.bookmark : Icons.bookmark_border,
+                    size: 20,
+                    color: AppColors.neutral1100,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

@@ -31,30 +31,26 @@ void main() {
   Future<void> disposeScreen(WidgetTester tester) =>
       tester.pumpWidget(const SizedBox());
 
-  testWidgets(
-    'onSendCode resolving true moves to the verify stage',
-    (tester) async {
-      await tester.pumpWidget(wrap(screen()));
+  testWidgets('onSendCode resolving true moves to the verify stage', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(screen()));
 
-      await reachVerifyStage(tester);
+    await reachVerifyStage(tester);
 
-      expect(find.text('Verification code'), findsOneWidget);
+    expect(find.text('Verification code'), findsOneWidget);
 
-      await disposeScreen(tester);
-    },
-  );
+    await disposeScreen(tester);
+  });
 
-  testWidgets(
-    'onSendCode resolving false stays on the identifier stage '
-    '(regression: a failed send must not show a countdown for a code that '
-    'was never sent, or "Resend code" later fails)',
-    (tester) async {
-      await tester.pumpWidget(wrap(screen(onSendCode: (_, _) async => false)));
+  testWidgets('onSendCode resolving false stays on the identifier stage '
+      '(regression: a failed send must not show a countdown for a code that '
+      'was never sent, or "Resend code" later fails)', (tester) async {
+    await tester.pumpWidget(wrap(screen(onSendCode: (_, _) async => false)));
 
-      await reachVerifyStage(tester);
+    await reachVerifyStage(tester);
 
-      expect(find.text('Verification code'), findsNothing);
-      expect(find.textContaining('Resend code'), findsNothing);
-    },
-  );
+    expect(find.text('Verification code'), findsNothing);
+    expect(find.textContaining('Resend code'), findsNothing);
+  });
 }

@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../data/models/product.dart';
 import '../../data/providers/cart_providers.dart';
 import '../../data/providers/product_providers.dart';
+import '../../data/providers/saved_providers.dart';
 import '../../shared/widgets/add_to_cart_toggle.dart';
 import '../../shared/widgets/app_button.dart';
 import '../../shared/widgets/app_icon.dart';
@@ -14,6 +15,7 @@ import '../../shared/widgets/info_row.dart';
 import '../../shared/widgets/product_card.dart';
 import '../../shared/widgets/size_selector.dart';
 import '../../shared/widgets/spec_table.dart';
+import '../activity/save_actions.dart';
 import '../cart/add_to_cart.dart';
 import '../cart/cart_logic.dart';
 
@@ -36,7 +38,6 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _quantity = 1;
   String? _selectedSize;
-  bool _saved = false;
 
   void _showSavedToast() {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -78,6 +79,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final productAsync = ref.watch(productByIdProvider(widget.productId));
     final cartLines = ref.watch(cartItemsProvider).value ?? const [];
+    final savedProducts = ref.watch(savedProductsProvider).value ?? const [];
 
     return Scaffold(
       backgroundColor: AppColors.neutral100,
@@ -151,12 +153,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 ],
               ),
               _TopBar(
-                saved: _saved,
+                saved: savedProducts.any((s) => s.product.id == product.id),
                 onBack: () => context.pop(),
-                onSaveToggle: () {
-                  setState(() => _saved = !_saved);
-                  if (_saved) _showSavedToast();
-                },
+                onSaveToggle: () => toggleProductSave(
+                  context,
+                  product,
+                  onSaved: _showSavedToast,
+                ),
               ),
             ],
           );

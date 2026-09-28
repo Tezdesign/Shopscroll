@@ -39,6 +39,7 @@ class SegmentedTabs extends StatelessWidget {
     this.fontSize = AppTypography.sizeSm,
     this.bottomPadding = AppSpacing.sm,
     this.inactiveColor = AppColors.neutral600,
+    this.tapHeight = 0,
   });
 
   final List<String> labels;
@@ -48,6 +49,10 @@ class SegmentedTabs extends StatelessWidget {
   final double fontSize;
   final double bottomPadding;
   final Color inactiveColor;
+
+  /// Minimum height of each tab's tap area. The underline stays at the
+  /// bottom of it. Zero (the default) keeps the tab as tall as its text.
+  final double tapHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +64,7 @@ class SegmentedTabs extends StatelessWidget {
         fontSize: fontSize,
         bottomPadding: bottomPadding,
         inactiveColor: inactiveColor,
+        tapHeight: tapHeight,
         onTap: () => onChanged(index),
       ),
     );
@@ -78,7 +84,10 @@ class SegmentedTabs extends StatelessWidget {
           ),
         );
       case SegmentedTabsDistribution.spaceBetween:
-        return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: tabs);
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: tabs,
+        );
       case SegmentedTabsDistribution.equal:
         return Row(
           children: [
@@ -96,6 +105,7 @@ class _Tab extends StatelessWidget {
     required this.fontSize,
     required this.bottomPadding,
     required this.inactiveColor,
+    required this.tapHeight,
     required this.onTap,
   });
 
@@ -104,32 +114,41 @@ class _Tab extends StatelessWidget {
   final double fontSize;
   final double bottomPadding;
   final Color inactiveColor;
+  final double tapHeight;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final color = active ? AppColors.neutral1100 : inactiveColor;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: EdgeInsets.only(bottom: bottomPadding),
-        decoration: active
-            ? const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: AppColors.neutral1100),
-                ),
-              )
-            : null,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamilyDisplay,
-            fontSize: fontSize,
-            height: AppTypography.lineHeightSm,
-            fontWeight: FontWeight.w600,
-            color: color,
+    return Semantics(
+      button: true,
+      selected: active,
+      label: label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: BoxConstraints(minHeight: tapHeight),
+          alignment: Alignment.bottomCenter,
+          padding: EdgeInsets.only(bottom: bottomPadding),
+          decoration: active
+              ? const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.neutral1100),
+                  ),
+                )
+              : null,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamilyDisplay,
+              fontSize: fontSize,
+              height: AppTypography.lineHeightSm,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ),
       ),

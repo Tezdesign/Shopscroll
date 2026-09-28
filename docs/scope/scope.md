@@ -20,6 +20,9 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 | 7 | Search flow | Unplanned | in-progress |
 | 8 | Banner screens | Unplanned | planned |
 | 9 | Cart interface | Unplanned | in-progress |
+| 10 | Activity screens | Unplanned | in-progress |
+| 11 | Order details | Unplanned | planned |
+| 12 | Chat | Unplanned | planned |
 
 ## Features
 
@@ -247,3 +250,56 @@ stock states are handled (see spec 0007 for the full acceptance criteria).
 Spec [0007](../specs/0007-cart-interface/index.md) · code: `lib/features/cart/`,
 `lib/data/providers/cart_providers.dart`, `lib/data/repositories/cart_repository.dart` (mock and
 Supabase), `lib/shared/widgets/item_card.dart`, `lib/core/router/app_router.dart`
+
+### 10. Activity screens · in-progress
+
+The Activity tab as one screen with three tabs: Purchases (past orders with their status), My collection
+(saved products and saved reels) and Messages (a list of store conversations). It also makes the bookmark
+on product detail and in the Reels player save for real, so the collection is stored per person.
+**Done when:** the Activity tab opens the three tabs, saved products and reels list in My collection and
+can be removed with Undo, Purchases shows the orders, Messages shows the mock conversations, and every
+list handles its loading, error and empty states (see spec 0008 for the full acceptance criteria).
+- [x] Design it (spec): `/architect activity screens`
+- [x] Build it: `/develop activity screens`
+   - [x] Saves data layer: `product_saves` migration applied, saved product and reel save repositories
+     (mock and Supabase), the two optimistic saved notifiers (AC-7, AC-8, AC-9, AC-10)
+   - [x] Activity screen thread: `/activity` route, search field and top tabs, saved products list,
+     product detail bookmark wired (AC-1, AC-5, AC-8)
+   - [x] Reels pill, `ReelCard` bookmark, Reels player bookmark wired, unsave with Undo (AC-6, AC-7, AC-8,
+     AC-10)
+   - [x] Purchases and Messages tabs with their coming soon routes, and the search filter for every tab
+     (AC-2, AC-3, AC-4, AC-11, AC-13)
+   - [x] Loading, error and empty states, accessibility and widget tests (AC-12, AC-14, AC-15)
+- [ ] Verify it: `/check verify activity screens`
+- [ ] Test it: `/test activity screens`
+
+Spec [0008](../specs/0008-activity-screens/index.md) · code: `lib/features/activity/`,
+`lib/data/providers/saved_providers.dart`, `lib/data/repositories/saved_product_repository.dart`,
+`lib/data/repositories/conversation_repository.dart` (mock and Supabase), `lib/shared/widgets/pill_tabs.dart`,
+`supabase/migrations/0002_product_saves.sql` (applied), `lib/core/router/app_router.dart`
+
+### 11. Order details · planned · needs a decision
+
+Design and build the screen a Purchases block opens: the items, delivery and payment details and the
+status of one order. The Activity screens only open a "coming soon" page today.
+**Done when:** tapping a purchase opens a real order detail screen with its states handled (see the spec
+once it exists).
+- [ ] Design it (spec): `/architect order details`
+- [ ] Build it: `/develop order details`
+- [ ] Verify it: `/check verify order details`
+- [ ] Test it: `/test order details`
+
+From spec [0008](../specs/0008-activity-screens/index.md)
+
+### 12. Chat · planned · needs a decision
+
+Design and build buyer to store chat: conversations, messages and sending, a table behind them, and the
+Chat now button on product detail. The Messages tab lists mock conversations only until this exists.
+**Done when:** a buyer can open a conversation from the Messages tab or product detail and exchange
+messages with a store, with its states handled (see the spec once it exists).
+- [ ] Design it (spec): `/architect chat`
+- [ ] Build it: `/develop chat`
+- [ ] Verify it: `/check verify chat`
+- [ ] Test it: `/test chat`
+
+From spec [0008](../specs/0008-activity-screens/index.md)

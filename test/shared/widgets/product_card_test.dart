@@ -5,7 +5,10 @@ import 'package:marketplace_app/shared/widgets/product_card.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+    return MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: child),
+    );
   }
 
   testWidgets('renders title, price and store name', (tester) async {
@@ -19,7 +22,10 @@ void main() {
       ),
     );
 
-    expect(find.text("Bershka Menswear SS25: who's slaying better"), findsOneWidget);
+    expect(
+      find.text("Bershka Menswear SS25: who's slaying better"),
+      findsOneWidget,
+    );
     expect(find.text(r'$40'), findsOneWidget);
     expect(find.text('Apple'), findsOneWidget);
     expect(find.text('Add to cart'), findsOneWidget);
@@ -73,15 +79,11 @@ void main() {
       ),
     );
 
-    final sizedBox = tester.widget<SizedBox>(
-      find.byType(SizedBox).first,
-    );
+    final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
     expect(sizedBox.width, 135);
   });
 
-  testWidgets('invokes onAddToCart when the button is tapped', (
-    tester,
-  ) async {
+  testWidgets('invokes onAddToCart when the button is tapped', (tester) async {
     var tapped = false;
     await tester.pumpWidget(
       wrap(
