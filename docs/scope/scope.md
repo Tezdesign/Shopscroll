@@ -18,7 +18,7 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 | 5 | Profile screen | Unplanned | in-progress |
 | 6 | Log in | Unplanned | in-progress |
 | 7 | Search flow | Unplanned | in-progress |
-| 8 | Banner screens | Unplanned | planned |
+| 8 | Banner screens | Unplanned | in-progress |
 | 9 | Cart interface | Unplanned | in-progress |
 | 10 | Activity screens | Unplanned | in-progress |
 | 11 | Order details | Unplanned | planned |
@@ -213,19 +213,28 @@ Spec [0006](../specs/0006-search-flow/index.md) · code: `lib/features/search/se
 `lib/features/search/search_logic.dart`, `lib/shared/widgets/search_field.dart`,
 `lib/core/router/app_router.dart`
 
-### 8. Banner screens · planned · needs a decision
+### 8. Banner screens · in-progress
 
 Make the promo banners tappable and design the screen a banner opens. The banners on Home and Discover
 are static tiles today, and nothing happens when one is tapped. Split out of the search flow work, which
-covers only search.
-**Done when:** tapping a promo banner opens a screen for that campaign, with its states handled (see the
-spec once it exists).
-- [ ] Design it (spec): `/architect banner screens`
+covers only search. The design turned out to be a Store Page: the same screen also resolves three other
+pre-existing dead taps (Home/Discover's store rows, product detail's store row, the Reels player's store
+row), so this feature now covers all four, not banners alone.
+**Done when:** tapping a promo banner, a store avatar, product detail's store row, or the Reels player's
+store row opens that seller's Store Page, with its states handled (see spec 0010 for the full acceptance
+criteria).
+- [x] Design it (spec): `/architect banner screens`
 - [ ] Build it: `/develop banner screens`
+   - [ ] Products-by-store repository method and provider (AC-5, AC-6)
+   - [ ] Store Page screen: header, profile block, tabs, Products tab, and the seller load's own
+     states (AC-2, AC-3, AC-4, AC-5, AC-6, AC-8 to AC-11, AC-13, AC-14)
+   - [ ] Reels tab (AC-5, AC-7 to AC-9)
+   - [ ] Wire every existing dead tap and banner `storeId` targeting to the new page (AC-1, AC-12)
 - [ ] Verify it: `/check verify banner screens`
 - [ ] Test it: `/test banner screens`
 
-From spec [0006](../specs/0006-search-flow/index.md)
+Split out of spec [0006](../specs/0006-search-flow/index.md); designed in spec
+[0010](../specs/0010-store-page/index.md) · code (filled by `/develop`)
 
 ### 9. Cart interface · in-progress
 

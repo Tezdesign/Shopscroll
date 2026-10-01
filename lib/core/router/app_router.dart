@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/activity/activity_screen.dart';
+import '../../features/activity/order_receipt_screen.dart';
 import '../../features/cart/cart_screen.dart';
 import '../../features/catalog/home_screen.dart';
 import '../../features/catalog/product_detail_screen.dart';
@@ -42,7 +43,8 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// Discover, Reels, Activity, Profile) as branches under [AppShell], so
 /// switching tabs preserves each one's own navigation stack and scroll
 /// position (see spec 0001). Activity is [ActivityScreen] (spec 0008), with
-/// its `orders/:id` and `chat/:id` children as coming soon pages; Profile is
+/// its `orders/:id` child as [OrderReceiptScreen] and `chat/:id` still a
+/// coming soon page; Profile is
 /// the real page from spec 0005 once Clerk is configured ([ProfileScreen] signed in, [ProfileAnonymousView]
 /// signed out), and falls back to the same placeholder when Clerk isn't
 /// configured at all (no `ClerkAuth` ancestor to read in that case).
@@ -135,9 +137,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'orders/:id',
-                    builder: (context, state) => const ComingSoonScreen(
-                      label: 'Order details',
-                      icon: Icons.receipt_long_outlined,
+                    builder: (context, state) => OrderReceiptScreen(
+                      orderId: state.pathParameters['id']!,
                     ),
                   ),
                   GoRoute(
