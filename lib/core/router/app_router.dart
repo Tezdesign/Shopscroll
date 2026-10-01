@@ -27,6 +27,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/reels/reel_player_screen.dart';
 import '../../features/reels/reels_screen.dart';
 import '../../features/search/search_screen.dart';
+import '../../features/store/store_page_screen.dart';
 import '../../shared/widgets/coming_soon_screen.dart';
 import '../config/clerk_config.dart';
 import '../onboarding/onboarding_prefs.dart';
@@ -53,9 +54,9 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// redesigned sign up flow — see `lib/features/onboarding/AGENTS.md`) →
 /// `/sign-up/phone` ([PhoneNumberScreen]) ⇄ `/sign-up/email`
 /// ([EmailAddressScreen]) (spec 0004, AC-1), `/profile/edit` (spec 0005,
-/// AC-5), plus product detail and the Reels full screen player, stay top
-/// level routes, outside the shell, so they open full screen without the
-/// bottom nav.
+/// AC-5), plus product detail, the Reels full screen player, and the Store
+/// Page ([StorePageScreen], spec 0010), stay top level routes, outside the
+/// shell, so they open full screen without the bottom nav.
 ///
 /// `/cart` ([CartScreen], spec 0007) is a child route of the Home branch's
 /// root route, so the tab bar keeps showing with Home highlighted.
@@ -308,6 +309,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           initialReelId: state.pathParameters['id']!,
           orderedReelIds: state.extra as List<String>?,
         ),
+      ),
+      GoRoute(
+        path: '/store/:id',
+        builder: (context, state) =>
+            StorePageScreen(storeId: state.pathParameters['id']!),
       ),
     ],
   );

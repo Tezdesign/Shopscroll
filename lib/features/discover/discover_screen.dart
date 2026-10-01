@@ -139,6 +139,7 @@ class _StoreGridSection extends StatelessWidget {
                   child: MostVisitedItem(
                     storeName: seller.name,
                     iconUrl: seller.avatarUrl,
+                    onTap: () => context.push('/store/${seller.id}'),
                   ),
                 ),
             ],
@@ -157,24 +158,29 @@ class _ProductFeed extends StatelessWidget {
 
   final AsyncValue<List<Product>> productsAsync;
 
+  // None of Discover's own slides name a single brand (unlike Home's two),
+  // so storeId stays unset on all three (spec 0010, AC-12).
   static const List<_BannerSlide> _banners = [
     (
       dateRange: '1 - 31 Oct 2023',
       title: 'Travel Ready',
       subtitle: 'Pack smarter with weekend luggage and travel essentials.',
       imageUrl: 'https://picsum.photos/seed/discover-travel/800/400',
+      storeId: null,
     ),
     (
       dateRange: '1 - 15 Nov 2023',
       title: 'Weekend Flash Deals',
       subtitle: 'Limited time drops across Fashion, Tech and Sports.',
       imageUrl: 'https://picsum.photos/seed/discover-flash/800/400',
+      storeId: null,
     ),
     (
       dateRange: '20 Nov - 5 Dec 2023',
       title: 'New Arrivals',
       subtitle: "Fresh drops from this week's favorite stores.",
       imageUrl: 'https://picsum.photos/seed/discover-new/800/400',
+      storeId: null,
     ),
   ];
 
@@ -272,6 +278,7 @@ typedef _BannerSlide = ({
   String title,
   String subtitle,
   String imageUrl,
+  String? storeId,
 });
 
 class _PromoBannerTile extends StatelessWidget {
@@ -282,79 +289,84 @@ class _PromoBannerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      width: double.infinity,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            CachedNetworkImage(
-              imageUrl: slide.imageUrl,
-              fit: BoxFit.cover,
-              placeholder: (context, url) =>
-                  const ColoredBox(color: AppColors.neutral1000),
-              errorWidget: (context, url, error) =>
-                  const ColoredBox(color: AppColors.neutral1000),
-            ),
-            Container(color: AppColors.neutral1100.withValues(alpha: 0.45)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xs,
+    return GestureDetector(
+      onTap: slide.storeId == null
+          ? null
+          : () => context.push('/store/${slide.storeId}'),
+      child: SizedBox(
+        height: height,
+        width: double.infinity,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CachedNetworkImage(
+                imageUrl: slide.imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                    const ColoredBox(color: AppColors.neutral1000),
+                errorWidget: (context, url, error) =>
+                    const ColoredBox(color: AppColors.neutral1000),
+              ),
+              Container(color: AppColors.neutral1100.withValues(alpha: 0.45)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.white100.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                      ),
+                      child: Text(
+                        slide.dateRange.toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: AppTypography.fontFamilyBody,
+                          fontSize: AppTypography.sizeXs,
+                          height: AppTypography.lineHeightXs,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.white100,
+                        ),
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.white100.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
-                    child: Text(
-                      slide.dateRange.toUpperCase(),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      slide.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontFamily: AppTypography.fontFamilyBody,
-                        fontSize: AppTypography.sizeXs,
-                        height: AppTypography.lineHeightXs,
+                        fontSize: AppTypography.sizeBase,
+                        height: AppTypography.lineHeightSm,
                         fontWeight: FontWeight.w600,
                         color: AppColors.white100,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    slide.title,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: AppTypography.fontFamilyBody,
-                      fontSize: AppTypography.sizeBase,
-                      height: AppTypography.lineHeightSm,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.white100,
+                    Text(
+                      slide.subtitle,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontFamilyBody,
+                        fontSize: AppTypography.sizeXs,
+                        height: AppTypography.lineHeightXs,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.white100,
+                      ),
                     ),
-                  ),
-                  Text(
-                    slide.subtitle,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: AppTypography.fontFamilyBody,
-                      fontSize: AppTypography.sizeXs,
-                      height: AppTypography.lineHeightXs,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.white100,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

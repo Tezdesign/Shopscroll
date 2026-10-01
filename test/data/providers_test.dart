@@ -58,6 +58,18 @@ void main() {
     expect(result.every((p) => p.category == 'Tech'), isTrue);
   });
 
+  test('productsByStoreProvider filters by storeId', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final result = await container.read(
+      productsByStoreProvider('seller-apple').future,
+    );
+
+    expect(result, isNotEmpty);
+    expect(result.every((p) => p.storeId == 'seller-apple'), isTrue);
+  });
+
   test(
     'dealsProductsProvider only returns products marked as a deal',
     () async {

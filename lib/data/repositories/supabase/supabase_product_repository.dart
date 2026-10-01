@@ -35,6 +35,15 @@ class SupabaseProductRepository implements ProductRepository {
   }
 
   @override
+  Future<List<Product>> getProductsByStore(String storeId) async {
+    final rows = await _client
+        .from('products')
+        .select()
+        .eq('store_id', storeId);
+    return rows.map(productFromRow).toList();
+  }
+
+  @override
   Future<List<Product>> getDealsProducts() async {
     final rows = await _client.from('products').select().eq('is_deal', true);
     return rows.map(productFromRow).toList();

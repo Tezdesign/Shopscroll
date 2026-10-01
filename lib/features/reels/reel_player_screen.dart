@@ -437,36 +437,47 @@ class _BottomOverlay extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.full),
-              child: SizedBox(
-                width: _avatarSize,
-                height: _avatarSize,
-                child: reel.storeAvatarUrl == null
-                    ? const ColoredBox(color: AppColors.neutral400)
-                    : CachedNetworkImage(
-                        imageUrl: reel.storeAvatarUrl!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            const ColoredBox(color: AppColors.neutral400),
-                        errorWidget: (context, url, error) =>
-                            const ColoredBox(color: AppColors.neutral400),
+            // Opens the seller's Store Page (spec 0010, AC-1); the Follow
+            // button beside it stays its own separate static tap target.
+            GestureDetector(
+              onTap: () => context.push('/store/${reel.storeId}'),
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                    child: SizedBox(
+                      width: _avatarSize,
+                      height: _avatarSize,
+                      child: reel.storeAvatarUrl == null
+                          ? const ColoredBox(color: AppColors.neutral400)
+                          : CachedNetworkImage(
+                              imageUrl: reel.storeAvatarUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const ColoredBox(color: AppColors.neutral400),
+                              errorWidget: (context, url, error) =>
+                                  const ColoredBox(color: AppColors.neutral400),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Flexible(
+                    child: Text(
+                      reel.storeName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontFamilyBody,
+                        fontSize: AppTypography.sizeBase,
+                        height: AppTypography.lineHeightBase,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.white100,
                       ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Flexible(
-              child: Text(
-                reel.storeName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: AppTypography.fontFamilyBody,
-                  fontSize: AppTypography.sizeBase,
-                  height: AppTypography.lineHeightBase,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.white100,
-                ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: AppSpacing.sm),

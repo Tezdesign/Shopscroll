@@ -352,9 +352,8 @@ class _PriceAndStockRow extends StatelessWidget {
   }
 }
 
-/// Store avatar + name row (Figma node 205:2282, annotated "will take you to
-/// Store page" — not wired since this build is user-scope only, see
-/// project scoping).
+/// Store avatar + name row (Figma node 205:2282), opening the seller's
+/// Store Page (spec 0010, AC-1).
 class _StoreRow extends StatelessWidget {
   const _StoreRow({required this.product});
 
@@ -364,38 +363,42 @@ class _StoreRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          child: SizedBox(
-            width: _avatarSize,
-            height: _avatarSize,
-            child: product.storeAvatarUrl == null
-                ? const ColoredBox(color: AppColors.neutral200)
-                : CachedNetworkImage(
-                    imageUrl: product.storeAvatarUrl!,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) =>
-                        const ColoredBox(color: AppColors.neutral200),
-                    errorWidget: (context, url, error) =>
-                        const ColoredBox(color: AppColors.neutral200),
-                  ),
+    return GestureDetector(
+      onTap: () => context.push('/store/${product.storeId}'),
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            child: SizedBox(
+              width: _avatarSize,
+              height: _avatarSize,
+              child: product.storeAvatarUrl == null
+                  ? const ColoredBox(color: AppColors.neutral200)
+                  : CachedNetworkImage(
+                      imageUrl: product.storeAvatarUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const ColoredBox(color: AppColors.neutral200),
+                      errorWidget: (context, url, error) =>
+                          const ColoredBox(color: AppColors.neutral200),
+                    ),
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Text(
-          product.storeName,
-          style: const TextStyle(
-            fontFamily: AppTypography.fontFamilyBody,
-            fontSize: AppTypography.sizeBase,
-            height: AppTypography.lineHeightBase,
-            fontWeight: FontWeight.w500,
-            color: AppColors.neutral1000,
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            product.storeName,
+            style: const TextStyle(
+              fontFamily: AppTypography.fontFamilyBody,
+              fontSize: AppTypography.sizeBase,
+              height: AppTypography.lineHeightBase,
+              fontWeight: FontWeight.w500,
+              color: AppColors.neutral1000,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

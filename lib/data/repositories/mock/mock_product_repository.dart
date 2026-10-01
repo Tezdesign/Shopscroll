@@ -29,6 +29,12 @@ class MockProductRepository implements ProductRepository {
   }
 
   @override
+  Future<List<Product>> getProductsByStore(String storeId) async {
+    await Future.delayed(mockNetworkDelay);
+    return mockProducts.where((p) => p.storeId == storeId).toList();
+  }
+
+  @override
   Future<List<Product>> getDealsProducts() async {
     await Future.delayed(mockNetworkDelay);
     return mockProducts.where((p) => p.isDeal).toList();

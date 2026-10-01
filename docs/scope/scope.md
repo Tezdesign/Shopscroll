@@ -224,17 +224,19 @@ row), so this feature now covers all four, not banners alone.
 store row opens that seller's Store Page, with its states handled (see spec 0010 for the full acceptance
 criteria).
 - [x] Design it (spec): `/architect banner screens`
-- [ ] Build it: `/develop banner screens`
-   - [ ] Products-by-store repository method and provider (AC-5, AC-6)
-   - [ ] Store Page screen: header, profile block, tabs, Products tab, and the seller load's own
+- [x] Build it: `/develop banner screens`
+   - [x] Products-by-store repository method and provider (AC-5, AC-6)
+   - [x] Store Page screen: header, profile block, tabs, Products tab, and the seller load's own
      states (AC-2, AC-3, AC-4, AC-5, AC-6, AC-8 to AC-11, AC-13, AC-14)
-   - [ ] Reels tab (AC-5, AC-7 to AC-9)
-   - [ ] Wire every existing dead tap and banner `storeId` targeting to the new page (AC-1, AC-12)
+   - [x] Reels tab (AC-5, AC-7 to AC-9)
+   - [x] Wire every existing dead tap and banner `storeId` targeting to the new page (AC-1, AC-12)
 - [ ] Verify it: `/check verify banner screens`
 - [ ] Test it: `/test banner screens`
 
 Split out of spec [0006](../specs/0006-search-flow/index.md); designed in spec
-[0010](../specs/0010-store-page/index.md) · code (filled by `/develop`)
+[0010](../specs/0010-store-page/index.md) · code: `lib/features/store/store_page_screen.dart`,
+`lib/data/repositories/product_repository.dart`, `lib/data/providers/product_providers.dart`,
+`lib/core/router/app_router.dart`
 
 ### 9. Cart interface · in-progress
 

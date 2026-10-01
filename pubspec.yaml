@@ -45,6 +45,7 @@ dependencies:
   clerk_auth: ^0.0.18-beta
   shared_preferences: ^2.5.3
   logging: ^1.3.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

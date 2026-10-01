@@ -14,10 +14,11 @@ final reelByIdProvider = FutureProvider.family<Reel?, String>((ref, id) {
 });
 
 /// Reels posted by a given store, as if fetched from
-/// `GET /reels?storeId=:storeId`.
+/// `GET /reels?storeId=:storeId`. No automatic retry, so a failed load
+/// reaches the Store Page's Reels tab as an error with its own "Try again".
 final reelsByStoreProvider = FutureProvider.family<List<Reel>, String>((
   ref,
   storeId,
 ) {
   return ref.watch(reelRepositoryProvider).getReelsByStore(storeId);
-});
+}, retry: (retryCount, error) => null);

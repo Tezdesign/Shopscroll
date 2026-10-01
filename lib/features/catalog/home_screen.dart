@@ -230,25 +230,38 @@ class _CampaignBannerCarousel extends StatefulWidget {
       _CampaignBannerCarouselState();
 }
 
+/// A campaign slide. `storeId` is set only on a single-brand slide (AC-12 of
+/// spec 0010); a slide with no `storeId` stays non-tappable.
+typedef _Slide = ({
+  String dateRange,
+  String title,
+  String subtitle,
+  String imageUrl,
+  String? storeId,
+});
+
 class _CampaignBannerCarouselState extends State<_CampaignBannerCarousel> {
-  static const _slides = [
+  static const List<_Slide> _slides = [
     (
       dateRange: '1 - 31 Oct 2023',
       title: 'Fall Sale Is Here',
       subtitle: 'Up to 40% off on new-season arrivals, storewide.',
       imageUrl: 'https://picsum.photos/seed/banner-fall/800/400',
+      storeId: null,
     ),
     (
       dateRange: '1 - 15 Nov 2023',
       title: 'Tech Week Deals',
       subtitle: 'Save on AirPods, chargers, and more from Apple.',
       imageUrl: 'https://picsum.photos/seed/banner-tech/800/400',
+      storeId: 'seller-apple',
     ),
     (
       dateRange: '20 Nov - 5 Dec 2023',
       title: 'New Sneaker Drops',
       subtitle: 'Fresh Nike arrivals, just in time for winter.',
       imageUrl: 'https://picsum.photos/seed/banner-sneakers/800/400',
+      storeId: 'seller-nike',
     ),
   ];
 
@@ -279,81 +292,86 @@ class _CampaignBannerCarouselState extends State<_CampaignBannerCarousel> {
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.base,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CachedNetworkImage(
-                        imageUrl: slide.imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            const ColoredBox(color: AppColors.neutral1000),
-                        errorWidget: (context, url, error) =>
-                            const ColoredBox(color: AppColors.neutral1000),
-                      ),
-                      Container(
-                        color: AppColors.neutral1100.withValues(alpha: 0.45),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
+                child: GestureDetector(
+                  onTap: slide.storeId == null
+                      ? null
+                      : () => context.push('/store/${slide.storeId}'),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CachedNetworkImage(
+                          imageUrl: slide.imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              const ColoredBox(color: AppColors.neutral1000),
+                          errorWidget: (context, url, error) =>
+                              const ColoredBox(color: AppColors.neutral1000),
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.xs,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.white100.withValues(
-                                  alpha: 0.2,
+                        Container(
+                          color: AppColors.neutral1100.withValues(alpha: 0.45),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.xs,
                                 ),
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.full,
+                                decoration: BoxDecoration(
+                                  color: AppColors.white100.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.full,
+                                  ),
+                                ),
+                                child: Text(
+                                  slide.dateRange.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontFamily: AppTypography.fontFamilyBody,
+                                    fontSize: AppTypography.sizeXs,
+                                    height: AppTypography.lineHeightXs,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.white100,
+                                  ),
                                 ),
                               ),
-                              child: Text(
-                                slide.dateRange.toUpperCase(),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                slide.title,
                                 style: const TextStyle(
                                   fontFamily: AppTypography.fontFamilyBody,
-                                  fontSize: AppTypography.sizeXs,
-                                  height: AppTypography.lineHeightXs,
+                                  fontSize: AppTypography.sizeBase,
+                                  height: AppTypography.lineHeightSm,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.white100,
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              slide.title,
-                              style: const TextStyle(
-                                fontFamily: AppTypography.fontFamilyBody,
-                                fontSize: AppTypography.sizeBase,
-                                height: AppTypography.lineHeightSm,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.white100,
+                              Text(
+                                slide.subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: AppTypography.fontFamilyBody,
+                                  fontSize: AppTypography.sizeXs,
+                                  height: AppTypography.lineHeightXs,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.white100,
+                                ),
                               ),
-                            ),
-                            Text(
-                              slide.subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: AppTypography.fontFamilyBody,
-                                fontSize: AppTypography.sizeXs,
-                                height: AppTypography.lineHeightXs,
-                                fontWeight: FontWeight.w400,
-                                color: AppColors.white100,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -467,6 +485,7 @@ class _MostVisitedSection extends ConsumerWidget {
                     child: MostVisitedItem(
                       storeName: seller.name,
                       iconUrl: seller.avatarUrl,
+                      onTap: () => context.push('/store/${seller.id}'),
                     ),
                   );
                 },
