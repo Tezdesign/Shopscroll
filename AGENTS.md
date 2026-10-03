@@ -41,11 +41,12 @@ governs which feature.
 
 ## Rules
 
-- Two backends coexist: without `--dart-define` config, all data comes from `lib/data/mock/*` through `lib/data/providers/*` (Riverpod `FutureProvider`/`FutureProvider.family` with an artificial delay, `network_delay.dart`, 300ms, to simulate a real `GET` round trip); once `SupabaseConfig.isConfigured` (see `lib/core/auth/AGENTS.md`), the same providers read through `lib/data/repositories/` instead (see `lib/data/repositories/AGENTS.md`), which reaches the real Supabase backend (see `supabase/AGENTS.md`). Doc comments on each provider name the REST endpoint it stands in for (e.g. "as if fetched from `GET /products`") — keep that convention for new providers.
+- Two backends coexist: without `--dart-define` config, all data comes from `lib/data/mock/*` through `lib/data/providers/*` (Riverpod `FutureProvider`/`FutureProvider.family` with an artificial delay, `network_delay.dart`, 300ms, to simulate a real `GET` round trip); once `SupabaseConfig.isConfigured` (see `apps/buyer/lib/core/auth/AGENTS.md`), the same providers read through `lib/data/repositories/` instead (see `apps/buyer/lib/data/repositories/AGENTS.md`), which reaches the real Supabase backend (see `supabase/AGENTS.md`). Doc comments on each provider name the REST endpoint it stands in for (e.g. "as if fetched from `GET /products`") — keep that convention for new providers.
+- The buyer and seller apps share one Supabase project and one Clerk instance (spec 0012): one account per person, sellers are `role = 'seller'` on their profile, set only by `become_seller()`. Never send `role` from a client write. The seller app has no anonymous session and requires sign in.
 - Models (`lib/data/models/*`) carry `fromJson`/`toJson`/`copyWith` even though nothing is serialized yet, so they're ready for a real API later.
 - Design tokens live in `lib/core/theme/app_theme.dart` (`AppColors`, `AppTypography`, `AppSpacing`, `AppRadius`), sourced from the Figma file's variable collection. Never write a literal `Color(0x...)` or raw size value in a screen/widget; use the tokens.
 - Screens and widgets document the Figma node they reproduce (e.g. "Figma node 791:7454") and explain any deviation from the source design in a doc comment above the widget. Follow this when adding new UI.
-- Feature code lives under `lib/features/<feature>/`: `catalog` (home + product detail), `discover`, `reels`, `profile` (see `lib/features/profile/AGENTS.md`), `search` (see `lib/features/search/AGENTS.md`), and `onboarding` (see `lib/features/onboarding/AGENTS.md`) are built out; `cart` (see `lib/features/cart/AGENTS.md`) is built out; `activity` has no directory yet, still a nav placeholder.
+- Feature code lives under `lib/features/<feature>/`: `catalog` (home + product detail), `discover`, `reels`, `profile` (see `apps/buyer/lib/features/profile/AGENTS.md`), `search` (see `apps/buyer/lib/features/search/AGENTS.md`), and `onboarding` (see `apps/buyer/lib/features/onboarding/AGENTS.md`) are built out; `cart` (see `apps/buyer/lib/features/cart/AGENTS.md`) is built out; `activity` has no directory yet, still a nav placeholder.
 - Routing is centralized in `lib/core/router/app_router.dart` (`go_router`) — read that file for the current route list rather than relying on one enumerated here, it grows with every feature.
 - Shared, reusable UI lives in `lib/shared/widgets/`; screen-only one-off widgets stay private (`_Prefixed`) inside the screen file.
 - Widget tests wrap the widget under test in `MaterialApp(theme: AppTheme.light, home: Scaffold(...))` for realistic styling. When a widget depends on a mock provider's artificial delay, `pump()` past `mockNetworkDelay` rather than `pumpAndSettle()`, which never settles against animating spinners or network images.
@@ -62,13 +63,13 @@ Declined: further Agent Skill / MCP discovery search
 ## Context files
 
 <!-- Nested AGENTS.md files are listed here as they are created -->
-- [lib/data/repositories/AGENTS.md](lib/data/repositories/AGENTS.md): the mock/Supabase repository pattern backing `lib/data/providers/*`
-- [lib/core/auth/AGENTS.md](lib/core/auth/AGENTS.md): the anonymous/Clerk dual Supabase-client switch and its configuration
-- [supabase/AGENTS.md](supabase/AGENTS.md): the real backend, schema/migrations/Edge Functions
-- [lib/features/onboarding/AGENTS.md](lib/features/onboarding/AGENTS.md): the first-launch welcome screen and the redesigned sign up flow (name, phone or email, code verification, interests, notifications)
-- [lib/features/profile/AGENTS.md](lib/features/profile/AGENTS.md): the real Profile tab (signed-in page, anonymous view, edit profile)
-- [lib/features/search/AGENTS.md](lib/features/search/AGENTS.md): the on device search screen opened from Home and Discover (suggestions, stores tab, results)
-- [lib/features/cart/AGENTS.md](lib/features/cart/AGENTS.md): the cart screen at `/cart`, the shared add to cart helper, and the optimistic cart notifier rules
+- [apps/buyer/lib/data/repositories/AGENTS.md](apps/buyer/lib/data/repositories/AGENTS.md): the mock/Supabase repository pattern backing `lib/data/providers/*`
+- [apps/buyer/lib/core/auth/AGENTS.md](apps/buyer/lib/core/auth/AGENTS.md): the anonymous/Clerk dual Supabase-client switch and its configuration
+- [supabase/AGENTS.md](supabase/AGENTS.md): the one backend both apps share (spec 0012): schema, migrations, seller role rules, Edge Functions, SQL checks
+- [apps/buyer/lib/features/onboarding/AGENTS.md](apps/buyer/lib/features/onboarding/AGENTS.md): the first-launch welcome screen and the redesigned sign up flow (name, phone or email, code verification, interests, notifications)
+- [apps/buyer/lib/features/profile/AGENTS.md](apps/buyer/lib/features/profile/AGENTS.md): the real Profile tab (signed-in page, anonymous view, edit profile)
+- [apps/buyer/lib/features/search/AGENTS.md](apps/buyer/lib/features/search/AGENTS.md): the on device search screen opened from Home and Discover (suggestions, stores tab, results)
+- [apps/buyer/lib/features/cart/AGENTS.md](apps/buyer/lib/features/cart/AGENTS.md): the cart screen at `/cart`, the shared add to cart helper, and the optimistic cart notifier rules
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
 `

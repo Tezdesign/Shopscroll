@@ -76,7 +76,7 @@ revoke insert, update, delete on public.order_items from authenticated;
 -- product_unavailable, price_changed, invalid_field, invalid_method.
 --
 -- Fees and delivery days are placeholders the owner will change. The same
--- numbers are in lib/data/models/place_order_request.dart (display only, this
+-- numbers are in apps/buyer/lib/data/models/place_order_request.dart (display only, this
 -- function is the truth).
 --   standard: 10 dollars, 6 working days
 --   exclusive: 16 dollars, 2 working days

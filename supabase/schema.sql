@@ -483,7 +483,7 @@ grant select on public.user_profiles, public.products, public.reels, public.reel
 grant select, insert, update, delete on public.cart_items, public.orders, public.order_items, public.reel_likes, public.reel_saves to authenticated;
 
 -- ============================================================
--- Seed data: the public catalog, from lib/data/mock/*.dart
+-- Seed data: the public catalog, from apps/buyer/lib/data/mock/*.dart
 -- ============================================================
 -- Only the ownerless catalog (sellers, products, reels, reel_products) is
 -- seeded here. cart_items, orders, reel_likes, and reel_saves are per-user

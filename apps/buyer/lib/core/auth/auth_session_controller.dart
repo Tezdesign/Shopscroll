@@ -29,9 +29,9 @@ class AuthSessionController {
     // A session Clerk restored from disk is already signed in when this is
     // built, so no transition ever fires for it. Without this the app would
     // show the signed in buyer but keep reading and writing (cart, orders)
-    // through the anonymous client. The profile upsert is skipped: it would
-    // overwrite the buyer's own profile edits on every launch.
-    if (_wasSignedIn) _handleSignedIn(upsertProfile: false);
+    // through the anonymous client. The profile insert is skipped: the row
+    // already exists from the sign in that created this session.
+    if (_wasSignedIn) _handleSignedIn(createProfile: false);
   }
 
   final WidgetRef ref;
@@ -54,7 +54,7 @@ class AuthSessionController {
     }
   }
 
-  Future<void> _handleSignedIn({bool upsertProfile = true}) async {
+  Future<void> _handleSignedIn({bool createProfile = true}) async {
     if (_isHandlingSignIn) return;
     _isHandlingSignIn = true;
     try {
@@ -69,7 +69,7 @@ class AuthSessionController {
       // one, exactly as its own caller check requires.
       ref.read(activeSupabaseClientProvider.notifier).state = clerkBackedClient;
 
-      if (upsertProfile) await _upsertBuyerProfile(user, targetUserId);
+      if (createProfile) await _createProfileIfMissing(user, targetUserId);
     } finally {
       _isHandlingSignIn = false;
     }
@@ -97,7 +97,15 @@ class AuthSessionController {
     }
   }
 
-  Future<void> _upsertBuyerProfile(clerk.User user, String targetUserId) async {
+  /// Creates the profile row on first sign in and leaves an existing one
+  /// alone (spec 0012, AC-3). It never sends `role`: the column default is
+  /// 'buyer', and a seller who signs in here must keep `role = 'seller'` and
+  /// their edited store details. `ignoreDuplicates` makes the write an
+  /// `ON CONFLICT DO NOTHING`, so a repeat sign in changes nothing.
+  Future<void> _createProfileIfMissing(
+    clerk.User user,
+    String targetUserId,
+  ) async {
     final name = [
       user.firstName,
       user.lastName,
@@ -107,10 +115,9 @@ class AuthSessionController {
       'id': targetUserId,
       'name': name.isEmpty ? (user.username ?? 'Shopper') : name,
       'username': user.username ?? targetUserId,
-      'role': 'buyer',
       'email': user.email,
       'phone': user.phoneNumber,
-    });
+    }, ignoreDuplicates: true);
   }
 
   void _handleSignedOut() {

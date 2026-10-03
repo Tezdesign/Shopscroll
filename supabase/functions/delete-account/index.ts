@@ -8,7 +8,7 @@
 // token cache — client token, session id and client id — and only then builds
 // its headers, which attach `Authorization` `if (hasClientToken)`. The
 // request goes out unauthenticated and Clerk answers `401 signed_out`. See
-// `lib/features/profile/AGENTS.md`. Deleting from a trusted server is where
+// `apps/buyer/lib/features/profile/AGENTS.md`. Deleting from a trusted server is where
 // this belongs anyway: the secret key never reaches a device, and the Clerk
 // user and the Supabase rows go in one call rather than depending on the
 // `user.deleted` webhook having been registered.

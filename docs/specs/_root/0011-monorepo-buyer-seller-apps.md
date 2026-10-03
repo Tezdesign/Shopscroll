@@ -3,6 +3,8 @@
 **Date**: 2026-10-02
 **Status**: Accepted
 
+> Partly superseded by [0012](0012-one-backend-seller-role/index.md): the two Supabase projects, two Clerk instances and Edge Function sync below are replaced by one shared Supabase project and one Clerk instance. The folder layout and shared package decisions here still stand.
+
 ## Summary
 
 The seller app will live in the same Git repository as the buyer app, in its own folder, not in a separate repository or a copied folder. The buyer app moves to `apps/buyer`, the new seller app goes in `apps/seller`, and the code both need (theme, shared widgets, data models, thin backend setup helpers) moves into one Dart package, `packages/shared`. Dart's built in workspace feature ties the three together, so one person can change shared code once and both apps pick it up. Each app keeps its own Supabase project and its own sign in, as you chose, and how the two databases stay in step is a separate decision.

@@ -14,8 +14,9 @@ clients, not one" and "State transitions" sections for the full reasoning).
 - `auth_session_controller.dart` — `AuthSessionController` listens to `ClerkAuthState` for sign
   in/out transitions. On sign in: runs `merge_anonymous_identity` (Postgres RPC) on the **anonymous**
   client first (its anonymous-only check reads the caller's own session, so it only succeeds before
-  the switch), then flips `activeSupabaseClientProvider` to the Clerk-backed client, then upserts the
-  buyer's `user_profiles` row. On sign out (or an expired session Clerk can't refresh): flips back to
+  the switch), then flips `activeSupabaseClientProvider` to the Clerk-backed client, then creates the
+  buyer's `user_profiles` row only if it is missing (`ignoreDuplicates`, never sends `role`, spec 0012):
+  a seller who signs in here keeps their role and store details. On sign out (or an expired session Clerk can't refresh): flips back to
   the anonymous client, minting a fresh anonymous session if none is persisted. This listens to
   `ClerkAuthState` generically — any screen that changes sign-in state (Clerk's prebuilt card, or a
   hand-built flow) triggers it the same way, no per-screen wiring needed.
