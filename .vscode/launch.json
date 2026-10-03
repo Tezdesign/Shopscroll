@@ -2,9 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "marketplace_app",
+      "name": "buyer",
       "request": "launch",
       "type": "dart",
+      "cwd": "apps/buyer",
       "args": ["--dart-define-from-file=env.json"]
     }
   ]

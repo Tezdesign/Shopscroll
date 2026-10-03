@@ -1,0 +1,23 @@
+name: shopscroll_seller
+description: "Shopscroll seller app (spec 0011)."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shopscroll_shared:
+    path: ../../packages/shared
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

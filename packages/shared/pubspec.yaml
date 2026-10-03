@@ -1,0 +1,27 @@
+name: shopscroll_shared
+description: Theme, neutral widgets, data models and backend helpers shared by the Shopscroll buyer and seller apps (spec 0011).
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.12.2
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.2.2
+  supabase_flutter: ^2.16.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  # Assets of shared widgets are read with the `package: 'shopscroll_shared'`
+  # argument so they resolve from every app.
+  assets:
+    - assets/illustrations/
