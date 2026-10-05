@@ -1,3 +1,10 @@
+import 'money.dart';
+import 'product_variant.dart';
+
+/// Whether shoppers can see a product. A draft is not a product, it lives in
+/// `ProductDraft` until it is published (spec 0015).
+enum ProductStatus { live, archived }
+
 /// A product listed by a seller/store.
 class Product {
   const Product({
@@ -19,6 +26,10 @@ class Product {
     this.rating,
     this.reviewCount = 0,
     required this.createdAt,
+    this.currency = 'USD',
+    this.status = ProductStatus.live,
+    this.attributes = const {},
+    this.variants = const [],
   });
 
   final String id;
@@ -51,8 +62,36 @@ class Product {
   final int reviewCount;
   final DateTime createdAt;
 
-  /// Whole-dollar display string, e.g. "$40".
-  String get priceLabel => '\$${price.toStringAsFixed(0)}';
+  /// ISO code of the store's currency. Real rows always carry their own; the
+  /// default is the currency of the mock catalog.
+  final String currency;
+  final ProductStatus status;
+
+  /// Optional specifications such as material, fit and care (spec 0015).
+  final Map<String, String> attributes;
+
+  /// The sellable combinations. Empty when the row was read without them (a
+  /// list screen) or for an older mock product.
+  final List<ProductVariant> variants;
+
+  /// Display string in the product's currency, e.g. "$40" or "89.000 TND".
+  /// [price] is the lowest variant price when variants exist.
+  String get priceLabel => Money.format(price, currency);
+
+  /// The variant a shopper picked, or null when none matches (or the product
+  /// has no variant rows). Mirrors how `place_order` finds a cart line's
+  /// variant: same color and same size, a missing choice matches a missing
+  /// option.
+  ProductVariant? variantFor({int? color, String? size}) {
+    for (final v in variants) {
+      if (v.colorValue == color && v.size == size) return v;
+    }
+    return null;
+  }
+
+  /// The price of the picked variant, or [price] when there is none.
+  double priceFor({int? color, String? size}) =>
+      variantFor(color: color, size: size)?.price ?? price;
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
@@ -80,6 +119,13 @@ class Product {
       rating: (json['rating'] as num?)?.toDouble(),
       reviewCount: json['reviewCount'] as int? ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      currency: json['currency'] as String? ?? 'USD',
+      status: ProductStatus.values.byName(json['status'] as String? ?? 'live'),
+      attributes: (json['attributes'] as Map<String, dynamic>? ?? const {})
+          .map((k, v) => MapEntry(k, v as String)),
+      variants: (json['variants'] as List<dynamic>? ?? const [])
+          .map((e) => ProductVariant.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -103,6 +149,10 @@ class Product {
       'rating': rating,
       'reviewCount': reviewCount,
       'createdAt': createdAt.toIso8601String(),
+      'currency': currency,
+      'status': status.name,
+      'attributes': attributes,
+      'variants': variants.map((v) => v.toJson()).toList(),
     };
   }
 
@@ -125,6 +175,10 @@ class Product {
     double? rating,
     int? reviewCount,
     DateTime? createdAt,
+    String? currency,
+    ProductStatus? status,
+    Map<String, String>? attributes,
+    List<ProductVariant>? variants,
   }) {
     return Product(
       id: id ?? this.id,
@@ -145,6 +199,10 @@ class Product {
       rating: rating ?? this.rating,
       reviewCount: reviewCount ?? this.reviewCount,
       createdAt: createdAt ?? this.createdAt,
+      currency: currency ?? this.currency,
+      status: status ?? this.status,
+      attributes: attributes ?? this.attributes,
+      variants: variants ?? this.variants,
     );
   }
 }

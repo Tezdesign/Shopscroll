@@ -23,6 +23,7 @@ import 'data/repositories/supabase/supabase_product_repository.dart';
 import 'data/repositories/supabase/supabase_reel_repository.dart';
 import 'data/repositories/supabase/supabase_saved_product_repository.dart';
 import 'data/repositories/supabase/supabase_seller_application_repository.dart';
+import 'data/repositories/supabase/supabase_seller_product_repository.dart';
 import 'data/repositories/supabase/supabase_user_profile_repository.dart';
 
 void main() async {
@@ -91,6 +92,9 @@ void main() async {
           ),
           sellerApplicationRepositoryProvider.overrideWithValue(
             SupabaseSellerApplicationRepository(anonymousClient),
+          ),
+          sellerProductRepositoryProvider.overrideWithValue(
+            SupabaseSellerProductRepository(anonymousClient),
           ),
           conversationRepositoryProvider.overrideWithValue(
             SupabaseConversationRepository(),
@@ -173,6 +177,11 @@ void main() async {
         ),
         sellerApplicationRepositoryProvider.overrideWith(
           (ref) => SupabaseSellerApplicationRepository(
+            ref.watch(activeSupabaseClientProvider),
+          ),
+        ),
+        sellerProductRepositoryProvider.overrideWith(
+          (ref) => SupabaseSellerProductRepository(
             ref.watch(activeSupabaseClientProvider),
           ),
         ),

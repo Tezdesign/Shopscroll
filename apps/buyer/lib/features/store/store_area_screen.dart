@@ -1,84 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shopscroll_shared/models/user_profile.dart';
 import 'package:shopscroll_shared/theme/app_theme.dart';
-import 'package:shopscroll_shared/widgets/coming_soon_screen.dart';
+import 'package:shopscroll_shared/widgets/app_button.dart';
 
 import '../../core/area/app_area.dart';
-import '../../core/onboarding/onboarding_prefs.dart';
-import '../../data/providers/user_profile_providers.dart';
 import 'area_toggle.dart';
+import 'seller_gate.dart';
 
-/// The store area at `/store` (spec 0014, AC-5): a placeholder with the
-/// [AreaToggle] on top. No seller features are built here, they get their own
-/// scope rows and specs.
+/// The store area at `/store` (spec 0014, AC-5) with the [AreaToggle] on top.
+/// Only a seller stays ([SellerGate]).
 ///
-/// Only a seller stays. While the profile loads it shows a spinner, and for a
-/// visitor, a buyer, or a profile that cannot be read it goes to the buyer
-/// area instead (AC-3, for example when the role was removed while this area
-/// was remembered). A buyer's memory is cleared so the next launch opens the
-/// buyer area directly; a failed read keeps it, because that says nothing
-/// about the role.
-class StoreAreaScreen extends ConsumerWidget {
+/// Until the seller shell (header, tab bar, Home, Activity, Profile) has its
+/// own spec, this holds two entry buttons for the product features of spec
+/// 0015: the Products list and Add product. They move into the shell later.
+class StoreAreaScreen extends StatelessWidget {
   const StoreAreaScreen({super.key});
 
-  void _leave(BuildContext context, WidgetRef ref, {required bool forget}) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!context.mounted) return;
-      if (forget) ref.read(onboardingPrefsProvider).setLastArea('buyer');
-      context.go('/');
-    });
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final id = ref.watch(signedInUserIdProvider);
-    if (id == null) {
-      _leave(context, ref, forget: true);
-      return const _Loading();
-    }
-
-    return ref
-        .watch(userProfileByIdProvider(id))
-        .when(
-          loading: () => const _Loading(),
-          error: (error, stackTrace) {
-            _leave(context, ref, forget: false);
-            return const _Loading();
-          },
-          data: (profile) {
-            if (profile?.role != UserRole.seller) {
-              _leave(context, ref, forget: true);
-              return const _Loading();
-            }
-            return const Scaffold(
-              backgroundColor: AppColors.neutral100,
-              body: SafeArea(
-                child: Column(
-                  children: [
-                    AreaToggle(current: AppArea.store),
-                    Expanded(
-                      child: ComingSoonScreen(
-                        label: 'Your store',
-                        icon: Icons.storefront_outlined,
+  Widget build(BuildContext context) {
+    return SellerGate(
+      child: Scaffold(
+        backgroundColor: AppColors.neutral100,
+        body: SafeArea(
+          child: Column(
+            children: [
+              const AreaToggle(current: AppArea.store),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.base),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Your store',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamilyDisplay,
+                          fontSize: AppTypography.sizeXl,
+                          height: AppTypography.lineHeightXl,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.neutral1100,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: AppSpacing.base),
+                      AppButton(
+                        label: 'Add product',
+                        leadingIcon: Icons.add,
+                        onPressed: () => context.push('/store/products/new'),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppButton(
+                        label: 'Products',
+                        variant: AppButtonVariant.secondary,
+                        onPressed: () => context.push('/store/products'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            );
-          },
-        );
+            ],
+          ),
+        ),
+      ),
+    );
   }
-}
-
-class _Loading extends StatelessWidget {
-  const _Loading();
-
-  @override
-  Widget build(BuildContext context) => const Scaffold(
-    backgroundColor: AppColors.neutral100,
-    body: Center(child: CircularProgressIndicator()),
-  );
 }

@@ -11,16 +11,17 @@ class SupabaseProductRepository implements ProductRepository {
 
   @override
   Future<List<Product>> getProducts() async {
-    final rows = await _client.from('products').select();
-    return rows.map(productFromRow).toList();
+    final rows = await _client.from('products').select().eq('status', 'live');
+    return rows.map((r) => productFromRow(r)).toList();
   }
 
   @override
   Future<Product?> getProductById(String id) async {
     final row = await _client
         .from('products')
-        .select()
+        .select(productWithVariantsSelect)
         .eq('id', id)
+        .eq('status', 'live')
         .maybeSingle();
     return row == null ? null : productFromRow(row);
   }
@@ -30,8 +31,9 @@ class SupabaseProductRepository implements ProductRepository {
     final rows = await _client
         .from('products')
         .select()
+        .eq('status', 'live')
         .eq('category', category);
-    return rows.map(productFromRow).toList();
+    return rows.map((r) => productFromRow(r)).toList();
   }
 
   @override
@@ -39,13 +41,18 @@ class SupabaseProductRepository implements ProductRepository {
     final rows = await _client
         .from('products')
         .select()
+        .eq('status', 'live')
         .eq('store_id', storeId);
-    return rows.map(productFromRow).toList();
+    return rows.map((r) => productFromRow(r)).toList();
   }
 
   @override
   Future<List<Product>> getDealsProducts() async {
-    final rows = await _client.from('products').select().eq('is_deal', true);
-    return rows.map(productFromRow).toList();
+    final rows = await _client
+        .from('products')
+        .select()
+        .eq('status', 'live')
+        .eq('is_deal', true);
+    return rows.map((r) => productFromRow(r)).toList();
   }
 }

@@ -170,6 +170,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     } on PlaceOrderException catch (error) {
       showCartSnackBar(messenger, placeOrderFailureMessage(error.reason));
       if (error.reason == PlaceOrderFailure.itemsChanged ||
+          error.reason == PlaceOrderFailure.outOfStock ||
           error.reason == PlaceOrderFailure.cartEmpty) {
         container.invalidate(cartItemsProvider);
       }
@@ -256,6 +257,7 @@ class _Form extends ConsumerWidget {
     final draft = ref.watch(checkoutDraftProvider);
     final notifier = ref.read(checkoutDraftProvider.notifier);
     final subtotal = cartTotal(items);
+    final currency = cartCurrency(items);
     final method = draft.deliveryMethod;
     final contact = draft.contact;
     final address = draft.address;
@@ -309,7 +311,7 @@ class _Form extends ConsumerWidget {
                     for (final option in DeliveryMethod.values)
                       DeliveryMethodTile(
                         title: option.title,
-                        priceLabel: moneyLabel(option.fee),
+                        priceLabel: moneyLabel(option.fee, currency),
                         selected: method == option,
                         onTap: () => notifier.setDeliveryMethod(option),
                       ),
@@ -342,17 +344,17 @@ class _Form extends ConsumerWidget {
                     ),
                     SummaryRow(
                       label: 'Order subtotal',
-                      value: moneyLabel(subtotal),
+                      value: moneyLabel(subtotal, currency),
                     ),
                     SummaryRow(
                       label: 'Delivery',
                       value: method == null
                           ? 'Not chosen'
-                          : moneyLabel(method.fee),
+                          : moneyLabel(method.fee, currency),
                     ),
                     SummaryRow(
                       label: 'Price to pay',
-                      value: moneyLabel(orderTotal(subtotal, method?.fee)),
+                      value: moneyLabel(orderTotal(subtotal, method?.fee), currency),
                       emphasized: true,
                     ),
                   ],

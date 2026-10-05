@@ -1,12 +1,42 @@
 import 'package:shopscroll_shared/models/product.dart';
+import 'package:shopscroll_shared/models/product_variant.dart';
 import 'package:shopscroll_shared/models/seller_application.dart';
 import 'package:shopscroll_shared/models/user_profile.dart';
 
 import '../../../core/config/supabase_config.dart';
 
+/// The select that reads a product with its variants, for screens that need
+/// the price and stock of a color and size (product page, cart).
+const productWithVariantsSelect = '*, variants:product_variants(*)';
+
+/// Maps a `product_variants` row to [ProductVariant].
+ProductVariant variantFromRow(Map<String, dynamic> row) {
+  return ProductVariant(
+    id: row['id'] as String,
+    colorName: row['color_name'] as String?,
+    colorValue: (row['color_value'] as num?)?.toInt(),
+    size: row['size'] as String?,
+    price: (row['price'] as num).toDouble(),
+    stock: (row['stock'] as num?)?.toInt() ?? 0,
+    sku: row['sku'] as String?,
+    imagePath: row['image_path'] as String?,
+    position: (row['position'] as num?)?.toInt() ?? 0,
+  );
+}
+
 /// Maps a `products` row (snake_case Postgres columns) to [Product]. Shared
 /// by every Supabase repository that embeds a product (catalog reads, cart).
-Product productFromRow(Map<String, dynamic> row) {
+/// Reads `variants` when the row was selected with
+/// [productWithVariantsSelect]. [projectUrl] is only for tests.
+Product productFromRow(
+  Map<String, dynamic> row, {
+  String projectUrl = SupabaseConfig.url,
+}) {
+  final variants =
+      (row['variants'] as List<dynamic>? ?? const [])
+          .map((e) => variantFromRow(e as Map<String, dynamic>))
+          .toList()
+        ..sort((a, b) => a.position.compareTo(b.position));
   return Product(
     id: row['id'] as String,
     title: row['title'] as String,
@@ -17,9 +47,12 @@ Product productFromRow(Map<String, dynamic> row) {
     storeId: row['store_id'] as String,
     storeName: row['store_name'] as String,
     storeAvatarUrl: row['store_avatar_url'] as String?,
-    imageUrl: row['image_url'] as String?,
+    imageUrl: storageUrlFromColumn(
+      row['image_url'] as String?,
+      projectUrl: projectUrl,
+    ),
     imageUrls: (row['image_urls'] as List<dynamic>? ?? const [])
-        .map((e) => e as String)
+        .map((e) => storageUrlFromColumn(e as String, projectUrl: projectUrl)!)
         .toList(),
     colorOptions: (row['color_options'] as List<dynamic>? ?? const [])
         .map((e) => (e as num).toInt())
@@ -32,6 +65,12 @@ Product productFromRow(Map<String, dynamic> row) {
     rating: (row['rating'] as num?)?.toDouble(),
     reviewCount: row['review_count'] as int? ?? 0,
     createdAt: DateTime.parse(row['created_at'] as String),
+    currency: row['currency'] as String? ?? 'TND',
+    status: ProductStatus.values.byName(row['status'] as String? ?? 'live'),
+    attributes: (row['attributes'] as Map<String, dynamic>? ?? const {}).map(
+      (k, v) => MapEntry(k, v as String),
+    ),
+    variants: variants,
   );
 }
 
@@ -40,6 +79,14 @@ Product productFromRow(Map<String, dynamic> row) {
 /// logo, because SQL does not know the project URL. Turns the second kind
 /// into a public Storage URL, and leaves null and full URLs as they are.
 String? avatarUrlFromColumn(
+  String? value, {
+  String projectUrl = SupabaseConfig.url,
+}) => storageUrlFromColumn(value, projectUrl: projectUrl);
+
+/// The same rule for any image column: a full URL stays as it is, a
+/// bucket relative path (`product-images/<id>/<id>/<name>.jpg`) becomes a
+/// public Storage URL (spec 0015: SQL does not know the project URL).
+String? storageUrlFromColumn(
   String? value, {
   String projectUrl = SupabaseConfig.url,
 }) {
@@ -71,6 +118,7 @@ UserProfile userProfileFromRow(
     location: row['location'] as String?,
     phone: row['phone'] as String?,
     email: row['email'] as String?,
+    currency: row['currency'] as String? ?? 'TND',
   );
 }
 

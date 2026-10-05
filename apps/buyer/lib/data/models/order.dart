@@ -21,6 +21,7 @@ class Order {
     this.paymentMethod,
     required this.createdAt,
     this.estimatedDelivery,
+    this.currency = 'USD',
   });
 
   final String id;
@@ -48,6 +49,10 @@ class Order {
   final DateTime createdAt;
   final DateTime? estimatedDelivery;
 
+  /// The currency every amount of this order is in (spec 0015, AC-19). The
+  /// default is the currency of the mock orders.
+  final String currency;
+
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
       id: json['id'] as String,
@@ -73,6 +78,7 @@ class Order {
       estimatedDelivery: json['estimatedDelivery'] != null
           ? DateTime.parse(json['estimatedDelivery'] as String)
           : null,
+      currency: json['currency'] as String? ?? 'USD',
     );
   }
 
@@ -91,6 +97,7 @@ class Order {
       'paymentMethod': paymentMethod,
       'createdAt': createdAt.toIso8601String(),
       'estimatedDelivery': estimatedDelivery?.toIso8601String(),
+      'currency': currency,
     };
   }
 
@@ -108,6 +115,7 @@ class Order {
     String? paymentMethod,
     DateTime? createdAt,
     DateTime? estimatedDelivery,
+    String? currency,
   }) {
     return Order(
       id: id ?? this.id,
@@ -123,6 +131,7 @@ class Order {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       createdAt: createdAt ?? this.createdAt,
       estimatedDelivery: estimatedDelivery ?? this.estimatedDelivery,
+      currency: currency ?? this.currency,
     );
   }
 }

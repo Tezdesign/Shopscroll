@@ -1,4 +1,5 @@
 import '../../data/models/cart_item.dart';
+import 'package:shopscroll_shared/models/money.dart';
 import 'package:shopscroll_shared/models/product.dart';
 
 /// Plain cart rules, kept free of Flutter and Riverpod so they are easy to
@@ -14,9 +15,18 @@ int clampQuantity(int quantity) => quantity.clamp(1, maxCartQuantity);
 double cartTotal(List<CartItem> items) =>
     items.fold(0, (sum, item) => sum + item.subtotal);
 
-/// Whole dollar total, written like the app's prices: `$170`.
-String cartTotalLabel(List<CartItem> items) =>
-    '\$${cartTotal(items).toStringAsFixed(0)}';
+/// The currency of a cart: the one of its first line (a cart with two
+/// currencies is refused by `place_order`, so one is enough).
+String cartCurrency(List<CartItem> items) =>
+    items.isEmpty ? 'USD' : items.first.product.currency;
+
+/// The total written in the currency of the cart's first line, like the
+/// prices: `$170` or `89.000 TND`. A cart with two currencies is refused by
+/// `place_order` (`mixed_currency`), so the first line's currency is enough.
+String cartTotalLabel(List<CartItem> items) => Money.format(
+  cartTotal(items),
+  items.isEmpty ? 'USD' : items.first.product.currency,
+);
 
 /// Oldest added first (AC-2).
 List<CartItem> sortedByAddedAt(List<CartItem> items) =>

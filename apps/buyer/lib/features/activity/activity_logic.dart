@@ -1,3 +1,4 @@
+import 'package:shopscroll_shared/models/money.dart';
 import 'package:shopscroll_shared/models/conversation.dart';
 import '../../data/models/order.dart';
 import '../../data/models/saved_product.dart';
@@ -99,6 +100,6 @@ String? extraProductsLabel(Order order) {
   return extra > 0 ? '+ $extra products' : null;
 }
 
-/// Whole dollars, like `$320` (AC-3).
+/// The total in the order's currency, like `$320` or `89.000 TND` (AC-3).
 String orderTotalLabel(Order order) =>
-    '\$${order.totalAmount.toStringAsFixed(0)}';
+    Money.format(order.totalAmount, order.currency);

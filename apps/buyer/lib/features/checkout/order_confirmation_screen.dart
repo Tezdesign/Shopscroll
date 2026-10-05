@@ -289,12 +289,12 @@ class _SummaryCard extends StatelessWidget {
                 children: [
                   SummaryRow(
                     label: 'Order subtotal',
-                    value: moneyLabel(subtotal),
+                    value: moneyLabel(subtotal, order.currency),
                   ),
-                  SummaryRow(label: 'Delivery', value: moneyLabel(fee)),
+                  SummaryRow(label: 'Delivery', value: moneyLabel(fee, order.currency)),
                   SummaryRow(
                     label: 'Total price',
-                    value: moneyLabel(order.totalAmount),
+                    value: moneyLabel(order.totalAmount, order.currency),
                     emphasized: true,
                   ),
                 ],
@@ -317,7 +317,7 @@ class _SummaryCard extends StatelessWidget {
               method?.orderName ?? order.deliveryMethod!,
               [
                 if (order.deliveryFee != null)
-                  'Shipping price: ${moneyLabel(fee)}',
+                  'Shipping price: ${moneyLabel(fee, order.currency)}',
                 if (arrival != null)
                   'Estimated arrival: ${arrivalLabel(arrival)}',
               ],

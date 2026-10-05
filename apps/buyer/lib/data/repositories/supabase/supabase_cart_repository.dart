@@ -12,7 +12,9 @@ class SupabaseCartRepository implements CartRepository {
 
   final SupabaseClient _client;
 
-  static const _select = '*, product:products(*)';
+  /// The product comes with its variants, so a line is priced from the color
+  /// and size picked (spec 0015, AC-19).
+  static const _select = '*, product:products(*, variants:product_variants(*))';
 
   /// Row level security already limits every call below to the caller's own
   /// rows (spec 0004), and `user_id` is only ever read from the session.
@@ -29,7 +31,9 @@ class SupabaseCartRepository implements CartRepository {
         .select(_select)
         .eq('user_id', userId);
 
-    return rows.map(_fromRow).toList();
+    // A product that is no longer visible (archived) comes back as null, and
+    // its line is left out instead of crashing the screen (spec 0015, AC-19).
+    return rows.where((row) => row['product'] != null).map(_fromRow).toList();
   }
 
   @override

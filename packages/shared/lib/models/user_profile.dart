@@ -18,6 +18,7 @@ class UserProfile {
     this.location,
     this.phone,
     this.email,
+    this.currency = 'TND',
   });
 
   final String id;
@@ -38,6 +39,9 @@ class UserProfile {
   final String? phone;
   final String? email;
 
+  /// The store's currency code, set by the server (spec 0015, AC-9).
+  final String currency;
+
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
       id: json['id'] as String,
@@ -54,6 +58,7 @@ class UserProfile {
       location: json['location'] as String?,
       phone: json['phone'] as String?,
       email: json['email'] as String?,
+      currency: json['currency'] as String? ?? 'TND',
     );
   }
 
@@ -73,6 +78,7 @@ class UserProfile {
       'location': location,
       'phone': phone,
       'email': email,
+      'currency': currency,
     };
   }
 
@@ -91,6 +97,7 @@ class UserProfile {
     String? location,
     String? phone,
     String? email,
+    String? currency,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -107,6 +114,7 @@ class UserProfile {
       location: location ?? this.location,
       phone: phone ?? this.phone,
       email: email ?? this.email,
+      currency: currency ?? this.currency,
     );
   }
 }

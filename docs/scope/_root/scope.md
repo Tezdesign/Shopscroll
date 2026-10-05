@@ -15,6 +15,7 @@ Work that spans the buyer app, the seller app and the shared package. Buyer feat
 | 21 | Seller application notifications | Unplanned | planned |
 | 22 | Shared login and store area | Unplanned | in-progress |
 | 23 | Visitor application retention job | Unplanned | planned |
+| 24 | Seller product creation | Unplanned | in-progress |
 
 ## Features
 
@@ -141,3 +142,25 @@ spec once it exists).
 - [ ] Test it: `/test visitor application retention job`
 
 From spec [0014](../../specs/_root/0014-shared-login-seller-area/index.md)
+
+### 24. Seller product creation · in-progress
+
+A seller creates, publishes and manages products from the store area: a three step flow (Basics, Price and stock,
+Preview) with photos, color and size variants that each have a price and stock, drafts saved to the server, a Products
+list with quick edit, Create similar, and Fill from photos using Claude. Orders take stock off the right variant at the
+right price.
+**Done when:** an approved seller can publish a product with variants from their phone and see it in the buyer app, a
+buyer pays the picked variant's price and cannot buy a sold out size, drafts survive closing the app, and all suites
+still pass.
+- [x] Design it (spec): `/architect seller product creation`
+- [ ] Build it: `/develop seller product creation`
+  - [ ] Migration `0008` with variants, drafts, `save_product`, storage and SQL checks (AC-2, AC-4, AC-6, AC-7, AC-11, AC-12, AC-16): written and checked on a local Postgres, not yet applied to a Supabase project
+  - [x] Shared models, repositories and the buyer side price, cart and Saved changes (AC-9, AC-18, AC-19)
+  - [x] The flow end to end: photos, variants, autosave, details, Preview and Publish (AC-1 to AC-8, AC-15, AC-17)
+  - [x] Products list, quick edit and live edit (AC-11, AC-12)
+  - [ ] Migration `0009` stock and variant price in `place_order` (AC-10, AC-19): written and checked on a local Postgres, not yet applied to a Supabase project
+  - [ ] Fill from photos and Create similar, then the full test run (AC-13, AC-14, AC-1 to AC-19): the app side and the function logic are done and tested, migration `0010` and the function deploy are not yet done
+- [ ] Verify it: `/check verify seller product creation`
+- [ ] Test it: `/test seller product creation`
+
+Spec [0015](../../specs/_root/0015-seller-product-creation/index.md) · code in `supabase/migrations/0008` to `0010`, `supabase/checks/`, `supabase/functions/autofill-product/`, `apps/buyer/lib/features/seller_products/`, `packages/shared/lib/models/` · needs the seller shell (header, tab bar, Home, Activity, Profile) for its final entry points

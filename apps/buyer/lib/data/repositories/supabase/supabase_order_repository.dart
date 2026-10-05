@@ -24,6 +24,7 @@ class SupabaseOrderRepository implements OrderRepository {
   CartItem _orderItemToCartItem(
     Map<String, dynamic> row,
     DateTime orderCreatedAt,
+    String currency,
   ) {
     return CartItem(
       id: row['id'] as String,
@@ -37,6 +38,7 @@ class SupabaseOrderRepository implements OrderRepository {
         storeName: row['store_name'] as String? ?? '',
         imageUrl: row['image_url'] as String?,
         createdAt: orderCreatedAt,
+        currency: currency,
       ),
       quantity: row['quantity'] as int? ?? 1,
       selectedSize: row['selected_size'] as String?,
@@ -47,8 +49,15 @@ class SupabaseOrderRepository implements OrderRepository {
 
   Order _fromRow(Map<String, dynamic> row) {
     final createdAt = DateTime.parse(row['created_at'] as String);
+    final currency = row['currency'] as String? ?? 'TND';
     final items = (row['order_items'] as List<dynamic>? ?? const [])
-        .map((e) => _orderItemToCartItem(e as Map<String, dynamic>, createdAt))
+        .map(
+          (e) => _orderItemToCartItem(
+            e as Map<String, dynamic>,
+            createdAt,
+            currency,
+          ),
+        )
         .toList();
     // Orders made before spec 0009 have no contact or address columns filled.
     final hasContact = row['contact_name'] != null;
@@ -58,6 +67,7 @@ class SupabaseOrderRepository implements OrderRepository {
       items: items,
       status: OrderStatus.values.byName(row['status'] as String),
       totalAmount: (row['total_amount'] as num).toDouble(),
+      currency: currency,
       orderNumber: (row['order_number'] as num?)?.toInt(),
       subtotal: (row['subtotal'] as num?)?.toDouble(),
       deliveryFee: (row['delivery_fee'] as num?)?.toDouble(),
@@ -128,14 +138,15 @@ class SupabaseOrderRepository implements OrderRepository {
           'p_delivery_method': request.deliveryMethod.name,
           'p_payment_method': request.paymentMethod.name,
           // Summing prices as doubles can leave 44.99999999, and the function
-          // compares this with an exact numeric, so send two decimals.
+          // compares this with an exact numeric, so send three decimals (a
+          // dinar has three, spec 0015 AC-19).
           'p_expected_subtotal': double.parse(
-            request.expectedSubtotal.toStringAsFixed(2),
+            request.expectedSubtotal.toStringAsFixed(3),
           ),
         },
       );
     } on PostgrestException catch (error) {
-      throw PlaceOrderException(_reasonFor(error.message));
+      throw PlaceOrderException(placeOrderFailureFor(error.message));
     } catch (_) {
       throw const PlaceOrderException(PlaceOrderFailure.failed);
     }
@@ -145,19 +156,24 @@ class SupabaseOrderRepository implements OrderRepository {
     }
     return order;
   }
-
-  // The function raises its reason as the whole error message.
-  PlaceOrderFailure _reasonFor(String message) {
-    if (message.contains('cart_empty')) return PlaceOrderFailure.cartEmpty;
-    if (message.contains('product_unavailable') ||
-        message.contains('price_changed')) {
-      return PlaceOrderFailure.itemsChanged;
-    }
-    if (message.contains('invalid_field') ||
-        message.contains('invalid_method') ||
-        message.contains('no_session')) {
-      return PlaceOrderFailure.invalid;
-    }
-    return PlaceOrderFailure.failed;
-  }
 }
+
+/// What the `place_order` function's reason means for the app. The function
+/// raises its reason as the whole error message. Public so a test can pin each
+/// mapping.
+PlaceOrderFailure placeOrderFailureFor(String message) {
+  if (message.contains('cart_empty')) return PlaceOrderFailure.cartEmpty;
+  if (message.contains('out_of_stock')) return PlaceOrderFailure.outOfStock;
+  if (message.contains('mixed_currency')) return PlaceOrderFailure.mixedCurrency;
+  if (message.contains('product_unavailable') ||
+      message.contains('price_changed')) {
+    return PlaceOrderFailure.itemsChanged;
+  }
+  if (message.contains('invalid_field') ||
+      message.contains('invalid_method') ||
+      message.contains('no_session')) {
+    return PlaceOrderFailure.invalid;
+  }
+  return PlaceOrderFailure.failed;
+}
+

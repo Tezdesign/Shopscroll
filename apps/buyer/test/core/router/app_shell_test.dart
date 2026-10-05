@@ -180,18 +180,22 @@ void main() {
       await tester.tap(find.text('Store owner'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Your store coming soon'), findsOneWidget);
+      // Spec 0015: the placeholder now holds the two product entry buttons.
+      expect(find.text('Your store'), findsOneWidget);
+      expect(find.text('Add product'), findsOneWidget);
       expect(OnboardingPrefs(prefs).lastArea, 'store');
     });
   });
 
   group('the store area (spec 0014, AC-3, AC-5)', () {
-    testWidgets('is a placeholder with the toggle, Store owner selected', (
+    testWidgets('shows the toggle and the product entry buttons', (
       tester,
     ) async {
       await pumpApp(tester, role: UserRole.seller, initialLocation: '/store');
 
-      expect(find.text('Your store coming soon'), findsOneWidget);
+      expect(find.text('Your store'), findsOneWidget);
+      expect(find.text('Add product'), findsOneWidget);
+      expect(find.text('Products'), findsOneWidget);
       expect(find.text('Buyer'), findsOneWidget);
     });
 

@@ -27,7 +27,9 @@ class SupabaseSavedProductRepository implements SavedProductRepository {
         .eq('user_id', userId)
         .order('created_at', ascending: false);
 
+    // An archived product reads back as null, skip it (spec 0015, AC-19).
     return rows
+        .where((row) => row['product'] != null)
         .map(
           (row) => SavedProduct(
             productFromRow(row['product'] as Map<String, dynamic>),

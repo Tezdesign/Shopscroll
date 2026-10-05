@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:shopscroll_shared/theme/app_theme.dart';
+import 'package:shopscroll_shared/models/money.dart';
 import 'package:shopscroll_shared/models/product.dart';
 import '../../data/providers/cart_providers.dart';
 import '../../data/providers/product_providers.dart';
@@ -38,6 +39,10 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _quantity = 1;
   String? _selectedSize;
+
+  /// The color swatch the shopper picked (spec 0015, AC-19): the price and
+  /// stock shown, and the cart line added, follow the picked color and size.
+  int? _selectedColor;
 
   void _showSavedToast() {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -94,6 +99,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           _selectedSize ??= product.sizes.isNotEmpty
               ? product.sizes.first
               : null;
+          _selectedColor ??= firstColor(product);
 
           return Stack(
             children: [
@@ -106,7 +112,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _PriceAndStockRow(product: product),
+                          _PriceAndStockRow(
+                            product: product,
+                            selectedColor: _selectedColor,
+                            selectedSize: _selectedSize,
+                            onColorChanged: (color) =>
+                                setState(() => _selectedColor = color),
+                          ),
                           const SizedBox(height: AppSpacing.base),
                           _StoreRow(product: product),
                           const SizedBox(height: AppSpacing.sm),
@@ -167,8 +179,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       bottomNavigationBar: productAsync.maybeWhen(
         data: (product) {
           if (product == null) return null;
-          // Product detail has no colour picker yet, so it adds the first one.
-          final color = firstColor(product);
+          final color = _selectedColor ?? firstColor(product);
+          final available = _variantAvailable(product, color, _selectedSize);
           final added =
               findLine(cartLines, product.id, _selectedSize, color) != null;
           return _BottomActionBar(
@@ -183,7 +195,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 ? () {}
                 : () => addToCart(
                     context,
-                    product,
+                    // A sold out or missing variant must not reach the cart.
+                    available ? product : product.copyWith(inStock: false),
                     quantity: _quantity,
                     size: _selectedSize,
                     color: color,
@@ -282,23 +295,44 @@ class _IconCircle extends StatelessWidget {
   }
 }
 
+/// Whether the picked color and size can be bought. A product with variant
+/// rows is available when its matching variant has stock, and a combination
+/// with no variant is not. An older product with no variant rows keeps using
+/// its own in-stock flag (spec 0015, AC-19).
+bool _variantAvailable(Product product, int? color, String? size) {
+  if (product.variants.isEmpty) return product.inStock;
+  return product.variantFor(color: color, size: size)?.inStock ?? false;
+}
+
 /// Price ("30$", one-off 28px size not on the shared scale — Figma's own
 /// value, kept literal like other components' intrinsic one-offs) + color
 /// swatches + "in stock" (Figma nodes 205:2448 / 177:2095).
 class _PriceAndStockRow extends StatelessWidget {
-  const _PriceAndStockRow({required this.product});
+  const _PriceAndStockRow({
+    required this.product,
+    required this.selectedColor,
+    required this.selectedSize,
+    required this.onColorChanged,
+  });
 
   final Product product;
+  final int? selectedColor;
+  final String? selectedSize;
+  final ValueChanged<int> onColorChanged;
 
   static const double _priceFontSize = 28;
 
   @override
   Widget build(BuildContext context) {
+    final available = _variantAvailable(product, selectedColor, selectedSize);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          product.priceLabel,
+          Money.format(
+            product.priceFor(color: selectedColor, size: selectedSize),
+            product.currency,
+          ),
           style: const TextStyle(
             fontFamily: AppTypography.fontFamilyBody,
             fontSize: _priceFontSize,
@@ -315,32 +349,43 @@ class _PriceAndStockRow extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  for (final color in product.colorOptions) ...[
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: Color(color),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.neutral300),
+                  for (final color in product.colorOptions)
+                    // 28 pixel tap area around the 16 pixel swatch, the
+                    // picked one gets a primary ring.
+                    InkResponse(
+                      onTap: () => onColorChanged(color),
+                      radius: 16,
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Color(color),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: color == selectedColor
+                                  ? AppColors.primary400
+                                  : AppColors.neutral300,
+                              width: color == selectedColor ? 2 : 1,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    if (color != product.colorOptions.last)
-                      const SizedBox(width: AppSpacing.xs),
-                  ],
                 ],
               )
             else
               const SizedBox.shrink(),
             Text(
-              product.inStock ? 'in stock' : 'out of stock',
+              available ? 'in stock' : 'out of stock',
               style: TextStyle(
                 fontFamily: AppTypography.fontFamilyBody,
                 fontSize: AppTypography.sizeXl,
                 height: AppTypography.lineHeightBase,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.43,
-                color: product.inStock
+                color: available
                     ? AppColors.success400
                     : AppColors.error400,
               ),

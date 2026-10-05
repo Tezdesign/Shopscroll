@@ -207,7 +207,7 @@ class _Body extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
           child: Column(
             spacing: AppSpacing.base,
-            children: [for (final item in order.items) _ItemRow(item: item)],
+            children: [for (final item in order.items) _ItemRow(item: item, currency: order.currency)],
           ),
         ),
         Container(
@@ -224,11 +224,11 @@ class _Body extends StatelessWidget {
           child: Column(
             spacing: AppSpacing.sm,
             children: [
-              SummaryRow(label: 'Order subtotal', value: moneyLabel(subtotal)),
-              SummaryRow(label: 'Delivery', value: moneyLabel(fee)),
+              SummaryRow(label: 'Order subtotal', value: moneyLabel(subtotal, order.currency)),
+              SummaryRow(label: 'Delivery', value: moneyLabel(fee, order.currency)),
               SummaryRow(
                 label: 'Total price',
-                value: moneyLabel(order.totalAmount),
+                value: moneyLabel(order.totalAmount, order.currency),
                 emphasized: true,
               ),
             ],
@@ -276,7 +276,7 @@ class _Body extends StatelessWidget {
                   method?.orderName ?? order.deliveryMethod!,
                   [
                     if (order.deliveryFee != null)
-                      'Shipping price : ${moneyLabel(fee)}',
+                      'Shipping price : ${moneyLabel(fee, order.currency)}',
                     if (arrival != null)
                       'Estimated arrival : ${arrivalLabel(arrival)}',
                   ],
@@ -304,7 +304,9 @@ class _Body extends StatelessWidget {
 /// title and price; here both use one style each, the same simplification
 /// `InfoSummaryRow` already documents for its own grey lines.
 class _ItemRow extends StatelessWidget {
-  const _ItemRow({required this.item});
+  const _ItemRow({required this.item, required this.currency});
+
+  final String currency;
 
   final CartItem item;
 
@@ -388,7 +390,7 @@ class _ItemRow extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(child: Text(product.title, style: _titleStyle)),
-            Text(moneyLabel(item.subtotal), style: _priceStyle),
+            Text(moneyLabel(item.subtotal, currency), style: _priceStyle),
           ],
         ),
       ],

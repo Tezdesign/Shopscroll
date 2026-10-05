@@ -1,6 +1,6 @@
-import 'dart:math';
-
 import 'package:shopscroll_shared/models/contact_info.dart';
+import 'package:shopscroll_shared/models/ids.dart';
+import 'package:shopscroll_shared/models/money.dart';
 import '../../data/models/place_order_request.dart';
 import 'package:shopscroll_shared/models/shipping_address.dart';
 import '../../data/repositories/order_repository.dart';
@@ -11,8 +11,11 @@ import 'package:shopscroll_shared/widgets/country_dial_code.dart';
 /// these, so the limits live in one place. The limits match the
 /// `place_order` SQL function, which is the one that enforces them.
 
-/// Whole dollar amount written like the app's prices: `$45`.
-String moneyLabel(double amount) => '\$${amount.toStringAsFixed(0)}';
+/// An amount written like the app's prices: `$45` or `89.000 TND`. The
+/// currency is the one of the cart or the order; it defaults to the mock
+/// catalog's (spec 0015, AC-19).
+String moneyLabel(double amount, [String currency = 'USD']) =>
+    Money.format(amount, currency);
 
 double orderTotal(double subtotal, double? fee) => subtotal + (fee ?? 0);
 
@@ -87,22 +90,16 @@ String firstNameOf(String fullName) {
 }
 
 /// A random version 4 id, made once per checkout (spec 0009, AC-12).
-String newOrderId() {
-  final random = Random.secure();
-  final bytes = List<int>.generate(16, (_) => random.nextInt(256));
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  String hex(int from, int to) => bytes
-      .sublist(from, to)
-      .map((b) => b.toRadixString(16).padLeft(2, '0'))
-      .join();
-  return '${hex(0, 4)}-${hex(4, 6)}-${hex(6, 8)}-${hex(8, 10)}-${hex(10, 16)}';
-}
+String newOrderId() => newUuid();
 
 /// What Checkout says for each reason an order was not made (AC-13).
 String placeOrderFailureMessage(PlaceOrderFailure reason) => switch (reason) {
   PlaceOrderFailure.itemsChanged => 'Some items changed. Check your cart.',
   PlaceOrderFailure.cartEmpty => 'Your cart is empty.',
+  PlaceOrderFailure.outOfStock =>
+    'An item you chose just sold out. Check your cart.',
+  PlaceOrderFailure.mixedCurrency =>
+    'Your cart has items in different currencies. Order them one currency at a time.',
   PlaceOrderFailure.invalid ||
   PlaceOrderFailure.failed => "Couldn't place your order. Try again.",
 };

@@ -29,6 +29,9 @@ import '../../features/seller_application/seller_application_wizard_screen.dart'
 import '../../features/reels/reel_player_screen.dart';
 import '../../features/reels/reels_screen.dart';
 import '../../features/search/search_screen.dart';
+import '../../features/seller_products/product_flow_screen.dart';
+import '../../features/seller_products/seller_products_screen.dart';
+import '../../features/store/seller_gate.dart';
 import '../../features/store/store_area_screen.dart';
 import '../../features/store/store_page_screen.dart';
 import 'package:shopscroll_shared/widgets/coming_soon_screen.dart';
@@ -366,6 +369,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     const SellerApplicationWizardScreen(isVisitor: true),
               )
             : const SellerApplicationWizardScreen(isVisitor: true),
+      ),
+      // The seller's product screens (spec 0015). Declared before
+      // `/store/:id` so `products` is never read as a store id. Every one is
+      // for sellers only (SellerGate).
+      GoRoute(
+        path: '/store/products',
+        builder: (context, state) =>
+            const SellerGate(child: SellerProductsScreen()),
+      ),
+      GoRoute(
+        path: '/store/products/new',
+        builder: (context, state) =>
+            const SellerGate(child: NewProductFlowScreen()),
+      ),
+      GoRoute(
+        path: '/store/products/:draftId/edit',
+        builder: (context, state) => SellerGate(
+          child: ProductFlowScreen(draftId: state.pathParameters['draftId']!),
+        ),
       ),
       GoRoute(
         path: '/store/:id',

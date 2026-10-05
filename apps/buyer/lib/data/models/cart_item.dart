@@ -21,7 +21,12 @@ class CartItem {
 
   final DateTime addedAt;
 
-  double get subtotal => product.price * quantity;
+  /// The price of the picked color and size, or the product price when the
+  /// product has no variant data (spec 0015, AC-19).
+  double get unitPrice =>
+      product.priceFor(color: selectedColor, size: selectedSize);
+
+  double get subtotal => unitPrice * quantity;
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(

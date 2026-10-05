@@ -9,12 +9,14 @@ import 'mock/mock_product_repository.dart';
 import 'mock/mock_reel_repository.dart';
 import 'mock/mock_saved_product_repository.dart';
 import 'mock/mock_seller_application_repository.dart';
+import 'mock/mock_seller_product_repository.dart';
 import 'mock/mock_user_profile_repository.dart';
 import 'order_repository.dart';
 import 'product_repository.dart';
 import 'reel_repository.dart';
 import 'saved_product_repository.dart';
 import 'seller_application_repository.dart';
+import 'seller_product_repository.dart';
 import 'user_profile_repository.dart';
 
 /// Every provider here defaults to its mock implementation, so the app,
@@ -53,3 +55,9 @@ final sellerApplicationRepositoryProvider =
     Provider<SellerApplicationRepository>(
       (ref) => MockSellerApplicationRepository(),
     );
+
+/// The seller's own products and drafts (spec 0015). Like the others it
+/// defaults to the in memory mock and `main.dart` swaps in Supabase.
+final sellerProductRepositoryProvider = Provider<SellerProductRepository>(
+  (ref) => MockSellerProductRepository(),
+);

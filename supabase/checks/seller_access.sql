@@ -115,19 +115,23 @@ begin
 
   -- ---------------------------------------------------------------- AC-5
   -- chk_newbuyer is now a seller. chk_plain is a buyer. chk_other is a seller.
+  -- Spec 0015 (migration 0008) closed direct writes to products: they now go
+  -- through save_product (see checks/seller_products.sql). The product this
+  -- seller owns is created here as the table owner so the reel tag checks
+  -- below still have one.
+  reset role;
+  insert into public.products (id, title, description, price, category, store_id, store_name)
+  values (v_my_product, 'mine', 'd', 5, 'Fashion', 'chk_newbuyer', 'Mine');
   perform pg_temp.act_as('chk_newbuyer');
-  perform pg_temp.expect('AC-5 seller inserts own product (happy path)',
-    pg_temp.try(format($q$insert into public.products (id, title, description, price, category, store_id, store_name)
-      values (%L, 'mine', 'd', 5, 'c', 'chk_newbuyer', 'Mine')$q$, v_my_product)), 'ok:1');
   perform pg_temp.expect('AC-5 seller reads it back',
     pg_temp.try(format('select 1 from public.products where id = %L and store_id = %L', v_my_product, 'chk_newbuyer')), 'ok:1');
-  perform pg_temp.expect('AC-5 seller updates own product',
-    pg_temp.try(format($q$update public.products set title = 'renamed' where id = %L$q$, v_my_product)), 'ok:1');
+  perform pg_temp.expect('AC-5 (0015) seller can no longer update a product directly',
+    pg_temp.try(format($q$update public.products set title = 'renamed' where id = %L$q$, v_my_product)), 'err:42501');
   perform pg_temp.expect('AC-5 seller cannot insert into another store',
     pg_temp.try($q$insert into public.products (title, description, price, category, store_id, store_name)
       values ('x', 'd', 1, 'c', 'chk_other', 'Other')$q$), 'err:42501');
   perform pg_temp.expect('AC-5 seller cannot update another seller''s product',
-    pg_temp.try(format($q$update public.products set title = 'hacked' where id = %L$q$, v_other_product)), 'ok:0');
+    pg_temp.try(format($q$update public.products set title = 'hacked' where id = %L$q$, v_other_product)), 'err:42501');
   perform pg_temp.expect('AC-5 seller cannot delete another seller''s product',
     pg_temp.try(format('delete from public.products where id = %L', v_other_product)), 'ok:0');
   perform pg_temp.expect('AC-5 seller cannot write products.rating',
@@ -156,8 +160,8 @@ begin
     pg_temp.try(format('delete from public.reel_products where reel_id = %L', v_my_reel)), 'ok:1');
   perform pg_temp.expect('AC-5 seller deletes own reel',
     pg_temp.try(format('delete from public.reels where id = %L', v_my_reel)), 'ok:1');
-  perform pg_temp.expect('AC-5 seller deletes own product',
-    pg_temp.try(format('delete from public.products where id = %L', v_my_product)), 'ok:1');
+  perform pg_temp.expect('AC-5 (0015) seller cannot delete a live product, only an archived one',
+    pg_temp.try(format('delete from public.products where id = %L', v_my_product)), 'ok:0');
   reset role;
 
   perform pg_temp.act_as('chk_plain');
@@ -168,7 +172,7 @@ begin
     pg_temp.try($q$insert into public.reels (video_url, thumbnail_url, store_id, store_name, caption)
       values ('v', 't', 'chk_plain', 'Plain', 'c')$q$), 'err:42501');
   perform pg_temp.expect('AC-5 buyer cannot update a product',
-    pg_temp.try(format($q$update public.products set title = 'hacked' where id = %L$q$, v_other_product)), 'ok:0');
+    pg_temp.try(format($q$update public.products set title = 'hacked' where id = %L$q$, v_other_product)), 'err:42501');
   perform pg_temp.expect('AC-5 buyer cannot delete a product',
     pg_temp.try(format('delete from public.products where id = %L', v_other_product)), 'ok:0');
   perform pg_temp.expect('AC-5 buyer cannot tag a reel',
