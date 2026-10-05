@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:shopscroll_shared/models/seller_application.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -60,10 +60,12 @@ class SupabaseSellerApplicationRepository
       );
       return id as String;
     } on PostgrestException catch (error) {
+      debugPrint('seller application submit refused: ${error.message}');
       throw SellerApplicationException(
         sellerApplicationFailureFor(error.message),
       );
-    } catch (_) {
+    } catch (error) {
+      debugPrint('seller application submit failed: $error');
       throw const SellerApplicationException(SellerApplicationFailure.failed);
     }
   }
@@ -115,7 +117,8 @@ class SupabaseSellerApplicationRepository
             ),
           );
       return path;
-    } catch (_) {
+    } catch (error) {
+      debugPrint('seller application upload to $bucket failed: $error');
       throw const SellerApplicationException(SellerApplicationFailure.failed);
     }
   }

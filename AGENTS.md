@@ -16,20 +16,32 @@ A Flutter mobile marketplace/shopping app ("Shopscroll"), UI built from a Figma 
 
 ## Commands
 
+The repo is a Dart workspace (root `pubspec.yaml`: `apps/buyer` and `packages/shared`). Install and analyze from
+the root, run and test from the package folder. The root has no `lib/`, so `flutter run` there fails with
+"Entrypoint file not found".
+
 ```bash
-# Install
+# Install (root, resolves both packages)
 flutter pub get
 
-# Dev / run — needs --dart-define-from-file=env.json (see .env.example) or
-# Supabase/Clerk stay unconfigured and the app silently falls back to mock
-# data and ComingSoonScreen placeholders (e.g. the Profile tab looks empty).
-flutter run --dart-define-from-file=env.json
+# Dev / run: the buyer app is the only app. Needs --dart-define-from-file=env.json
+# (see apps/buyer/.env.example) or Supabase/Clerk stay unconfigured and the app
+# silently falls back to mock data and ComingSoonScreen placeholders (e.g. the
+# Profile tab looks empty).
+cd apps/buyer && flutter run --dart-define-from-file=env.json
 
 # Build
-flutter build <ios|apk|...> --dart-define-from-file=env.json
+cd apps/buyer && flutter build <ios|apk|...> --dart-define-from-file=env.json
 
-# Test
-flutter test
+# Analyze (root, covers every package)
+flutter analyze
+
+# Test (run each package from its own folder)
+cd apps/buyer && flutter test
+cd packages/shared && flutter test
+
+# Edge Function tests (supabase/functions/_shared)
+deno test supabase/functions/_shared/
 ```
 
 ## Specs
