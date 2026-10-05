@@ -4,6 +4,8 @@
 **Status**: Accepted
 
 > Partly superseded by [0012](0012-one-backend-seller-role/index.md): the two Supabase projects, two Clerk instances and Edge Function sync below are replaced by one shared Supabase project and one Clerk instance. The folder layout and shared package decisions here still stand.
+>
+> Also partly superseded by [0014](0014-shared-login-seller-area/index.md): the seller app is no longer a separate app. There is one app with a store area chosen at login, and `apps/seller` is removed. The monorepo layout and the shared package still stand.
 
 ## Summary
 

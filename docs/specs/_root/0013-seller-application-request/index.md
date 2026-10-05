@@ -3,6 +3,8 @@
 **Date**: 2026-10-03
 **Status**: In Progress
 
+> Partly replaced by [0014](../0014-shared-login-seller-area/index.md): AC-10 and build plan task 6 (the seller app gate) are replaced by the shared login and the store area inside the buyer app. A person with no account can also apply (0014). Everything else here still stands.
+
 ## Summary
 
 A buyer who wants to sell sends a seller application from the buyer app (Profile, Settings, Seller application). They fill a four step form (store details, public contact and logo, documents, review) and upload an ID photo. An admin approves or rejects it for now by running a database function with the service role. Only approval turns the person into a seller and copies the store details onto their profile. The seller app lets in only approved sellers and shows a waiting or blocked screen to everyone else. The review is only real once the open `become_seller()` function from spec 0012 is closed, which stays a launch blocker below.
@@ -124,12 +126,12 @@ Build approach: none recorded in `AGENTS.md` or the scope header, so this plan u
 
 1. Write and apply `supabase/migrations/0006_seller_applications.sql`: table, indexes, row level security and grants, the three functions, the two buckets and their storage policies. Confirm in the database that each exists. Before building any UI, test one upload with a Clerk token on a test or branch project, to confirm Storage accepts a Clerk user id as the owner, and that a wrong type, an over size file and an anonymous session are refused, satisfies **AC-1**, **AC-2**, **AC-3**, **AC-4**, **AC-5**, **AC-6**, **AC-7**
 2. [x] Add `supabase/checks/seller_applications.sql` (same style as `seller_access.sql`: fixtures, fake JWTs, one NOTICE per check, rollback) covering submit, the same id retry, two submits at the same moment, the one open rule, validation and file path rules, the table and `storage.objects` permissions (including an anonymous session), approve (including empty contact fields becoming null, `already_seller` and the second approve) and reject, satisfies **AC-1** to **AC-7**
-3. Shared and buyer data layer: a `SellerApplication` model in `packages/shared` (`fromJson`, `toJson`, `copyWith`), a `SellerApplicationRepository` in the buyer app with a Supabase implementation and a mock implementation (the mock and Supabase convention in `AGENTS.md`), the error code mapping, and the `avatar_url` rule in the row mapper (a value that does not start with `http` becomes a public Storage URL), satisfies **AC-6**, **AC-8**
-4. Buyer screen: the "Seller application" row in Settings, the `/profile/seller-application` route, the empty state, the list with status chips, pull to refresh, the anonymous sign in prompt, and the "Become a seller" button opening it, built to Figma nodes 3001:9443, 3001:9520 and 3001:9544, satisfies **AC-8**
-5. Buyer wizard: four steps with a progress bar, validation, `image_picker` with resize, uploads then submit, retry and double tap safety, iOS permission strings, satisfies **AC-9**
+3. [x] Shared and buyer data layer: a `SellerApplication` model in `packages/shared` (`fromJson`, `toJson`, `copyWith`), a `SellerApplicationRepository` in the buyer app with a Supabase implementation and a mock implementation (the mock and Supabase convention in `AGENTS.md`), the error code mapping, and the `avatar_url` rule in the row mapper (a value that does not start with `http` becomes a public Storage URL), satisfies **AC-6**, **AC-8**
+4. [x] Buyer screen: the "Seller application" row in Settings, the `/profile/seller-application` route, the empty state, the list with status chips, pull to refresh, the anonymous sign in prompt, and the "Become a seller" button opening it, built to Figma nodes 3001:9443, 3001:9520 and 3001:9544, satisfies **AC-8**
+5. [x] Buyer wizard: four steps with a progress bar, validation, `image_picker` with resize, uploads then submit, retry and double tap safety, iOS permission strings, satisfies **AC-9**
 6. Seller app: remove the `become_seller()` call from `SellerSessionController`, read the person's role and latest application, and add the waiting, blocked and "apply in Shopscroll" screens. Update its tests, satisfies **AC-10**
-7. Extend `supabase/functions/_shared/delete_user_data.ts` to remove every file under the person's id folder in both buckets, walking sub folders through the Storage API (applications cascade with the profile), and test it with a person who has files in both buckets, satisfies **AC-11**
-8. Run `flutter analyze` and the buyer, shared and seller test suites, then the SQL checks on a test database, and save the manual API checks (wrong type, over size, cross user read) in `verify.md`, satisfies **AC-5**, **AC-12**
+7. [x] Extend `supabase/functions/_shared/delete_user_data.ts` to remove every file under the person's id folder in both buckets, walking sub folders through the Storage API (applications cascade with the profile), and test it with a person who has files in both buckets, satisfies **AC-11**
+8. [x] Run `flutter analyze` and the buyer, shared and seller test suites, then the SQL checks on a test database, and save the manual API checks (wrong type, over size, cross user read) in `verify.md`, satisfies **AC-5**, **AC-12**
 
 ## Rationale
 

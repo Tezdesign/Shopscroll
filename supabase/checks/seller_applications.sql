@@ -1,8 +1,10 @@
 -- Decision record: docs/specs/_root/0013-seller-application-request/index.md (build plan task 2)
+-- Updated for migration 0007 (spec 0014): submitter_id is required and two unique
+-- indexes were renamed. Apply 0007 before running it.
 --
 -- SQL checks for seller applications: AC-1 to AC-7. Run the whole file in the
 -- SQL editor of a TEST or BRANCH database (or with psql) after applying
--- migrations 0004, 0005 and 0006. It creates its own fixtures, switches role
+-- migrations 0004, 0005, 0006 and 0007. It creates its own fixtures, switches role
 -- with a fake JWT to act as each person, and ends with `rollback`, so it
 -- leaves no rows behind. Do not run it against live data you care about
 -- without reading it first.
@@ -217,13 +219,13 @@ begin
 
   -- The unique indexes are the backstop for two submits at the same moment.
   perform pg_temp.expect('AC-2 index refuses a second reviewing row for one person',
-    pg_temp.try(format($q$insert into public.seller_applications (id, applicant_id, store_name, username, location, id_document_path)
-      values (%L, 'chk_a', 'Dup', 'dup_a', 'Tunis', 'x')$q$, v_a2)),
-    'err:23505:duplicate key value violates unique constraint "seller_applications_one_reviewing_per_person"');
+    pg_temp.try(format($q$insert into public.seller_applications (id, applicant_id, submitter_id, store_name, username, location, id_document_path)
+      values (%L, 'chk_a', 'chk_a', 'Dup', 'dup_a', 'Tunis', 'x')$q$, v_a2)),
+    'err:23505:duplicate key value violates unique constraint "seller_applications_one_reviewing_per_owner"');
   perform pg_temp.expect('AC-2 index refuses a second reviewing row for one username',
-    pg_temp.try(format($q$insert into public.seller_applications (id, applicant_id, store_name, username, location, id_document_path)
-      values (%L, 'chk_c', 'Dup', 'shop_a', 'Tunis', 'x')$q$, v_c1)),
-    'err:23505:duplicate key value violates unique constraint "seller_applications_one_reviewing_per_username"');
+    pg_temp.try(format($q$insert into public.seller_applications (id, applicant_id, submitter_id, store_name, username, location, id_document_path)
+      values (%L, 'chk_c', 'chk_c', 'Dup', 'shop_a', 'Tunis', 'x')$q$, v_c1)),
+    'err:23505:duplicate key value violates unique constraint "seller_applications_one_username_in_flight"');
 
   -- Username held by another reviewing application.
   perform pg_temp.act_as('chk_b');
@@ -245,8 +247,8 @@ begin
   perform pg_temp.expect('AC-4 client cannot read another person''s row',
     pg_temp.try(format('select 1 from public.seller_applications where id = %L', v_b1)), 'ok:0');
   perform pg_temp.expect('AC-4 client cannot insert a row',
-    pg_temp.try(format($q$insert into public.seller_applications (id, applicant_id, store_name, username, location, id_document_path)
-      values (%L, 'chk_a', 'Mine', 'mine_a', 'Tunis', 'x')$q$, v_a2)), 'err:42501');
+    pg_temp.try(format($q$insert into public.seller_applications (id, applicant_id, submitter_id, store_name, username, location, id_document_path)
+      values (%L, 'chk_a', 'chk_a', 'Mine', 'mine_a', 'Tunis', 'x')$q$, v_a2)), 'err:42501');
   perform pg_temp.expect('AC-4 client cannot update a row',
     pg_temp.try(format($q$update public.seller_applications set status = 'approved' where id = %L$q$, v_a1)), 'err:42501');
   perform pg_temp.expect('AC-4 client cannot delete a row',

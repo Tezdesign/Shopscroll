@@ -53,6 +53,12 @@ navigating themselves (the same shape `WelcomeScreen` uses); `app_router.dart` w
    work it stands for (anonymous merge, buyer profile upsert) runs in `AuthSessionController`, which
    exposes no progress, so the wait is a fixed `duration`. Give it a future to await once one exists.
 
+8. `log_in_screen.dart` (`LogInScreen`) at `/sign-in`, wired to Clerk by `sign_in_verification.dart`
+   (`SignInVerification`). The Buyer or Store owner toggle (`AccountType`, in `lib/shared/widgets/account_type_toggle.dart`)
+   is passed to `onVerify`, and after a successful sign in `SignInVerification.finishSignIn` waits for the
+   merge and claim, then opens the buyer area or the store area (spec 0014, AC-1; see `lib/core/area/AGENTS.md`).
+   "Apply now" here and on `WelcomeScreen` opens `/apply`, the seller application for a person with no account.
+
 `sign_up_verification.dart` holds `signUpDraftProvider` (the name/username from step 2, kept in memory
 until there is an identifier to create the sign up with, so leaving early creates no account) and
 `SignUpVerification`, which `app_router.dart` builds per route visit — `.email(context, ref)` for step

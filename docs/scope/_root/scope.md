@@ -13,6 +13,8 @@ Work that spans the buyer app, the seller app and the shared package. Buyer feat
 | 19 | Seller application request | Unplanned | in-progress |
 | 20 | Seller application admin dashboard | Unplanned | planned |
 | 21 | Seller application notifications | Unplanned | planned |
+| 22 | Shared login and store area | Unplanned | in-progress |
+| 23 | Visitor application retention job | Unplanned | planned |
 
 ## Features
 
@@ -75,13 +77,13 @@ can sign in to the seller app, a rejected or reviewing one cannot, and all buyer
 - [x] Design it (spec): `/architect seller application request`
 - [ ] Build it: `/develop seller application request`
   - [ ] Migration `0006` (table, functions, buckets, rules) and SQL checks (AC-1 to AC-7)
-  - [ ] Buyer data layer, Seller application screen and four step wizard (AC-6, AC-8, AC-9)
+  - [x] Buyer data layer, Seller application screen and four step wizard (AC-6, AC-8, AC-9)
   - [ ] Seller app gate: waiting, blocked and apply screens, no `become_seller()` call (AC-10)
-  - [ ] Account deletion removes files, then the full test run (AC-5, AC-11, AC-12)
+  - [x] Account deletion removes files, then the full test run (AC-5, AC-11, AC-12)
 - [ ] Verify it: `/check verify seller application request`
 - [ ] Test it: `/test seller application request`
 
-Spec [0013](../../specs/_root/0013-seller-application-request/index.md) · code in `supabase/migrations/0006_seller_applications.sql`, `supabase/checks/seller_applications.sql`
+Spec [0013](../../specs/_root/0013-seller-application-request/index.md) · code in `supabase/migrations/0006_seller_applications.sql`, `supabase/checks/seller_applications.sql`, `apps/buyer/lib/features/seller_application/`
 
 ### 20. Seller application admin dashboard · planned · needs a decision
 
@@ -105,3 +107,37 @@ Tell the applicant in the app and by email when an application is approved or re
 - [ ] Test it: `/test seller application notifications`
 
 From spec [0013](../../specs/_root/0013-seller-application-request/index.md)
+
+### 22. Shared login and store area · in-progress
+
+One login for buyers and store owners. The Buyer or Store owner choice picks the area after Log in: the buyer area, or a
+store area inside the same app that only approved sellers can enter, with a toggle between them. A person with no account
+can send a seller application from "Apply now", and it attaches to the account created on the same phone. The separate
+seller app is removed.
+**Done when:** a buyer who picks Store owner lands in the buyer area with a notice, an approved seller reaches the store
+area and can toggle, a visitor can apply and later become a seller after signing up on the same phone and being
+approved, `apps/seller` is gone, and all suites still pass.
+- [x] Design it (spec): `/architect for the shared login`
+- [ ] Build it: `/develop shared login and store area`
+  - [ ] Migration `0007` and SQL checks (AC-8 to AC-13, AC-15)
+  - [ ] Claim Edge Function (AC-13)
+  - [x] Remove `apps/seller`, area state and store area, login routing and claim triggers (AC-1 to AC-6, AC-13)
+  - [x] Visitor application: Apply now, About you step, uploads, confirmation (AC-7)
+  - [ ] Account deletion cleanup, then the full test run (AC-14, AC-15)
+- [ ] Verify it: `/check verify shared login and store area`
+- [ ] Test it: `/test shared login and store area`
+
+Spec [0014](../../specs/_root/0014-shared-login-seller-area/index.md) · replaces the seller app gate of feature 19 (spec 0013 task 6 and AC-10)
+
+### 23. Visitor application retention job · planned · needs a decision
+
+Delete rejected and approved but unclaimed visitor applications, and their files, 30 days after the decision, and sweep
+uploads in `visitor-documents` that no application points to. A launch requirement of feature 22.
+**Done when:** nothing a visitor sent is kept more than 30 days after a decision, and orphan uploads are removed (see the
+spec once it exists).
+- [ ] Design it (spec): `/architect visitor application retention job`
+- [ ] Build it: `/develop visitor application retention job`
+- [ ] Verify it: `/check verify visitor application retention job`
+- [ ] Test it: `/test visitor application retention job`
+
+From spec [0014](../../specs/_root/0014-shared-login-seller-area/index.md)

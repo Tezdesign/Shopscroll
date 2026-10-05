@@ -10,9 +10,8 @@ import 'package:shopscroll_shared/widgets/app_button.dart';
 /// opens `/sign-up`, [GetStartedScreen], the first step of the redesigned
 /// sign up flow (see `lib/features/onboarding/AGENTS.md`). "Skip for now"
 /// goes straight to browsing, matching the copy already used for this
-/// exact choice elsewhere in the source Figma file. "Apply now" is left as
-/// a static label: seller onboarding is out of scope (see AGENTS.md, buyer
-/// side only).
+/// exact choice elsewhere in the source Figma file. "Apply now" opens the
+/// seller application for a person with no account (spec 0014, AC-7).
 ///
 /// Sign up/Log in are [AppButton] (`AppButtonSize.small`, primary/secondary)
 /// stretched to share the row via [Expanded] — the source frame instances
@@ -36,11 +35,16 @@ class WelcomeScreen extends StatelessWidget {
     required this.onSignUp,
     required this.onLogIn,
     required this.onSkip,
+    required this.onApplyNow,
   });
 
   final VoidCallback onSignUp;
   final VoidCallback onLogIn;
   final VoidCallback onSkip;
+
+  /// "Apply now": opens the seller application for a person with no account
+  /// (spec 0014, AC-7).
+  final VoidCallback onApplyNow;
 
   @override
   Widget build(BuildContext context) {
@@ -121,21 +125,24 @@ class WelcomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        const TextSpan(
-                          text: 'Interested in becoming a seller ? ',
-                        ),
-                        TextSpan(
-                          text: 'Apply now',
-                          style: TextStyle(color: AppColors.primary400),
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                    style: AppTypography.labelLarge.copyWith(
-                      color: AppColors.neutral1100,
+                  GestureDetector(
+                    onTap: onApplyNow,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          const TextSpan(
+                            text: 'Interested in becoming a seller ? ',
+                          ),
+                          TextSpan(
+                            text: 'Apply now',
+                            style: TextStyle(color: AppColors.primary400),
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.neutral1100,
+                      ),
                     ),
                   ),
                 ],

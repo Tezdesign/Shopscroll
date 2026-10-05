@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Shopscroll uses your photos so you can add a store logo and your documents to a seller application.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Shopscroll uses the camera so you can take a photo of your ID for a seller application.</string>
 </dict>
 </plist>

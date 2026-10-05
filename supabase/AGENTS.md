@@ -20,8 +20,17 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
   update and delete their own `products`, `reels` and `reel_products` (`store_id` = the caller's Clerk
   `sub`); `0005` stops clients writing `role`, `is_verified` and the counters on `user_profiles`. Apply
   `0005` only once no buyer build that sends `role` is in use, or those sign ins fail.
-- `checks/` — SQL you run by hand on a test or branch database: `seller_access.sql` (rolls back, one
-  NOTICE per check) and `audit_seller_rows.sql` (read only, run before `0004`).
+  `0006_seller_applications.sql` (spec 0013): `seller_applications`, `submit_`, `approve_` and
+  `reject_seller_application`, and the `store-logos` and `application-documents` buckets.
+  `0007_visitor_applications.sql` (spec 0014): a person with no account applies through their anonymous
+  session (`submit_visitor_application`, private `visitor-documents` bucket, 12 file cap per session folder);
+  `merge_anonymous_identity` now also attaches those rows to the account that signs in on the same phone
+  (`bound_account_id`); after an admin approves, `claim_seller_application` (service role only) copies the
+  store details onto the profile and sets `role = 'seller'`. It also replaces `submit_seller_application` and
+  `approve_seller_application`. Unverified until applied and checked on a test database.
+- `checks/` — SQL you run by hand on a test or branch database: `seller_access.sql`,
+  `seller_applications.sql` and `visitor_applications.sql` (each rolls back, one NOTICE per check) and
+  `audit_seller_rows.sql` (read only, run before `0004`).
 - `functions/<name>/index.ts` — Supabase Edge Functions (Deno). Deploys and `supabase secrets set`
   are manual steps, not run by this repo's tooling.
   - `_shared/delete_user_data.ts` — removes one identity's cart, likes, saves and profile with the
@@ -36,8 +45,18 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
     `CLERK_SECRET_KEY` and `CLERK_ISSUER`. Deploy it with `--no-verify-jwt`: it does its own
     verification and fails closed, so it must not also depend on the platform gateway accepting a
     third-party token. This exists because `ClerkAuthState.deleteUser()` is broken in `clerk_auth`
-    0.0.18-beta — see `apps/buyer/lib/features/profile/AGENTS.md`.
-
+    0.0.18-beta — see `apps/buyer/lib/features/profile/AGENTS.md`. It also removes the account's visitor
+    applications and their `visitor-documents` files first, and stops there if that fails so a retry still has
+    the file paths (`_shared/delete_user_files.ts`, spec 0014).
+  - `_shared/clerk_caller.ts` — the one Clerk session token check (pinned `CLERK_ISSUER`), used by
+    `delete-account` and `claim-seller-application`.
+  - `claim-seller-application` — the signed in app calls it after sign in, on resume and when the Seller
+    application screen opens. It copies an approved visitor application's logo from `visitor-documents` to
+    `store-logos`, then runs `claim_seller_application`. Logic is in `_shared/claim_seller_application.ts`.
+    Needs `CLERK_ISSUER`; deploy with `--no-verify-jwt`. The Storage copy between buckets is not yet confirmed
+    against the real project.
+  - Tests for the shared modules run with `deno test supabase/functions/_shared/`. They use only `Deno.test`
+    and `node:assert`, so Node 22 can run them too (`--experimental-strip-types` with a `Deno.test` shim).
 ## Conventions
 
 - Every owned-table RLS policy compares to `(select auth.jwt()->>'sub')`, not `auth.uid()` — `uuid`
@@ -52,6 +71,6 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
 - New schema changes ship as a new `migrations/000N_<name>.sql`, never by editing `schema.sql` or an
   already-applied migration in place.
 
-Governing specs: `docs/specs/buyer/0003-supabase-backend/index.md`, `docs/specs/buyer/0004-clerk-authentication/index.md`, `docs/specs/_root/0012-one-backend-seller-role/index.md`.
+Governing specs: `docs/specs/buyer/0003-supabase-backend/index.md`, `docs/specs/buyer/0004-clerk-authentication/index.md`, `docs/specs/_root/0012-one-backend-seller-role/index.md`, `docs/specs/_root/0013-seller-application-request/index.md`, `docs/specs/_root/0014-shared-login-seller-area/index.md`.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

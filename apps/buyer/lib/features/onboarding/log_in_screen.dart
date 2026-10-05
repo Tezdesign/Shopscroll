@@ -8,18 +8,12 @@ import 'package:shopscroll_shared/widgets/app_icon.dart';
 import 'package:shopscroll_shared/widgets/app_text_field.dart';
 import 'package:shopscroll_shared/widgets/country_dial_code.dart';
 import 'package:shopscroll_shared/widgets/phone_field.dart';
+import '../../shared/widgets/account_type_toggle.dart';
 import 'verification_code_section.dart';
 
 /// Which identifier someone is signing in with. Picks the Clerk strategy
 /// (`emailCode` or `phoneCode`) that `sign_in_verification.dart` uses.
 enum LogInChannel { email, phone }
-
-/// The two halves of the "Who are you" toggle (Figma component 620:3086).
-/// Presentational for now: buyer and seller share one onboarding flow, and
-/// what separates them is the seller only interfaces that come later, so
-/// nothing downstream reads this yet (no role on Clerk, no role column in
-/// Supabase). Kept in the screen so the element exists and toggles.
-enum AccountType { buyer, storeOwner }
 
 /// Reproduces the Figma "Log in" screen and its states (nodes 3001:11087
 /// empty, 5369:2154 typing, 5368:7329 filled, 5364:7369 verification,
@@ -72,6 +66,7 @@ class LogInScreen extends StatefulWidget {
     required this.onVerify,
     required this.onResendCode,
     required this.onSignUp,
+    required this.onApplyNow,
     this.resendCooldown = const Duration(seconds: 30),
   });
 
@@ -84,12 +79,14 @@ class LogInScreen extends StatefulWidget {
   final Future<bool> Function(LogInChannel channel, String identifier)
   onSendCode;
 
-  /// Called with the identifier and the entered 6 digit code once the code
-  /// passes validation; the caller checks it and decides what comes next.
+  /// Called with the identifier, the entered 6 digit code and the Buyer or
+  /// Store owner choice once the code passes validation; the caller checks the
+  /// code and the choice decides which area opens (spec 0014, AC-1).
   final Future<void> Function(
     LogInChannel channel,
     String identifier,
     String code,
+    AccountType accountType,
   )
   onVerify;
 
@@ -100,6 +97,10 @@ class LogInScreen extends StatefulWidget {
   /// "Sign up" in the footer. The screen signals the choice rather than
   /// navigating itself, the same shape the other onboarding screens use.
   final VoidCallback onSignUp;
+
+  /// "Apply now" in the footer: opens the seller application for a person with
+  /// no account (spec 0014, AC-7).
+  final VoidCallback onApplyNow;
 
   /// How long "Resend code" stays disabled after a code is sent.
   final Duration resendCooldown;
@@ -222,6 +223,7 @@ class _LogInScreenState extends State<LogInScreen> {
       _channel,
       _identifier,
       _codeController.text.replaceAll(RegExp(r'\D'), ''),
+      _accountType,
     );
     if (!mounted) return;
     setState(() => _busy = false);
@@ -260,7 +262,7 @@ class _LogInScreenState extends State<LogInScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.base),
-              _AccountTypeToggle(
+              AccountTypeToggle(
                 selected: _accountType,
                 onChanged: (type) => setState(() => _accountType = type),
               ),
@@ -318,79 +320,14 @@ class _LogInScreenState extends State<LogInScreen> {
                 onTap: widget.onSignUp,
               ),
               const SizedBox(height: AppSpacing.base),
-              // No seller flow exists to route to yet (the app is buyer side
-              // only), so this line is drawn but not tappable.
-              const _FooterLine(
+              _FooterLine(
                 lead: 'Interested in becoming a seller ? ',
                 link: 'Apply now',
+                onTap: widget.onApplyNow,
               ),
               const SizedBox(height: AppSpacing.base),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The "Who are you" pill (Figma 620:3086): two equal halves, the selected
-/// one filled [AppColors.primary100] with [AppColors.primary500] label and
-/// icon, the other [AppColors.neutral200] with [AppColors.neutral400].
-class _AccountTypeToggle extends StatelessWidget {
-  const _AccountTypeToggle({required this.selected, required this.onChanged});
-
-  /// The frame's height. Not a spacing token, the same way [AppButton]
-  /// carries its own 44.
-  static const double _height = 40;
-
-  final AccountType selected;
-  final ValueChanged<AccountType> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.full),
-      child: Row(
-        children: [
-          Expanded(child: _half(AccountType.buyer, AppIconGlyph.user, 'Buyer')),
-          Expanded(
-            child: _half(
-              AccountType.storeOwner,
-              AppIconGlyph.store,
-              'Store owner',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _half(AccountType type, AppIconGlyph glyph, String label) {
-    final active = type == selected;
-    final foreground = active ? AppColors.primary500 : AppColors.neutral400;
-    return GestureDetector(
-      onTap: () => onChanged(type),
-      child: Container(
-        height: _height,
-        alignment: Alignment.center,
-        color: active ? AppColors.primary100 : AppColors.neutral200,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(glyph, color: foreground),
-            const SizedBox(width: AppSpacing.xs),
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: foreground,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -3,6 +3,10 @@
 // Removing one identity's rows from Supabase (spec 0004, AC-8): cart, likes,
 // saves and profile go; order history stays, because an order is a financial
 // record of a sale that happened, not personal data the buyer owns outright.
+// Seller applications go with the profile (they cascade), and the photos that
+// came with them are removed from both Storage buckets (spec 0013, AC-11).
+// Visitor applications attached to the account (spec 0014, AC-14) are removed
+// first, with their files, because they do not cascade.
 //
 // Two callers share this, and must not drift apart: `clerk-webhook`, for a
 // deletion started anywhere else (the Clerk dashboard, the Backend API), and
@@ -14,6 +18,11 @@
 // caller (a verified Svix signature, or a verified Clerk session token).
 
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.45.0";
+import {
+  deleteUserFiles,
+  deleteVisitorApplications,
+  type VisitorApplicationRows,
+} from "./delete_user_files.ts";
 
 /// A service role client. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are
 /// injected by the Edge Function runtime; neither needs manual setup.
@@ -24,16 +33,60 @@ export function serviceRoleClient(): SupabaseClient {
   );
 }
 
-/// Deletes everything this app holds for `userId` except their orders.
+/// The visitor applications of one account, read and deleted with the service
+/// role. The id goes into a PostgREST filter string, so anything but the
+/// characters a Clerk id has is refused rather than escaped.
+function visitorApplicationRows(supabase: SupabaseClient): VisitorApplicationRows {
+  return {
+    async list(userId) {
+      if (!/^[A-Za-z0-9_-]+$/.test(userId)) {
+        throw new Error("invalid user id for application cleanup");
+      }
+      const { data, error } = await supabase
+        .from("seller_applications")
+        .select("id, id_document_path, business_document_path, logo_path")
+        .eq("origin", "visitor")
+        .or(`applicant_id.eq.${userId},bound_account_id.eq.${userId}`);
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((row) => ({
+        id: row.id as string,
+        paths: [row.id_document_path, row.business_document_path, row.logo_path],
+      }));
+    },
+    async remove(ids) {
+      const { error } = await supabase
+        .from("seller_applications")
+        .delete()
+        .in("id", ids);
+      if (error) throw new Error(error.message);
+    },
+  };
+}
+
+/// Deletes everything this app holds for `userId` except their orders: the
+/// rows, and every file they uploaded for a seller application.
 ///
-/// Idempotent: deleting rows that are already gone is not an error, so a
-/// retried webhook or a second attempt after a partial failure is safe.
-/// Returns the first error encountered, or null when everything went.
+/// Idempotent: deleting rows and files that are already gone is not an error,
+/// so a retried webhook or a second attempt after a partial failure is safe.
+/// The visitor applications go first and alone (AC-14): their paths come from
+/// rows, and the profile delete below cascades some of those rows away. If that
+/// first step fails nothing else runs, so a retry still has the paths. After it,
+/// the files and the rows are attempted independently, so a failure in one does
+/// not leave the other behind. Returns the first error encountered, or null when
+/// everything went.
 export async function deleteUserData(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<Error | null> {
-  const results = await Promise.all([
+  const visitorError = await deleteVisitorApplications(
+    supabase.storage,
+    visitorApplicationRows(supabase),
+    userId,
+  );
+  if (visitorError) return visitorError;
+
+  const [filesError, ...results] = await Promise.all([
+    deleteUserFiles(supabase.storage, userId),
     supabase.from("cart_items").delete().eq("user_id", userId),
     supabase.from("reel_likes").delete().eq("user_id", userId),
     supabase.from("reel_saves").delete().eq("user_id", userId),
@@ -41,6 +94,7 @@ export async function deleteUserData(
     supabase.from("user_profiles").delete().eq("id", userId),
   ]);
 
+  if (filesError) return filesError;
   const failure = results.find((result) => result.error);
   return failure?.error ? new Error(failure.error.message) : null;
 }

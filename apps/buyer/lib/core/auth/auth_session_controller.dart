@@ -3,6 +3,10 @@ import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../data/providers/seller_application_providers.dart';
+import '../area/app_area.dart';
+import '../area/seller_claim.dart';
+import '../onboarding/onboarding_prefs.dart';
 import 'active_supabase_client.dart';
 
 /// Drives the anonymous to real identity switch (spec 0004's "Two Supabase
@@ -17,6 +21,12 @@ import 'active_supabase_client.dart';
 /// detecting an expired session with nothing to refresh, both surface here
 /// as the same signed out transition, and both fall back to the anonymous
 /// client the same way (AC-6, AC-7).
+///
+/// Spec 0014 adds three jobs. The merge also attaches the visitor
+/// applications this phone sent to the account. After the switch it asks the
+/// claim function to turn an approved application into a seller (AC-13),
+/// before [signInSettledProvider] completes, so Log in routing sees the final
+/// role (AC-2). And sign out forgets the remembered area (AC-3).
 class AuthSessionController {
   AuthSessionController({
     required this.ref,
@@ -48,7 +58,7 @@ class AuthSessionController {
     _wasSignedIn = isSignedIn;
 
     if (isSignedIn) {
-      _handleSignedIn();
+      ref.read(signInSettledProvider.notifier).state = _handleSignedIn();
     } else {
       _handleSignedOut();
     }
@@ -63,6 +73,7 @@ class AuthSessionController {
       final targetUserId = user.id;
 
       await _mergeAnonymousIdentity(targetUserId);
+      ref.read(signedInUserIdProvider.notifier).state = targetUserId;
 
       // Only now does the app start reading/writing through the Clerk
       // backed client; the merge above ran while still on the anonymous
@@ -70,9 +81,26 @@ class AuthSessionController {
       ref.read(activeSupabaseClientProvider.notifier).state = clerkBackedClient;
 
       if (createProfile) await _createProfileIfMissing(user, targetUserId);
+
+      // A claim failure never blocks the sign in (AC-2): it is swallowed here
+      // and retried at the next launch, resume or Seller application screen.
+      await _claim();
     } finally {
       _isHandlingSignIn = false;
     }
+  }
+
+  Future<void> _claim() async {
+    if (await ref.read(sellerClaimProvider).claim()) {
+      ref.invalidate(sellerApplicationsProvider);
+    }
+  }
+
+  /// The claim on app resume (AC-13), for a signed in buyer. Skipped while a
+  /// sign in is still running, which claims at its end.
+  Future<void> claimOnResume() async {
+    if (!clerkAuth.isSignedIn || _isHandlingSignIn) return;
+    await _claim();
   }
 
   Future<void> _mergeAnonymousIdentity(String targetUserId) async {
@@ -121,6 +149,9 @@ class AuthSessionController {
   }
 
   void _handleSignedOut() {
+    ref.read(signedInUserIdProvider.notifier).state = null;
+    ref.read(areaNoticeProvider.notifier).state = null;
+    ref.read(onboardingPrefsProvider).clearLastArea();
     ref.read(activeSupabaseClientProvider.notifier).state = anonymousClient;
     if (anonymousClient.auth.currentSession == null) {
       anonymousClient.auth.signInAnonymously();

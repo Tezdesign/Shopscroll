@@ -24,9 +24,12 @@ import '../../features/onboarding/welcome_screen.dart';
 import '../../features/profile/edit_profile_screen.dart';
 import '../../features/profile/profile_anonymous_view.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/seller_application/seller_application_screen.dart';
+import '../../features/seller_application/seller_application_wizard_screen.dart';
 import '../../features/reels/reel_player_screen.dart';
 import '../../features/reels/reels_screen.dart';
 import '../../features/search/search_screen.dart';
+import '../../features/store/store_area_screen.dart';
 import '../../features/store/store_page_screen.dart';
 import 'package:shopscroll_shared/widgets/coming_soon_screen.dart';
 import '../config/clerk_config.dart';
@@ -58,6 +61,10 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// Page ([StorePageScreen], spec 0010), stay top level routes, outside the
 /// shell, so they open full screen without the bottom nav.
 ///
+/// `/store` ([StoreAreaScreen], spec 0014) is the store area, a placeholder
+/// that only a seller stays in, and `/apply` is the seller application for a
+/// visitor with no account. Both are top level.
+///
 /// `/cart` ([CartScreen], spec 0007) is a child route of the Home branch's
 /// root route, so the tab bar keeps showing with Home highlighted.
 /// `/checkout` ([CheckoutScreen]) and `/order-confirmation/:id`
@@ -87,8 +94,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: ref.watch(initialLocationProvider),
     routes: [
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            AppShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) => AppShell(
+          navigationShell: navigationShell,
+          location: state.uri.path,
+        ),
         branches: [
           StatefulShellBranch(
             routes: [
@@ -188,6 +197,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ref.read(onboardingPrefsProvider).markWelcomeSeen();
             context.go('/');
           },
+          onApplyNow: () {
+            ref.read(onboardingPrefsProvider).markWelcomeSeen();
+            context.push('/apply');
+          },
         ),
       ),
       GoRoute(
@@ -198,9 +211,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final signIn = SignInVerification.maybe(context, ref);
           return LogInScreen(
             onSendCode: signIn?.sendCode ?? (channel, identifier) async => true,
-            onVerify: signIn?.verify ?? (channel, identifier, code) async {},
+            onVerify:
+                signIn?.verify ?? (channel, identifier, code, type) async {},
             onResendCode: signIn?.resendCode ?? (channel, identifier) async {},
             onSignUp: () => context.push('/sign-up'),
+            onApplyNow: () => context.push('/apply'),
           );
         },
       ),
@@ -271,6 +286,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/profile/edit',
         builder: (context, state) => const EditProfileScreen(),
       ),
+      // Settings, Seller application (spec 0013). Signed in only: an anonymous
+      // visitor gets the same sign in prompt as the Profile tab.
+      GoRoute(
+        path: '/profile/seller-application',
+        builder: (context, state) => ClerkConfig.isConfigured
+            ? ClerkAuthBuilder(
+                signedInBuilder: (context, authState) =>
+                    SellerApplicationScreen(userId: authState.user!.id),
+                signedOutBuilder: (context, authState) =>
+                    const ProfileAnonymousView(),
+              )
+            : const SellerApplicationScreen(),
+      ),
+      GoRoute(
+        path: '/profile/seller-application/new',
+        builder: (context, state) => ClerkConfig.isConfigured
+            ? ClerkAuthBuilder(
+                signedInBuilder: (context, authState) =>
+                    const SellerApplicationWizardScreen(),
+                signedOutBuilder: (context, authState) =>
+                    const ProfileAnonymousView(),
+              )
+            : const SellerApplicationWizardScreen(),
+      ),
       GoRoute(
         path: '/checkout',
         builder: (context, state) => ClerkConfig.isConfigured
@@ -309,6 +348,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           initialReelId: state.pathParameters['id']!,
           orderedReelIds: state.extra as List<String>?,
         ),
+      ),
+      // The store area (spec 0014): a placeholder only a seller stays in.
+      GoRoute(
+        path: '/store',
+        builder: (context, state) => const StoreAreaScreen(),
+      ),
+      // "Apply now" for a person with no account (spec 0014, AC-7). Someone
+      // already signed in applies from Settings, Seller application instead.
+      GoRoute(
+        path: '/apply',
+        builder: (context, state) => ClerkConfig.isConfigured
+            ? ClerkAuthBuilder(
+                signedInBuilder: (context, authState) =>
+                    SellerApplicationScreen(userId: authState.user!.id),
+                builder: (context, authState) =>
+                    const SellerApplicationWizardScreen(isVisitor: true),
+              )
+            : const SellerApplicationWizardScreen(isVisitor: true),
       ),
       GoRoute(
         path: '/store/:id',

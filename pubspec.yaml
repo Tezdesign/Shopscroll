@@ -9,5 +9,4 @@ environment:
 
 workspace:
   - apps/buyer
-  - apps/seller
   - packages/shared

@@ -48,10 +48,9 @@ class OrderReceiptScreen extends ConsumerWidget {
                   buttonLabel: 'Try again',
                   onPressed: () => ref.invalidate(orderByIdProvider(orderId)),
                 ),
-                data: (order) =>
-                    order == null
-                        ? const ListMessage('Order not found')
-                        : _Body(order: order),
+                data: (order) => order == null
+                    ? const ListMessage('Order not found')
+                    : _Body(order: order),
               ),
             ),
           ],

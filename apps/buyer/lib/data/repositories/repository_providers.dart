@@ -8,11 +8,13 @@ import 'mock/mock_order_repository.dart';
 import 'mock/mock_product_repository.dart';
 import 'mock/mock_reel_repository.dart';
 import 'mock/mock_saved_product_repository.dart';
+import 'mock/mock_seller_application_repository.dart';
 import 'mock/mock_user_profile_repository.dart';
 import 'order_repository.dart';
 import 'product_repository.dart';
 import 'reel_repository.dart';
 import 'saved_product_repository.dart';
+import 'seller_application_repository.dart';
 import 'user_profile_repository.dart';
 
 /// Every provider here defaults to its mock implementation, so the app,
@@ -46,3 +48,8 @@ final savedProductRepositoryProvider = Provider<SavedProductRepository>(
 final conversationRepositoryProvider = Provider<ConversationRepository>(
   (ref) => MockConversationRepository(),
 );
+
+final sellerApplicationRepositoryProvider =
+    Provider<SellerApplicationRepository>(
+      (ref) => MockSellerApplicationRepository(),
+    );

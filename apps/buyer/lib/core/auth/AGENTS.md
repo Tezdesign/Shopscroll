@@ -19,7 +19,10 @@ clients, not one" and "State transitions" sections for the full reasoning).
   a seller who signs in here keeps their role and store details. On sign out (or an expired session Clerk can't refresh): flips back to
   the anonymous client, minting a fresh anonymous session if none is persisted. This listens to
   `ClerkAuthState` generically — any screen that changes sign-in state (Clerk's prebuilt card, or a
-  hand-built flow) triggers it the same way, no per-screen wiring needed.
+  hand-built flow) triggers it the same way, no per-screen wiring needed. Spec 0014 adds: the merge also attaches
+  the visitor applications this phone sent; after the profile row it asks the claim function to make an approved
+  applicant a seller; it publishes `signedInUserIdProvider` and `signInSettledProvider` (which Log in routing awaits);
+  and sign out clears the remembered area. See `lib/core/area/AGENTS.md`.
 
 ## Diagnosing Clerk calls
 

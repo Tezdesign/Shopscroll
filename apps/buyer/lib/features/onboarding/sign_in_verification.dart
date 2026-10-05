@@ -4,7 +4,13 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/area/app_area.dart';
+import '../../core/area/landing_after_sign_in.dart';
 import '../../core/config/clerk_config.dart';
+import '../../core/onboarding/onboarding_prefs.dart';
+import '../../data/providers/user_profile_providers.dart';
+import '../../data/repositories/repository_providers.dart';
+import '../../shared/widgets/account_type_toggle.dart';
 import 'log_in_screen.dart';
 
 /// Backs the send, verify and resend callbacks of [LogInScreen] with Clerk's
@@ -33,18 +39,19 @@ import 'log_in_screen.dart';
 /// would be friendlier, and is an open decision rather than something this
 /// wiring should invent.
 class SignInVerification {
-  SignInVerification._(this._authState, this._context);
+  SignInVerification._(this._authState, this._context, this._ref);
 
   /// Null when Clerk is not configured: there is no `ClerkAuth` ancestor to
   /// read, so [LogInScreen] runs as UI only, advancing through its stages
   /// against no backend.
   static SignInVerification? maybe(BuildContext context, Ref ref) =>
       ClerkConfig.isConfigured
-      ? SignInVerification._(ClerkAuth.of(context, listen: false), context)
+      ? SignInVerification._(ClerkAuth.of(context, listen: false), context, ref)
       : null;
 
   final ClerkAuthState _authState;
   final BuildContext _context;
+  final Ref _ref;
 
   clerk.Strategy _strategyFor(LogInChannel channel) =>
       channel == LogInChannel.phone
@@ -83,9 +90,9 @@ class SignInVerification {
   }
 
   /// Attempts [code] against the pending sign in. On success the person is
-  /// signed in and lands on the home screen.
+  /// signed in and lands in the area they chose ([finishSignIn]).
   ///
-  /// Sign in goes straight home rather than through the sign up tail
+  /// Sign in goes straight to an area rather than through the sign up tail
   /// (interests, notifications, setting up): a returning person has already
   /// answered those, and "Setting up your account" is the wrong thing to say
   /// to someone who already has one.
@@ -93,6 +100,7 @@ class SignInVerification {
     LogInChannel channel,
     String identifier,
     String code,
+    AccountType accountType,
   ) async {
     await _authState.safelyCall(
       _context,
@@ -102,7 +110,7 @@ class SignInVerification {
     if (!_context.mounted) return;
 
     if (_authState.isSignedIn) {
-      _context.go('/');
+      await finishSignIn(accountType);
       return;
     }
 
@@ -117,6 +125,32 @@ class SignInVerification {
         ),
       );
     }
+  }
+
+  /// Opens the area the Buyer or Store owner choice asks for (spec 0014,
+  /// AC-1). Waits for the work a sign in starts (merge, claim) to finish or
+  /// fail first, so an approved applicant who signs in as Store owner reaches
+  /// the store area in one pass (AC-2). The area is remembered for the next
+  /// launch (AC-3), and a notice for a non seller is shown by the shell.
+  Future<void> finishSignIn(AccountType choice) async {
+    await _ref.read(signInSettledProvider);
+    if (!_context.mounted) return;
+
+    final userId = _ref.read(signedInUserIdProvider) ?? _authState.user?.id;
+    final landing = await landingAfterSignIn(
+      choice: choice,
+      // Read fresh, not the cached profile: the claim may have changed the role.
+      role: () async => userId == null
+          ? null
+          : (await _ref.refresh(userProfileByIdProvider(userId).future))?.role,
+      applications: () =>
+          _ref.read(sellerApplicationRepositoryProvider).getMyApplications(),
+    );
+    if (!_context.mounted) return;
+
+    _ref.read(onboardingPrefsProvider).setLastArea(landing.area.name);
+    _ref.read(areaNoticeProvider.notifier).state = landing.notice;
+    _context.go(landing.area == AppArea.store ? '/store' : '/');
   }
 
   /// Asks Clerk for a fresh code for the same pending sign in.

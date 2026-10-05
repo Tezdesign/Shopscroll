@@ -12,7 +12,14 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      wrap(WelcomeScreen(onSignUp: () {}, onLogIn: () {}, onSkip: () {})),
+      wrap(
+        WelcomeScreen(
+          onSignUp: () {},
+          onLogIn: () {},
+          onSkip: () {},
+          onApplyNow: () {},
+        ),
+      ),
     );
 
     expect(find.text('Shopscroll'), findsOneWidget);
@@ -31,6 +38,7 @@ void main() {
           onSignUp: () => tapped = true,
           onLogIn: () {},
           onSkip: () {},
+          onApplyNow: () {},
         ),
       ),
     );
@@ -49,6 +57,7 @@ void main() {
           onSignUp: () {},
           onLogIn: () => tapped = true,
           onSkip: () {},
+          onApplyNow: () {},
         ),
       ),
     );
@@ -67,11 +76,33 @@ void main() {
           onSignUp: () {},
           onLogIn: () {},
           onSkip: () => tapped = true,
+          onApplyNow: () {},
         ),
       ),
     );
 
     await tester.tap(find.text('Skip for now'));
+    await tester.pump();
+
+    expect(tapped, isTrue);
+  });
+
+  testWidgets('tapping Apply now invokes onApplyNow (spec 0014, AC-7)', (
+    tester,
+  ) async {
+    var tapped = false;
+    await tester.pumpWidget(
+      wrap(
+        WelcomeScreen(
+          onSignUp: () {},
+          onLogIn: () {},
+          onSkip: () {},
+          onApplyNow: () => tapped = true,
+        ),
+      ),
+    );
+
+    await tester.tap(find.textContaining('Apply now'));
     await tester.pump();
 
     expect(tapped, isTrue);

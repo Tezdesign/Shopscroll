@@ -9,6 +9,7 @@ import 'package:shopscroll_shared/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/auth/active_supabase_client.dart';
+import 'core/area/app_area.dart';
 import 'core/auth/auth_session_controller.dart';
 import 'core/config/clerk_config.dart';
 import 'core/config/supabase_config.dart';
@@ -21,6 +22,7 @@ import 'data/repositories/supabase/supabase_order_repository.dart';
 import 'data/repositories/supabase/supabase_product_repository.dart';
 import 'data/repositories/supabase/supabase_reel_repository.dart';
 import 'data/repositories/supabase/supabase_saved_product_repository.dart';
+import 'data/repositories/supabase/supabase_seller_application_repository.dart';
 import 'data/repositories/supabase/supabase_user_profile_repository.dart';
 
 void main() async {
@@ -87,6 +89,9 @@ void main() async {
           savedProductRepositoryProvider.overrideWithValue(
             SupabaseSavedProductRepository(anonymousClient),
           ),
+          sellerApplicationRepositoryProvider.overrideWithValue(
+            SupabaseSellerApplicationRepository(anonymousClient),
+          ),
           conversationRepositoryProvider.overrideWithValue(
             SupabaseConversationRepository(),
           ),
@@ -115,6 +120,15 @@ void main() async {
       kDebugMode ||
       (!onboardingPrefs.hasSeenWelcome && !clerkAuthState.isSignedIn);
 
+  // The area last used opens again (spec 0014, AC-3), but only for a session
+  // that was restored. The store area checks the profile's role itself and
+  // sends a non seller to the buyer area.
+  final initialLocation = showWelcome
+      ? '/welcome'
+      : (clerkAuthState.isSignedIn && onboardingPrefs.lastArea == 'store')
+      ? '/store'
+      : '/';
+
   final clerkBackedClient = buildClerkBackedClient(
     SupabaseConfig.url,
     SupabaseConfig.publishableKey,
@@ -126,9 +140,10 @@ void main() async {
       overrides: [
         activeSupabaseClientProvider.overrideWith((ref) => anonymousClient),
         onboardingPrefsProvider.overrideWithValue(onboardingPrefs),
-        initialLocationProvider.overrideWithValue(
-          showWelcome ? '/welcome' : '/',
-        ),
+        initialLocationProvider.overrideWithValue(initialLocation),
+        // Known from the first frame for a restored session, so the store area
+        // does not mistake a launch for a visitor while the merge still runs.
+        signedInUserIdProvider.overrideWith((ref) => clerkAuthState.user?.id),
         productRepositoryProvider.overrideWith(
           (ref) => SupabaseProductRepository(
             ref.watch(activeSupabaseClientProvider),
@@ -153,6 +168,11 @@ void main() async {
         ),
         savedProductRepositoryProvider.overrideWith(
           (ref) => SupabaseSavedProductRepository(
+            ref.watch(activeSupabaseClientProvider),
+          ),
+        ),
+        sellerApplicationRepositoryProvider.overrideWith(
+          (ref) => SupabaseSellerApplicationRepository(
             ref.watch(activeSupabaseClientProvider),
           ),
         ),
@@ -205,7 +225,8 @@ class MarketplaceApp extends ConsumerStatefulWidget {
   ConsumerState<MarketplaceApp> createState() => _MarketplaceAppState();
 }
 
-class _MarketplaceAppState extends ConsumerState<MarketplaceApp> {
+class _MarketplaceAppState extends ConsumerState<MarketplaceApp>
+    with WidgetsBindingObserver {
   AuthSessionController? _authSessionController;
 
   @override
@@ -223,13 +244,25 @@ class _MarketplaceAppState extends ConsumerState<MarketplaceApp> {
         anonymousClient: anonymousClient,
         clerkBackedClient: clerkBackedClient,
       );
+      WidgetsBinding.instance.addObserver(this);
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _authSessionController?.dispose();
     super.dispose();
+  }
+
+  /// A signed in buyer coming back to the app retries the seller claim (spec
+  /// 0014, AC-13), so an application approved in the meantime opens the store
+  /// without a new sign in.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _authSessionController?.claimOnResume();
+    }
   }
 
   @override

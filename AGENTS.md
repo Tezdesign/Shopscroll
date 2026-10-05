@@ -42,7 +42,7 @@ governs which feature.
 ## Rules
 
 - Two backends coexist: without `--dart-define` config, all data comes from `lib/data/mock/*` through `lib/data/providers/*` (Riverpod `FutureProvider`/`FutureProvider.family` with an artificial delay, `network_delay.dart`, 300ms, to simulate a real `GET` round trip); once `SupabaseConfig.isConfigured` (see `apps/buyer/lib/core/auth/AGENTS.md`), the same providers read through `lib/data/repositories/` instead (see `apps/buyer/lib/data/repositories/AGENTS.md`), which reaches the real Supabase backend (see `supabase/AGENTS.md`). Doc comments on each provider name the REST endpoint it stands in for (e.g. "as if fetched from `GET /products`") — keep that convention for new providers.
-- The buyer and seller apps share one Supabase project and one Clerk instance (spec 0012): one account per person, sellers are `role = 'seller'` on their profile, set only by `become_seller()`. Never send `role` from a client write. The seller app has no anonymous session and requires sign in.
+- One app, one login, one Supabase project and one Clerk instance (specs 0012, 0014): one account per person, sellers are `role = 'seller'` on their profile, set only on the server (`approve_seller_application`, `claim_seller_application`, or the open `become_seller()`). Never send `role` from a client write. The login's Buyer or Store owner choice picks the area, and the store area (`/store`) is only for sellers (see `apps/buyer/lib/core/area/AGENTS.md`). There is no separate seller app.
 - Models (`lib/data/models/*`) carry `fromJson`/`toJson`/`copyWith` even though nothing is serialized yet, so they're ready for a real API later.
 - Design tokens live in `lib/core/theme/app_theme.dart` (`AppColors`, `AppTypography`, `AppSpacing`, `AppRadius`), sourced from the Figma file's variable collection. Never write a literal `Color(0x...)` or raw size value in a screen/widget; use the tokens.
 - Screens and widgets document the Figma node they reproduce (e.g. "Figma node 791:7454") and explain any deviation from the source design in a doc comment above the widget. Follow this when adding new UI.
@@ -69,6 +69,8 @@ Declined: further Agent Skill / MCP discovery search
 - [apps/buyer/lib/features/onboarding/AGENTS.md](apps/buyer/lib/features/onboarding/AGENTS.md): the first-launch welcome screen and the redesigned sign up flow (name, phone or email, code verification, interests, notifications)
 - [apps/buyer/lib/features/profile/AGENTS.md](apps/buyer/lib/features/profile/AGENTS.md): the real Profile tab (signed-in page, anonymous view, edit profile)
 - [apps/buyer/lib/features/search/AGENTS.md](apps/buyer/lib/features/search/AGENTS.md): the on device search screen opened from Home and Discover (suggestions, stores tab, results)
+- [apps/buyer/lib/core/area/AGENTS.md](apps/buyer/lib/core/area/AGENTS.md): the buyer and store areas, the seller check, the notice after Log in, and the seller claim
+- [apps/buyer/lib/features/seller_application/AGENTS.md](apps/buyer/lib/features/seller_application/AGENTS.md): the seller application screen and wizard, including the visitor path from "Apply now"
 - [apps/buyer/lib/features/cart/AGENTS.md](apps/buyer/lib/features/cart/AGENTS.md): the cart screen at `/cart`, the shared add to cart helper, and the optimistic cart notifier rules
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

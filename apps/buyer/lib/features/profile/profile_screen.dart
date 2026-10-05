@@ -94,11 +94,7 @@ class _ProfileContent extends ConsumerWidget {
             AppButton(
               label: 'Become a seller',
               size: AppButtonSize.small,
-              onPressed: () => _openComingSoon(
-                context,
-                'Become a seller',
-                Icons.storefront_outlined,
-              ),
+              onPressed: () => context.push('/profile/seller-application'),
             ),
           ],
         ),
@@ -155,6 +151,10 @@ class _ProfileContent extends ConsumerWidget {
               label: 'Payments',
               onTap: () =>
                   _openComingSoon(context, 'Payments', Icons.payment_outlined),
+            ),
+            SettingsRow(
+              label: 'Seller application',
+              onTap: () => context.push('/profile/seller-application'),
             ),
           ],
         ),

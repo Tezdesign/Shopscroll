@@ -17,46 +17,20 @@
 //   supabase secrets set CLERK_SECRET_KEY=sk_...
 //   supabase secrets set CLERK_ISSUER=https://<your-app>.clerk.accounts.dev
 //
-// CLERK_ISSUER is pinned rather than read from the token: taking the issuer
-// from an unverified token and then fetching that issuer's keys to verify it
-// would prove nothing, since an attacker would supply both.
+// The token check lives in `_shared/clerk_caller.ts` (the issuer is pinned
+// there, never read from the token).
 
-import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.9.6";
+import { callerUserId, issuer } from "../_shared/clerk_caller.ts";
 import {
   deleteUserData,
   serviceRoleClient,
 } from "../_shared/delete_user_data.ts";
-
-const issuer = Deno.env.get("CLERK_ISSUER");
-const jwks = issuer
-  ? createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`))
-  : null;
 
 const json = (body: unknown, status: number) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },
   });
-
-/// The Clerk user id the request proves it is, or null when it proves
-/// nothing. Verification is this function's own: it never trusts a `sub` the
-/// caller simply asserts, and it fails closed on any error.
-async function callerUserId(req: Request): Promise<string | null> {
-  if (!jwks) return null;
-
-  const header = req.headers.get("Authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  if (!token) return null;
-
-  try {
-    const { payload } = await jwtVerify(token, jwks, { issuer });
-    return typeof payload.sub === "string" && payload.sub.length > 0
-      ? payload.sub
-      : null;
-  } catch {
-    return null;
-  }
-}
 
 /// Deletes the Clerk user. Treats "already gone" as success so a retry after
 /// a partial failure still cleans up the rows.
