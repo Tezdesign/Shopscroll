@@ -1,0 +1,6 @@
+{
+  "name": "shopscroll",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Only here so Cloudflare's build step (npm clean-install) has a project to read. The app is Flutter, see AGENTS.md."
+}
