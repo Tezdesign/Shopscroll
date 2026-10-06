@@ -16,6 +16,7 @@ Work that spans the buyer app, the seller app and the shared package. Buyer feat
 | 22 | Shared login and store area | Unplanned | in-progress |
 | 23 | Visitor application retention job | Unplanned | planned |
 | 24 | Seller product creation | Unplanned | in-progress |
+| 25 | Seller application admin email | Unplanned | in-progress |
 
 ## Features
 
@@ -164,3 +165,24 @@ still pass.
 - [ ] Test it: `/test seller product creation`
 
 Spec [0015](../../specs/_root/0015-seller-product-creation/index.md) · code in `supabase/migrations/0008` to `0010`, `supabase/checks/`, `supabase/functions/autofill-product/`, `apps/buyer/lib/features/seller_products/`, `packages/shared/lib/models/` · needs the seller shell (header, tab bar, Home, Activity, Profile) for its final entry points
+
+### 25. Seller application admin email · in-progress
+
+Every new seller application (from an account or from "Apply now" with no account) is emailed to the admin through
+Mailjet. The email has the store and contact details and one private link to a review page, where the admin sees the ID
+photos through links that expire in minutes and approves or rejects (reject asks for a reason). Failed emails retry
+by themselves.
+**Done when:** a new application sends one email within about a minute, the link shows the application and its photos,
+Approve and Reject decide it through the existing functions, an expired or used link is refused, a Mailjet failure
+retries and never blocks an application, and all suites still pass.
+- [x] Design it (spec): `/architect seller application admin email`
+- [ ] Build it: `/develop seller application admin email`
+  - [x] Migration `0011`, the trigger, the retry job, the token table and SQL checks (AC-1, AC-3, AC-9, AC-11, AC-12, AC-13): applied to the shopscroll project (on its own, `0008` to `0010` are still pending there) and all SQL checks pass there and on a local Supabase Postgres
+  - [x] Mailjet email module and the `notify-admin-application` function (AC-1, AC-2, AC-3, AC-9, AC-10, AC-11, AC-13): code and tests pass, not deployed yet
+  - [x] The `review-application` function and the token decision in SQL (AC-4 to AC-8, AC-11, AC-13): code and tests pass, not deployed yet
+  - [x] The review page on Cloudflare Pages (AC-4 to AC-8): written and checked in a browser against a fake function, not deployed yet
+  - [ ] Setup notes, `verify.md` and the full test run (AC-1 to AC-9, AC-14)
+- [ ] Verify it: `/check verify seller application admin email`
+- [ ] Test it: `/test seller application admin email`
+
+Spec [0016](../../specs/_root/0016-seller-application-admin-email/index.md) · code in `supabase/migrations/0011_admin_notification.sql`, `supabase/checks/admin_notification.sql`, `supabase/functions/notify-admin-application/`, `supabase/functions/review-application/`, `supabase/functions/_shared/`, `web/admin-review/` · next to features 20 (admin dashboard, which can replace the review page) and 21 (applicant notices)

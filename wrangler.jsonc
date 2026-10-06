@@ -1,0 +1,9 @@
+{
+  // Publishes the admin review page (spec 0016) as static assets on Cloudflare.
+  // The name must match the project name in the Cloudflare dashboard.
+  "name": "shopscroll-review",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./web/admin-review"
+  }
+}

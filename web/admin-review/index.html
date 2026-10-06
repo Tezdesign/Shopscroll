@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Seller application review</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Seller application</h1>
+    <p id="status" role="status" aria-live="polite">Loading...</p>
+
+    <section id="application" hidden>
+      <dl id="details"></dl>
+
+      <h2>Photos</h2>
+      <p class="hint">These links last 5 minutes. Reload the page for new ones.</p>
+      <div id="photos"></div>
+
+      <div id="actions">
+        <button type="button" id="approve" class="primary">Approve</button>
+        <button type="button" id="reject" class="danger">Reject</button>
+      </div>
+
+      <form id="confirm-approve" hidden>
+        <p>Approve this application? The person becomes a seller once their account is ready.</p>
+        <button type="submit" class="primary">Yes, approve</button>
+        <button type="button" data-cancel>Cancel</button>
+      </form>
+
+      <form id="confirm-reject" hidden>
+        <label for="reason">Reason (the applicant may see it)</label>
+        <textarea id="reason" maxlength="500" rows="4" required></textarea>
+        <button type="submit" class="danger">Send rejection</button>
+        <button type="button" data-cancel>Cancel</button>
+      </form>
+    </section>
+
+    <p id="message" role="alert" hidden></p>
+  </main>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
