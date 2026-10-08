@@ -56,6 +56,10 @@ class SupabaseSellerApplicationRepository
           'p_contact_email': request.contactEmail,
           'p_logo_path': request.logoPath,
           'p_business_document_path': request.businessDocumentPath,
+          // Sent only when given, so a backend without migration 0012 still
+          // accepts every other submit (spec 0017, AC-8).
+          if (applicant == null && request.personalEmail != null)
+            'p_applicant_email': request.personalEmail,
         },
       );
       return id as String;

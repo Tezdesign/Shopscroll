@@ -172,6 +172,7 @@ class _SellerApplicationWizardScreenState
   final _website = TextEditingController();
   final _phone = TextEditingController();
   final _email = TextEditingController();
+  final _personalEmail = TextEditingController();
   final _logo = _Slot();
   final _idDocument = _Slot();
   final _businessDocument = _Slot();
@@ -196,6 +197,7 @@ class _SellerApplicationWizardScreenState
       _website,
       _phone,
       _email,
+      _personalEmail,
       _aboutName,
       _aboutEmail,
       _aboutPhone,
@@ -340,6 +342,7 @@ class _SellerApplicationWizardScreenState
           websiteUrl: _orNull(_website),
           contactPhone: _orNull(_phone),
           contactEmail: _orNull(_email),
+          personalEmail: widget.isVisitor ? null : _orNull(_personalEmail),
           logoPath: logoPath,
           businessDocumentPath: businessPath,
           applicant: widget.isVisitor
@@ -562,6 +565,24 @@ class _SellerApplicationWizardScreenState
             hintText: 'Store email',
             keyboardType: TextInputType.emailAddress,
           ),
+          if (!widget.isVisitor) ...[
+            const SizedBox(height: AppSpacing.base),
+            _label('Your email (optional)'),
+            AppTextField(
+              controller: _personalEmail,
+              hintText: 'Your personal email',
+              keyboardType: TextInputType.emailAddress,
+              validator: validatePersonalEmail,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Private. Only our team sees it, and we email you the decision '
+              'here.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.neutral700,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.base),
           _PhotoField(
             label: 'Store logo (optional)',
@@ -666,6 +687,8 @@ class _SellerApplicationWizardScreenState
         _ReviewRow('Website', shown(_orNull(_website))),
         _ReviewRow('Phone', shown(_orNull(_phone))),
         _ReviewRow('Email', shown(_orNull(_email))),
+        if (!widget.isVisitor)
+          _ReviewRow('Your email', shown(_orNull(_personalEmail))),
         _ReviewRow('Logo', yesNo(_logo)),
         _ReviewRow('ID photo', yesNo(_idDocument)),
         _ReviewRow('Business registration', yesNo(_businessDocument)),

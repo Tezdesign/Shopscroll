@@ -12,11 +12,12 @@ Work that spans the buyer app, the seller app and the shared package. Buyer feat
 | 18 | Seller access rules | Unplanned | in-progress |
 | 19 | Seller application request | Unplanned | in-progress |
 | 20 | Seller application admin dashboard | Unplanned | planned |
-| 21 | Seller application notifications | Unplanned | planned |
+| 21 | Seller application notifications | Unplanned | in-progress |
 | 22 | Shared login and store area | Unplanned | in-progress |
 | 23 | Visitor application retention job | Unplanned | planned |
 | 24 | Seller product creation | Unplanned | in-progress |
 | 25 | Seller application admin email | Unplanned | in-progress |
+| 26 | Applicant in app decision notice | Unplanned | planned |
 
 ## Features
 
@@ -99,37 +100,49 @@ the spec 0013 functions, with a proper admin role instead of the service role.
 
 From spec [0013](../../specs/_root/0013-seller-application-request/index.md)
 
-### 21. Seller application notifications · planned · needs a decision
+### 21. Seller application notifications · in-progress
 
-Tell the applicant in the app and by email when an application is approved or rejected.
-**Done when:** an applicant gets a notification and an email on each decision (see the spec once it exists).
-- [ ] Design it (spec): `/architect seller application notifications`
+Tell the applicant by email when an application is approved or rejected, through Mailjet. An approval says what to do
+next: a new person creates an account with the email they applied with, a person with an account opens the Profile tab
+and uses the Buyer or Store owner switch. A rejection carries the admin's reason. Approved visitor applications now also
+find their account through the account's Clerk verified email, and signed in applicants get an optional personal email
+field. The in app notice is feature 26.
+**Done when:** every approval or rejection sends one email to the applicant within about a minute, a visitor who signs up
+with the application email on any phone becomes a seller, a failed email retries and never blocks a decision, and all
+suites still pass.
+- [x] Design it (spec): `/architect seller application notifications`
 - [ ] Build it: `/develop seller application notifications`
+  - [x] Migration `0012`, the trigger, the retry job, the attach by email functions and SQL checks (AC-1, AC-2, AC-6 to AC-10, AC-13): applied and all SQL checks pass on a local test database, not applied to the shopscroll project yet
+  - [x] The decision email module and the `notify-applicant-decision` function (AC-1 to AC-6, AC-12, AC-13): code and tests pass, not deployed yet
+  - [x] The claim function attaches by Clerk verified email (AC-9, AC-10): code and tests pass, not deployed yet
+  - [x] The optional personal email field in the signed in form (AC-8)
+  - [ ] Setup notes, `verify.md` and the full test run (AC-1 to AC-11, AC-14)
 - [ ] Verify it: `/check verify seller application notifications`
 - [ ] Test it: `/test seller application notifications`
 
-From spec [0013](../../specs/_root/0013-seller-application-request/index.md)
+Spec [0017](../../specs/_root/0017-applicant-decision-email/index.md) · code in `supabase/migrations/0012_applicant_notification.sql`, `supabase/checks/applicant_notification.sql`, `supabase/functions/notify-applicant-decision/`, `supabase/functions/claim-seller-application/`, `supabase/functions/_shared/` (`applicant_email.ts`, `clerk_emails.ts`), `apps/buyer/lib/features/seller_application/` · from spec [0013](../../specs/_root/0013-seller-application-request/index.md)
 
 ### 22. Shared login and store area · in-progress
 
 One login for buyers and store owners. The Buyer or Store owner choice picks the area after Log in: the buyer area, or a
 store area inside the same app that only approved sellers can enter, with a toggle between them. A person with no account
-can send a seller application from "Apply now", and it attaches to the account created on the same phone. The separate
-seller app is removed.
+can send a seller application from "Apply now", and it attaches to the account whose Clerk verified email or phone matches
+what they typed, so every signed in person sees only their own applications. The separate seller app is removed.
 **Done when:** a buyer who picks Store owner lands in the buyer area with a notice, an approved seller reaches the store
-area and can toggle, a visitor can apply and later become a seller after signing up on the same phone and being
-approved, `apps/seller` is gone, and all suites still pass.
+area and can toggle, a visitor can apply and later become a seller after signing up with the email or phone they typed and being
+approved, every signed in person sees only their own applications, `apps/seller` is gone, and all suites still pass.
 - [x] Design it (spec): `/architect for the shared login`
 - [ ] Build it: `/develop shared login and store area`
-  - [ ] Migration `0007` and SQL checks (AC-8 to AC-13, AC-15)
+  - [x] Migration `0007` and SQL checks (AC-8 to AC-13, AC-15)
   - [ ] Claim Edge Function (AC-13)
   - [x] Remove `apps/seller`, area state and store area, login routing and claim triggers (AC-1 to AC-6, AC-13)
   - [x] Visitor application: Apply now, About you step, uploads, confirmation (AC-7)
   - [ ] Account deletion cleanup, then the full test run (AC-14, AC-15)
+  - [ ] Attach by Clerk verified contact: migration `0013`, SQL checks, the claim function and the phone fix (AC-10, AC-12, AC-13, AC-16, AC-17, tasks 10 to 16)
 - [ ] Verify it: `/check verify shared login and store area`
 - [ ] Test it: `/test shared login and store area`
 
-Spec [0014](../../specs/_root/0014-shared-login-seller-area/index.md) · replaces the seller app gate of feature 19 (spec 0013 task 6 and AC-10)
+Spec [0014](../../specs/_root/0014-shared-login-seller-area/index.md) · replaces the seller app gate of feature 19 (spec 0013 task 6 and AC-10) · code in `apps/buyer/lib/core/area/`, `apps/buyer/lib/features/seller_application/`, `supabase/migrations/0007_visitor_applications.sql`, `supabase/migrations/0013_attach_by_verified_contact.sql`, `supabase/checks/` (`visitor_applications.sql`, `detach_unclaimed_attached.sql`), `supabase/functions/claim-seller-application/`, `supabase/functions/_shared/` (`claim_seller_application.ts`, `clerk_contacts.ts`, `delete_user_files.ts`)
 
 ### 23. Visitor application retention job · planned · needs a decision
 
@@ -186,3 +199,15 @@ retries and never blocks an application, and all suites still pass.
 - [ ] Test it: `/test seller application admin email`
 
 Spec [0016](../../specs/_root/0016-seller-application-admin-email/index.md) · code in `supabase/migrations/0011_admin_notification.sql`, `supabase/checks/admin_notification.sql`, `supabase/functions/notify-admin-application/`, `supabase/functions/review-application/`, `supabase/functions/_shared/`, `web/admin-review/` · next to features 20 (admin dashboard, which can replace the review page) and 21 (applicant notices)
+
+### 26. Applicant in app decision notice · planned · needs a decision
+
+Show an approved or rejected applicant a notice inside the app (for example a one time message on the next open), next to
+the email from feature 21. Needs a seen flag per application.
+**Done when:** an applicant sees one notice per decision in the app (see the spec once it exists).
+- [ ] Design it (spec): `/architect applicant in app decision notice`
+- [ ] Build it: `/develop applicant in app decision notice`
+- [ ] Verify it: `/check verify applicant in app decision notice`
+- [ ] Test it: `/test applicant in app decision notice`
+
+From spec [0017](../../specs/_root/0017-applicant-decision-email/index.md)

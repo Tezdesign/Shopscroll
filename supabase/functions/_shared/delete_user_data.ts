@@ -5,8 +5,9 @@
 // record of a sale that happened, not personal data the buyer owns outright.
 // Seller applications go with the profile (they cascade), and the photos that
 // came with them are removed from both Storage buckets (spec 0013, AC-11).
-// Visitor applications attached to the account (spec 0014, AC-14) are removed
-// first, with their files, because they do not cascade.
+// Visitor applications the account owns (spec 0014, AC-14) are removed first,
+// with their files, because they do not cascade. Visitor applications that are
+// only attached to it belong to somebody else and are detached, not deleted.
 //
 // Two callers share this, and must not drift apart: `clerk-webhook`, for a
 // deletion started anywhere else (the Clerk dashboard, the Backend API), and
@@ -33,8 +34,8 @@ export function serviceRoleClient(): SupabaseClient {
   );
 }
 
-/// The visitor applications of one account, read and deleted with the service
-/// role. The id goes into a PostgREST filter string, so anything but the
+/// The visitor applications of one account, read, deleted and detached with the
+/// service role. The id goes into a PostgREST filter string, so anything but the
 /// characters a Clerk id has is refused rather than escaped.
 function visitorApplicationRows(supabase: SupabaseClient): VisitorApplicationRows {
   return {
@@ -46,7 +47,7 @@ function visitorApplicationRows(supabase: SupabaseClient): VisitorApplicationRow
         .from("seller_applications")
         .select("id, id_document_path, business_document_path, logo_path")
         .eq("origin", "visitor")
-        .or(`applicant_id.eq.${userId},bound_account_id.eq.${userId}`);
+        .eq("applicant_id", userId);
       if (error) throw new Error(error.message);
       return (data ?? []).map((row) => ({
         id: row.id as string,
@@ -59,6 +60,24 @@ function visitorApplicationRows(supabase: SupabaseClient): VisitorApplicationRow
         .delete()
         .in("id", ids);
       if (error) throw new Error(error.message);
+    },
+    async detach(userId) {
+      // Two statements: a reviewing row can refuse to detach (its session sent
+      // another reviewing row), and that must not undo the others. A refusal
+      // leaves that one row attached to the deleted id, which hurts nobody.
+      for (const reviewing of [false, true]) {
+        const query = supabase
+          .from("seller_applications")
+          .update({ bound_account_id: null })
+          .eq("bound_account_id", userId)
+          .is("applicant_id", null);
+        const { error } = await (reviewing
+          ? query.eq("status", "reviewing")
+          : query.neq("status", "reviewing"));
+        if (error && !(reviewing && error.code === "23505")) {
+          throw new Error(error.message);
+        }
+      }
     },
   };
 }

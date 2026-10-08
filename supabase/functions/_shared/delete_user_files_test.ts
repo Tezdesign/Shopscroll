@@ -178,6 +178,8 @@ class FakeRows implements VisitorApplicationRows {
   rows: { id: string; paths: (string | null)[] }[];
   log: string[];
   failRemove = false;
+  detached = 0;
+  failDetach = false;
 
   constructor(rows: { id: string; paths: (string | null)[] }[], log: string[]) {
     this.rows = rows;
@@ -193,6 +195,13 @@ class FakeRows implements VisitorApplicationRows {
     this.log.push("rows");
     if (this.failRemove) return Promise.reject(new Error("rows are locked"));
     this.rows = this.rows.filter((row) => !ids.includes(row.id));
+    return Promise.resolve();
+  }
+
+  detach(_userId: string) {
+    this.log.push("detach");
+    if (this.failDetach) return Promise.reject(new Error("detach is locked"));
+    this.detached++;
     return Promise.resolve();
   }
 }
@@ -224,7 +233,7 @@ Deno.test("removes the files named on the rows, then the rows", async () => {
   const error = await deleteVisitorApplications(storage, rows, ME);
 
   assert.equal(error, null);
-  assert.deepEqual(log, ["list", "files", "rows"]);
+  assert.deepEqual(log, ["list", "files", "rows", "detach"]);
   assert.deepEqual(storage.paths("visitor-documents"), ["anon_2/app-2/id-2.jpg"]);
   assert.deepEqual(rows.rows, []);
 });
@@ -255,12 +264,39 @@ Deno.test("a row failure is reported, and a rerun finishes the job", async () =>
   assert.deepEqual(rows.rows, []);
 });
 
-Deno.test("no visitor applications is not an error and removes nothing", async () => {
+Deno.test("no owned visitor applications removes nothing, but still detaches the attached ones", async () => {
   const storage = new FakeStorage({ "visitor-documents": VISITOR_FILES });
   const rows = new FakeRows([], []);
 
   assert.equal(await deleteVisitorApplications(storage, rows, ME), null);
   assert.equal(storage.removeCalls.length, 0);
+  assert.equal(rows.detached, 1);
+  assert.deepEqual(storage.paths("visitor-documents"), VISITOR_FILES);
+});
+
+Deno.test("AC-14 a detach failure is reported, and a rerun finishes the job", async () => {
+  const storage = new FakeStorage({ "visitor-documents": VISITOR_FILES });
+  const rows = new FakeRows([{ id: "a1", paths: ["anon_1/app-1/id-1.jpg"] }], []);
+  rows.failDetach = true;
+
+  assert.equal((await deleteVisitorApplications(storage, rows, ME))?.message, "detach is locked");
+  assert.deepEqual(rows.rows, []);
+
+  rows.failDetach = false;
+  assert.equal(await deleteVisitorApplications(storage, rows, ME), null);
+  assert.equal(rows.detached, 1);
+});
+
+Deno.test("AC-14 a file failure detaches nothing", async () => {
+  const storage = new FakeStorage({ "visitor-documents": VISITOR_FILES });
+  storage.from = () => ({
+    list: () => Promise.resolve({ data: [], error: null }),
+    remove: () => Promise.resolve({ data: null, error: { message: "storage is down" } }),
+  });
+  const rows = new FakeRows([{ id: "a1", paths: ["anon_1/app-1/id-1.jpg"] }], []);
+
+  assert.equal((await deleteVisitorApplications(storage, rows, ME))?.message, "storage is down");
+  assert.equal(rows.detached, 0);
 });
 
 Deno.test("a list failure is returned and nothing is removed", async () => {

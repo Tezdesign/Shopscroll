@@ -111,9 +111,28 @@ void main() {
       expect(validateApplicantEmail('${'a' * 197}@b.co'), isNotNull);
     });
 
+    test('the personal email is optional but must look like an email', () {
+      for (final empty in [null, '', '   ']) {
+        expect(validatePersonalEmail(empty), isNull);
+      }
+      expect(validatePersonalEmail(' a@b.co '), isNull);
+      for (final bad in ['a', 'a@b', 'a b@c.co']) {
+        expect(validatePersonalEmail(bad), isNotNull, reason: bad);
+      }
+      expect(validatePersonalEmail('${'a' * 197}@b.co'), isNotNull);
+    });
+
     test('phone joins the picked dial code and the digits typed', () {
       const tunisia = CountryDialCode('TN', '+216', 'Tunisia');
       expect(internationalPhone(tunisia, '12 345-678'), '+21612345678');
+      // One leading national 0 is dropped, as Clerk stores the number.
+      const france = CountryDialCode('FR', '+33', 'France');
+      expect(internationalPhone(france, '06 12 34 56 78'), '+33612345678');
+      expect(internationalPhone(france, '612345678'), '+33612345678');
+      expect(internationalPhone(france, '006 12'), '+330612');
+      // Italy keeps it: Italian numbers can start with 0.
+      const italy = CountryDialCode('IT', '+39', 'Italy');
+      expect(internationalPhone(italy, '06 1234 5678'), '+390612345678');
       expect(validateApplicantPhone(tunisia, '12 345 678'), isNull);
       expect(validateApplicantPhone(tunisia, '123'), isNotNull);
       expect(validateApplicantPhone(tunisia, ''), isNotNull);

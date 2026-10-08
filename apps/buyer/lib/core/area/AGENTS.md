@@ -16,7 +16,8 @@ person with `role = 'seller'` stays in. There is no separate seller app any more
   "not a seller", so sign in never fails because of it.
 - `seller_claim.dart` — `SellerClaim.claim()` calls the `claim-seller-application` Edge Function (see
   `supabase/AGENTS.md`) and never throws. It skips visitors and sellers, and refreshes the cached profile when it
-  returns `claimed: true`.
+  returns `claimed: true`. The function first attaches a visitor application to the account only when Clerk verified
+  the email or phone typed in it (spec 0014 AC-12), so the app does nothing extra for the attach.
 
 ## Conventions
 

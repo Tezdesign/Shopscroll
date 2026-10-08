@@ -84,15 +84,18 @@ void main() {
       phone: '+21612345678',
     );
 
-    SellerApplicationRequest request({ApplicantContact? applicant}) =>
-        SellerApplicationRequest(
-          id: 'a1',
-          storeName: 'Shop',
-          username: 'shop_1',
-          location: 'Tunis',
-          idDocumentPath: 'anon_1/a1/id-x.jpg',
-          applicant: applicant,
-        );
+    SellerApplicationRequest request({
+      ApplicantContact? applicant,
+      String? personalEmail,
+    }) => SellerApplicationRequest(
+      id: 'a1',
+      storeName: 'Shop',
+      username: 'shop_1',
+      location: 'Tunis',
+      idDocumentPath: 'anon_1/a1/id-x.jpg',
+      applicant: applicant,
+      personalEmail: personalEmail,
+    );
 
     test(
       'a visitor submit calls submit_visitor_application with the contact',
@@ -122,6 +125,25 @@ void main() {
           (jsonDecode((call as http.Request).body) as Map<String, dynamic>)
               .keys,
           isNot(contains('p_applicant_name')),
+        );
+      },
+    );
+
+    test(
+      'a signed in submit sends the personal email only when given (spec 0017)',
+      () async {
+        await repository.submit(request(personalEmail: 'me@example.com'));
+        await repository.submit(request());
+
+        Map<String, dynamic> body(http.BaseRequest r) =>
+            jsonDecode((r as http.Request).body) as Map<String, dynamic>;
+        expect(
+          body(recorder.requests[0])['p_applicant_email'],
+          'me@example.com',
+        );
+        expect(
+          body(recorder.requests[1]).keys,
+          isNot(contains('p_applicant_email')),
         );
       },
     );

@@ -1,8 +1,9 @@
 -- Decision record: docs/specs/_root/0014-shared-login-seller-area/index.md (build plan task 2)
 --
--- SQL checks for visitor applications: AC-8 to AC-13. Run the whole file in the
--- SQL editor of a TEST or BRANCH database (or with psql) after applying
--- migrations 0004 to 0007. It creates its own fixtures, switches role with a fake
+-- SQL checks for visitor applications: AC-8 to AC-13, AC-17. Run the whole file in
+-- the SQL editor of a TEST or BRANCH database (or with psql) after applying
+-- migrations 0004 to 0013 (the detach step of 0013 is checked by
+-- detach_unclaimed_attached.sql). It creates its own fixtures, switches role with a fake
 -- JWT to act as each person, and ends with `rollback`, so it leaves no rows
 -- behind. Do not run it against live data you care about without reading it
 -- first.
@@ -82,6 +83,16 @@ create function pg_temp.raw_visitor(
       id_document_path, status) values (%L, 'visitor', null, %L, 'Raw Visitor', %L, %L,
       'Raw', %L, 'Tunis', 'x', %L)$q$,
     p_id, p_sub, p_email, p_phone, p_username, p_status
+  );
+$$;
+
+-- attach_applications_by_contact called as the current role, passing only what Clerk
+-- would have verified. The statement is true when it returns p_n.
+create function pg_temp.att(p_sub text, p_emails text[], p_phones text[], p_n integer)
+returns text language sql as $$
+  select format(
+    $q$select 1 where public.attach_applications_by_contact(%L, %L::text[], %L::text[]) = %s$q$,
+    p_sub, p_emails, p_phones, p_n
   );
 $$;
 
@@ -439,68 +450,127 @@ begin
   reset role;
 
   -- ---------------------------------------------------------------- AC-12 attach
-  -- Signing up on the phone that sent the application: merge_anonymous_identity
-  -- runs on the anonymous session, with the new account id as target.
+  -- Being on the phone that sent the application proves nothing: signing in on it
+  -- (merge_anonymous_identity) attaches no row, and the session keeps reading its
+  -- own free row.
   perform pg_temp.act_as('anon_1', true);
   perform pg_temp.expect('AC-12 anon_1 merges into chk_a',
     pg_temp.try($q$select public.merge_anonymous_identity('chk_a')$q$), 'ok:1');
+  select count(*) into v_n from public.seller_applications where id = v1;
+  if v_n <> 1 then
+    raise exception 'FAIL AC-10: the sending session cannot read its own free row';
+  end if;
+  reset role;
+  if (select bound_account_id from public.seller_applications where id = v1) is not null then
+    raise exception 'FAIL AC-12: the sending phone attached a row without proof';
+  end if;
+  raise notice 'ok   AC-12 signing in on the sending phone attaches nothing';
+
+  perform pg_temp.act_as('chk_a');
+  select count(*) into v_n from public.seller_applications;
+  if v_n <> 0 then
+    raise exception 'FAIL AC-17: chk_a sees % application row(s) before any proof, expected 0', v_n;
+  end if;
+  reset role;
+  raise notice 'ok   AC-17 an account sees no application it has not proved';
+
+  -- No client can run the attach or the check that asks whether one waits.
+  perform pg_temp.act_as('chk_a');
+  perform pg_temp.expect('AC-12 a signed in client cannot attach',
+    pg_temp.try(pg_temp.att('chk_a', array['alpha@example.com'], '{}', 1)), 'err:42501');
+  perform pg_temp.expect('AC-12 a signed in client cannot call has_unattached_visitor_applications',
+    pg_temp.try('select public.has_unattached_visitor_applications()'), 'err:42501');
+  reset role;
+  set local role anon;
+  perform pg_temp.expect('AC-12 anon cannot attach',
+    pg_temp.try(pg_temp.att('chk_a', array['alpha@example.com'], '{}', 1)), 'err:42501');
+  perform pg_temp.expect('AC-12 anon cannot call has_unattached_visitor_applications',
+    pg_temp.try('select public.has_unattached_visitor_applications()'), 'err:42501');
+  reset role;
+
+  -- Proof by contact, as the service role. Every case below attaches nothing.
+  set local role service_role;
+  perform pg_temp.expect('AC-12 a free reviewing visitor row makes the waiting check true',
+    pg_temp.try('select 1 where public.has_unattached_visitor_applications()'), 'ok:1');
+  perform pg_temp.expect('AC-12 a null, empty or blank contact list attaches nothing',
+    pg_temp.try($q$select 1 where public.attach_applications_by_contact('chk_a', null, null) = 0
+                   and public.attach_applications_by_contact('chk_a', '{}', '{}') = 0
+                   and public.attach_applications_by_contact('chk_a', array['  '], array['']) = 0$q$), 'ok:1');
+  perform pg_temp.expect('AC-12 an email that differs in one character attaches nothing',
+    pg_temp.try(pg_temp.att('chk_a', array['alpha@example.co'], '{}', 0)), 'ok:1');
+  perform pg_temp.expect('AC-12 a phone that differs in one digit attaches nothing',
+    pg_temp.try(pg_temp.att('chk_a', '{}', array['+2161234567'], 0)), 'ok:1');
+  perform pg_temp.expect('AC-12 a phone with spaces is not the same number',
+    pg_temp.try(pg_temp.att('chk_a', '{}', array['+216 12345678'], 0)), 'ok:1');
+  -- v5 was typed with chk_a's profile email and chk_b's profile phone. An account
+  -- whose verified contacts are different gets nothing.
+  perform pg_temp.expect('AC-12 an account with other verified contacts attaches nothing',
+    pg_temp.try(pg_temp.att('chk_b', array['b@example.com'], array['+1555'], 0)), 'ok:1');
+  perform pg_temp.expect('AC-12 an existing seller is never attached',
+    pg_temp.try(pg_temp.att('chk_s', array['alpha@example.com'], '{}', 0)), 'ok:1');
+  perform pg_temp.expect('AC-12 a reviewing row is skipped when the account has an open application',
+    pg_temp.try(pg_temp.att('chk_open', array['gamma@example.com'], '{}', 0)), 'ok:1');
+  reset role;
+  if exists (select 1 from public.seller_applications where bound_account_id is not null) then
+    raise exception 'FAIL AC-12: a refused attach still bound a row';
+  end if;
+  raise notice 'ok   AC-12 wrong, unverified, blank and skipped contacts attach nothing';
+
+  -- The real attach by email: case and spaces do not matter.
+  set local role service_role;
+  perform pg_temp.expect('AC-12 a verified email attaches the row',
+    pg_temp.try(pg_temp.att('chk_a', array['nobody@example.com', '  ALPHA@Example.COM '], '{}', 1)), 'ok:1');
+  perform pg_temp.expect('AC-12 an attached row is not attached again',
+    pg_temp.try(pg_temp.att('chk_b', array['alpha@example.com'], '{}', 0)), 'ok:1');
   reset role;
   select * into v_app from public.seller_applications where id = v1;
   if v_app.bound_account_id <> 'chk_a' or v_app.applicant_id is not null or v_app.status <> 'reviewing' then
     raise exception 'FAIL AC-12: the row was not attached to chk_a: %', v_app;
   end if;
-  raise notice 'ok   AC-12 the row is attached to the account that signed in (no applicant yet)';
+  raise notice 'ok   AC-12 the row is attached to the account that proved the email (no applicant yet)';
 
+  -- By phone, exact match, on another account.
+  set local role service_role;
+  perform pg_temp.expect('AC-12 a verified phone attaches the row',
+    pg_temp.try(pg_temp.att('chk_b', '{}', array['+21612345681'], 1)), 'ok:1');
+  reset role;
+  if (select bound_account_id from public.seller_applications where id = v4) is distinct from 'chk_b' then
+    raise exception 'FAIL AC-12: the row was not attached to chk_b by phone';
+  end if;
+  raise notice 'ok   AC-12 a verified phone attaches the row';
+
+  -- Each account reads its own row and nobody else's, and the sending session
+  -- stops reading a row once it is attached.
   perform pg_temp.act_as('chk_a');
   select count(*) into v_n from public.seller_applications;
-  if v_n <> 1 then
-    raise exception 'FAIL AC-10: chk_a sees % application row(s), expected only the attached one (1)', v_n;
+  if v_n <> 1 or not exists (select 1 from public.seller_applications where id = v1) then
+    raise exception 'FAIL AC-17: chk_a sees % row(s), expected only its attached one', v_n;
   end if;
-  raise notice 'ok   AC-10 an account reads the application attached to it';
   perform pg_temp.expect('AC-12 an attached reviewing row counts as the account''s open application',
     pg_temp.try(format($q$select public.submit_seller_application(%L, 'Shop', 'acct_shop', 'Tunis', %L)$q$, v_a1, 'chk_a/' || v_a1 || '/id-1.jpg')),
     'err:P0001:already_open');
   reset role;
-
-  -- An account that already has an open application of its own is skipped.
-  perform pg_temp.act_as('anon_3', true);
-  perform pg_temp.expect('AC-12 anon_3 merges into chk_open',
-    pg_temp.try($q$select public.merge_anonymous_identity('chk_open')$q$), 'ok:1');
-  reset role;
-  if (select bound_account_id from public.seller_applications where id = v3) is not null then
-    raise exception 'FAIL AC-12: a row was attached to an account that already has an open application';
+  perform pg_temp.act_as('chk_b');
+  select count(*) into v_n from public.seller_applications;
+  if v_n <> 1 or not exists (select 1 from public.seller_applications where id = v4) then
+    raise exception 'FAIL AC-17: chk_b sees % row(s), expected only its attached one', v_n;
   end if;
-  raise notice 'ok   AC-12 a row is skipped when the account already has an open application';
-
-  -- Merging on a session that sent nothing changes nothing, and typed contact
-  -- details never attach a row: v5 carries chk_a's email and chk_b's phone.
-  perform pg_temp.act_as('anon_9', true);
-  perform pg_temp.try($q$select public.merge_anonymous_identity('chk_a')$q$);
-  perform pg_temp.try($q$select public.merge_anonymous_identity('chk_b')$q$);
   reset role;
-  if (select bound_account_id from public.seller_applications where id = v5) is not null then
-    raise exception 'FAIL AC-12: a row was attached by matching an email or phone';
-  end if;
-  raise notice 'ok   AC-12 matching email or phone never attaches a row';
-
-  -- A real (non anonymous) session cannot run the attach, and only the sender's
-  -- own rows are touched.
-  perform pg_temp.act_as('anon_2', false);
-  perform pg_temp.try($q$select public.merge_anonymous_identity('chk_b')$q$);
-  reset role;
-  if (select bound_account_id from public.seller_applications where id = v2) is not null then
-    raise exception 'FAIL AC-12: a non anonymous caller attached a row';
-  end if;
-  raise notice 'ok   AC-12 a non anonymous caller attaches nothing';
-
-  -- Attaching leaves an already attached row alone.
   perform pg_temp.act_as('anon_1', true);
-  perform pg_temp.try($q$select public.merge_anonymous_identity('chk_b')$q$);
-  reset role;
-  if (select bound_account_id from public.seller_applications where id = v1) <> 'chk_a' then
-    raise exception 'FAIL AC-12: an attached row was moved to another account';
+  select count(*) into v_n from public.seller_applications where id = v1;
+  if v_n <> 0 then
+    raise exception 'FAIL AC-10: the sending session still reads a row attached to an account';
   end if;
-  raise notice 'ok   AC-12 an attached row stays with its account';
+  reset role;
+  raise notice 'ok   AC-17 each account reads only its own attached row, the sender stops reading it';
+
+  -- An account that already has an attached open row does not take a second one
+  -- (v5 was typed with chk_a's profile email, but only a verified contact counts).
+  set local role service_role;
+  perform pg_temp.expect('AC-12 an account with an open application takes no second reviewing row',
+    pg_temp.try(pg_temp.att('chk_a', array['a@example.com'], '{}', 0)), 'ok:1');
+  reset role;
+  raise notice 'ok   AC-12 the one open rule holds for attached rows';
 
   -- ---------------------------------------------------------------- AC-11 decisions
   perform pg_temp.act_as('chk_a');
@@ -540,6 +610,20 @@ begin
     raise exception 'FAIL AC-11: a decision on a visitor row changed a profile';
   end if;
   raise notice 'ok   AC-11 visitor rows are approved and rejected, no profile changes';
+
+  -- A rejected row attaches to an account that proves its contact, even when that
+  -- account already has an open application, and both then show (AC-17).
+  set local role service_role;
+  perform pg_temp.expect('AC-12 a rejected row attaches next to an open application',
+    pg_temp.try(pg_temp.att('chk_open', array['zeta@example.com'], '{}', 1)), 'ok:1');
+  reset role;
+  perform pg_temp.act_as('chk_open');
+  select count(*) into v_n from public.seller_applications;
+  if v_n <> 2 or (select status from public.seller_applications where id = v7) <> 'rejected' then
+    raise exception 'FAIL AC-17: chk_open should read its own reviewing row and the attached rejected one, got % row(s)', v_n;
+  end if;
+  reset role;
+  raise notice 'ok   AC-17 an attached rejected row shows next to the account''s own open application';
 
   -- An approved visitor application keeps its username reserved until claimed.
   perform pg_temp.act_as('anon_10', true);
@@ -673,6 +757,24 @@ begin
     raise exception 'FAIL AC-11: account approval no longer copies the profile: %', v_row;
   end if;
   raise notice 'ok   AC-11 account approval is unchanged';
+
+  -- ---------------------------------------------------------------- AC-12 race
+  -- The account chk_race has no application, but the one open index already has an
+  -- entry under its name (a session id that equals it, only possible in a test).
+  -- Attaching the reviewing row then hits seller_applications_one_reviewing_per_owner.
+  -- That is caught, and the approved row of the same call stays attached.
+  perform pg_temp.try(pg_temp.raw_visitor('00000000-0000-0000-0000-0000000000c1', 'chk_race', 'race_a', 'race1@example.com', '+21655550001'));
+  perform pg_temp.try(pg_temp.raw_visitor('00000000-0000-0000-0000-0000000000c2', 'anon_race2', 'race_b', 'race2@example.com', '+21655550002'));
+  perform pg_temp.try(pg_temp.raw_visitor('00000000-0000-0000-0000-0000000000c3', 'anon_race3', 'race_c', 'race3@example.com', '+21655550003', 'approved'));
+  set local role service_role;
+  perform pg_temp.expect('AC-12 a unique violation on the reviewing row keeps the approved attach',
+    pg_temp.try(pg_temp.att('chk_race', array['race2@example.com', 'race3@example.com'], '{}', 1)), 'ok:1');
+  reset role;
+  if (select bound_account_id from public.seller_applications where id = '00000000-0000-0000-0000-0000000000c3') is distinct from 'chk_race'
+     or (select bound_account_id from public.seller_applications where id = '00000000-0000-0000-0000-0000000000c2') is not null then
+    raise exception 'FAIL AC-12: the race left the approved row unattached or attached the reviewing one';
+  end if;
+  raise notice 'ok   AC-12 a race on the one open rule never undoes the approved and rejected attaches';
 
   raise notice 'ALL CHECKS PASSED';
 end;

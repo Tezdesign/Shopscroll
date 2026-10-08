@@ -24,13 +24,22 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
   `reject_seller_application`, and the `store-logos` and `application-documents` buckets.
   `0007_visitor_applications.sql` (spec 0014): a person with no account applies through their anonymous
   session (`submit_visitor_application`, private `visitor-documents` bucket, 12 file cap per session folder);
-  `merge_anonymous_identity` now also attaches those rows to the account that signs in on the same phone
-  (`bound_account_id`); after an admin approves, `claim_seller_application` (service role only) copies the
+  `merge_anonymous_identity` first attached those rows to the account that signs in on the same phone (replaced by
+  `0013`, below); after an admin approves, `claim_seller_application` (service role only) copies the
   store details onto the profile and sets `role = 'seller'`. It also replaces `submit_seller_application` and
-  `approve_seller_application`. Unverified until applied and checked on a test database.
+  `approve_seller_application`. Checked on a local test database, not yet applied to the real project.
+  `0012_applicant_notification.sql` (spec 0017): a trigger and a retry job (pg_net, Vault entry `applicant_notify_url`,
+  secret `admin_notify_secret`) post decided applications to `notify-applicant-decision`, and `submit_seller_application`
+  takes an optional private `p_applicant_email`.
+  `0013_attach_by_verified_contact.sql` (spec 0014 AC-12, AC-16): a visitor row attaches (`bound_account_id`) only through
+  `attach_applications_by_contact(clerk id, verified emails, verified phones)`, service role only, never by being on the
+  sending phone. It detaches the rows the old rule attached, drops the 0012 email attach, trims
+  `merge_anonymous_identity` to the cart and orders, and stops a sending session reading a row once it is attached.
+  Approved and rejected rows always attach, a reviewing row only for an account with no open application (the oldest).
 - `checks/` — SQL you run by hand on a test or branch database: `seller_access.sql`,
-  `seller_applications.sql` and `visitor_applications.sql` (each rolls back, one NOTICE per check) and
-  `audit_seller_rows.sql` (read only, run before `0004`).
+  `seller_applications.sql`, `visitor_applications.sql` and `applicant_notification.sql` (each rolls back, one NOTICE per
+  check), `detach_unclaimed_attached.sql` (applies `0013` itself inside a transaction, run it with psql from the repo root
+  before `0013` is applied) and `audit_seller_rows.sql` (read only, run before `0004`).
 - `functions/<name>/index.ts` — Supabase Edge Functions (Deno). Deploys and `supabase secrets set`
   are manual steps, not run by this repo's tooling.
   - `_shared/delete_user_data.ts` — removes one identity's cart, likes, saves and profile with the
@@ -45,16 +54,23 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
     `CLERK_SECRET_KEY` and `CLERK_ISSUER`. Deploy it with `--no-verify-jwt`: it does its own
     verification and fails closed, so it must not also depend on the platform gateway accepting a
     third-party token. This exists because `ClerkAuthState.deleteUser()` is broken in `clerk_auth`
-    0.0.18-beta — see `apps/buyer/lib/features/profile/AGENTS.md`. It also removes the account's visitor
-    applications and their `visitor-documents` files first, and stops there if that fails so a retry still has
-    the file paths (`_shared/delete_user_files.ts`, spec 0014).
+    0.0.18-beta — see `apps/buyer/lib/features/profile/AGENTS.md`. It also removes the visitor applications the
+    account owns (`applicant_id`) and their `visitor-documents` files first, and stops there if that fails so a retry
+    still has the file paths. Rows that are only attached to it are detached, not deleted, because they are somebody
+    else's application (`_shared/delete_user_files.ts`, spec 0014 AC-14).
   - `_shared/clerk_caller.ts` — the one Clerk session token check (pinned `CLERK_ISSUER`), used by
     `delete-account` and `claim-seller-application`.
   - `claim-seller-application` — the signed in app calls it after sign in, on resume and when the Seller
-    application screen opens. It copies an approved visitor application's logo from `visitor-documents` to
-    `store-logos`, then runs `claim_seller_application`. Logic is in `_shared/claim_seller_application.ts`.
-    Needs `CLERK_ISSUER`; deploy with `--no-verify-jwt`. The Storage copy between buckets is not yet confirmed
+    application screen opens. First it attaches free visitor applications whose typed email or phone Clerk verified
+    for the caller (`_shared/clerk_contacts.ts` reads them, only while the caller is not a seller and
+    `has_unattached_visitor_applications()` is true; a failure is logged as a short code and never blocks the claim).
+    Then it copies an approved visitor application's logo from `visitor-documents` to `store-logos` and runs
+    `claim_seller_application`. Logic is in `_shared/claim_seller_application.ts`.
+    Needs `CLERK_ISSUER` and `CLERK_SECRET_KEY`; deploy with `--no-verify-jwt`. The Storage copy between buckets is not yet confirmed
     against the real project.
+  - `notify-applicant-decision` — emails the applicant when an application is approved or rejected, through Mailjet.
+    Called by the database (migration `0012`) with the shared secret, so deploy with `--no-verify-jwt`. Logic and
+    tests are in `_shared/applicant_email.ts`.
   - Tests for the shared modules run with `deno test supabase/functions/_shared/`. They use only `Deno.test`
     and `node:assert`, so Node 22 can run them too (`--experimental-strip-types` with a `Deno.test` shim).
 ## Conventions
@@ -71,6 +87,6 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
 - New schema changes ship as a new `migrations/000N_<name>.sql`, never by editing `schema.sql` or an
   already-applied migration in place.
 
-Governing specs: `docs/specs/buyer/0003-supabase-backend/index.md`, `docs/specs/buyer/0004-clerk-authentication/index.md`, `docs/specs/_root/0012-one-backend-seller-role/index.md`, `docs/specs/_root/0013-seller-application-request/index.md`, `docs/specs/_root/0014-shared-login-seller-area/index.md`.
+Governing specs: `docs/specs/buyer/0003-supabase-backend/index.md`, `docs/specs/buyer/0004-clerk-authentication/index.md`, `docs/specs/_root/0012-one-backend-seller-role/index.md`, `docs/specs/_root/0013-seller-application-request/index.md`, `docs/specs/_root/0014-shared-login-seller-area/index.md`, `docs/specs/_root/0017-applicant-decision-email/index.md`.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

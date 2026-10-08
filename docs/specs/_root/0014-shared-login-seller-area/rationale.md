@@ -16,6 +16,8 @@ Not deciding leaves the Store owner choice and the "Apply now" link as decoratio
 
 ### Option 1: One app with a role switched store area, visitor applications in the same table, claimed on sign in
 
+> Updated 2026-10-08: the attach by the sending phone described below was replaced by an attach through a Clerk verified email or phone. See the update at the end of this file.
+
 The buyer app holds both areas. The login choice and the profile role pick the area, a toggle switches between them for approved sellers, and `apps/seller` is removed. A visitor applies through their anonymous session into the same table with private contact columns. When the same phone signs up or logs in, the application is attached to that account, and an Edge Function turns an approved, attached application into a seller.
 
 **Pros**:
@@ -72,8 +74,43 @@ Option 1 follows the owner's flow and the forces above. The design draws one log
 
 For the visitor path, the anonymous session the app already has is enough to bind a submit to one session without any new service. The risk is real, so the design stacks cheap brakes: one open application per session, per email and per phone, a private bucket nobody can read, a 12 file and 5 MB cap per session and Supabase's own anonymous sign in rate limit. A captcha and a manual link (Option 4) would be stronger, and the follow up list keeps the captcha as the next step if spam appears.
 
-How an application finds its account is the part the cross check changed. The first draft matched an approved application to whoever signed up with a verified email or phone equal to what the visitor typed. A read only review on a second model showed why that is unsafe: a visitor can type a victim's email and their own phone, the admin confirms the phone and approves, and the victim's next sign in hands them the store and overwrites their profile. A typo does the same to a stranger. So nothing the visitor types is ever used to match. The application attaches only to the account created or used on the phone that sent it, proved by the anonymous session that `merge_anonymous_identity` already checks at sign in. The cost is that a person who applies on one phone and signs up on another is not attached automatically, and the admin attaches that case by hand, which is rare and safe. The claim itself still runs in an Edge Function, because it has to copy the logo between buckets (the service role and the Storage API), and it now also runs on launch, resume and when the Seller application screen opens, so an approval that comes weeks after sign up is not missed.
+How an application finds its account is the part the cross check changed. The first draft matched an approved application to whoever signed up with a verified email or phone equal to what the visitor typed. A read only review on a second model showed why that is unsafe: a visitor can type a victim's email and their own phone, the admin confirms the phone and approves, and the victim's next sign in hands them the store and overwrites their profile. A typo does the same to a stranger. So nothing the visitor types is ever used to match. (Replaced on 2026-10-08, see the update at the end of this file.) The application attaches only to the account created or used on the phone that sent it, proved by the anonymous session that `merge_anonymous_identity` already checks at sign in. The cost is that a person who applies on one phone and signs up on another is not attached automatically, and the admin attaches that case by hand, which is rare and safe. The claim itself still runs in an Edge Function, because it has to copy the logo between buckets (the service role and the Storage API), and it now also runs on launch, resume and when the Seller application screen opens, so an approval that comes weeks after sign up is not missed.
 
 The cross check also led to a username reservation for approved but unclaimed applications, phone numbers stored in international format, a cap on files per anonymous session, row locks in the claim, a fixed logo destination so a retry cannot fail, and a deletion order that reads the file paths before the rows go.
 
 The engineer's choices that shaped this: one app, switched by role (not a handoff); the last area remembered; a non seller who picks Store owner goes to the buyer area with a notice (so the waiting and blocked screens from 0013 are not needed); a toggle at the top of both areas, shown only to approved sellers; visitors apply with name, email and phone and no account; contact details are not verified before sending; the logo is uploaded privately and copied on claim; and rejected or unclaimed applications are kept 30 days. The engineer first chose to claim by verified email or phone, and this spec replaces that with the same phone binding after the cross check found the takeover risk. The recommended pick was followed in every other case except the 30 day retention (the recommended pick was 90 days) and the logo (the recommended pick was to skip it for visitors). Both cost a little more to build or to run than the recommended options, and both are recorded as the owner's choice.
+
+## Update 2026-10-08: attach by Clerk verified contact
+
+### Context
+
+The same phone rule attaches every visitor application sent from a phone to the first account that signs in on it. That proves "same phone", not "same person". In testing, two applications for two different stores were sent from one phone, and the account that signed in there saw both, including the one that was not theirs. The engineer's requirement is plain: every signed in person sees only their own applications. The rule also does not help a person who signs up on another phone, and spec 0017 already had to add a second route (a Clerk verified email, approved rows only) to make its approval email true. Two attach rules that disagree are harder to reason about than one.
+
+> ⚠️ Premise note: the first draft of this spec matched by verified email or phone and the cross check rejected it, because a visitor can type a victim's email and their own phone, the admin confirms the phone and approves, and the victim's next claim overwrites the victim's profile with the typed store. This update reopens that risk on purpose, for both contacts, because the engineer chose "either contact is enough". The risk is smaller than it was, because it needs an admin approval that skips confirming both contacts, but it is not zero. The hardening that closes it (record which contact the admin confirmed and require it at the claim) is in Follow-up.
+
+### Options considered
+
+**Option A: Keep the same phone rule and only add the 0017 email rule.**
+- Pros: no migration, no removal.
+- Cons: the bug stays. Any unrelated account that signs in on the sending phone sees the applications. Two attach rules.
+
+**Option B: Keep the same phone rule, and also require a matching verified contact.**
+- Pros: the strongest proof of the two.
+- Cons: a person who signs up on another phone, the common case, is never attached. More code in `merge_anonymous_identity`, which already trusts the account id the caller passes in.
+
+**Option C: Attach only by a Clerk verified email or verified phone, on every status, remove the phone session rule (chosen).**
+- Pros: one rule, proven by Clerk, works on any phone. A person sees their pending and rejected applications too. `merge_anonymous_identity` goes back to its original job.
+- Cons: more Clerk lookups, and the typed someone else's contact risk in the Premise note.
+
+**Option D: Verified email only.**
+- Pros: the simplest, and the smallest exposure.
+- Cons: a person who signs up with a phone number only never sees their application, and the application form asks for a phone as the main contact.
+
+### Rationale
+
+Option C follows the requirement directly: the only thing that decides whether a row shows for an account is proof that the account owns the contact the applicant typed. Option A leaves the reported bug. Option B keeps the weakest link in place and fails the person who changes phones. Option D fails people who sign up by phone. The engineer chose either contact (the recommended pick) and every status, with all matching applications attaching.
+
+The cost is the typed someone else's contact risk, accepted knowingly and recorded in Consequences and Follow-up. Because only an approved row can ever become a store, the worst case needs an admin to approve without confirming both contacts. The other effect, that a stranger's pending application can block a person's own, ends as soon as the admin decides it.
+
+Existing unclaimed links made by the old rule are cleared by the migration (the engineer's choice), so nobody keeps a link that was never proven. The attach function replaces the 0017 pair in a new migration, because 0012 is already applied to the live project and cannot be edited.
+

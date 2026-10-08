@@ -52,6 +52,14 @@ class MockSellerApplicationRepository implements SellerApplicationRepository {
         SellerApplicationFailure.invalidField,
       );
     }
+    final personalEmail = request.personalEmail?.trim() ?? '';
+    if (personalEmail.isNotEmpty &&
+        (personalEmail.length > 200 ||
+            !_emailPattern.hasMatch(personalEmail))) {
+      throw const SellerApplicationException(
+        SellerApplicationFailure.invalidField,
+      );
+    }
     final applicant = request.applicant;
     if (applicant != null &&
         (applicant.name.trim().length < 2 ||

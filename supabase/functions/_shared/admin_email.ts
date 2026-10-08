@@ -32,6 +32,7 @@ export interface ApplicationEmailData {
 export interface MailjetMessage {
   From: { Email: string; Name: string };
   To: { Email: string }[];
+  ReplyTo?: { Email: string };
   Subject: string;
   TextPart: string;
   HTMLPart: string;

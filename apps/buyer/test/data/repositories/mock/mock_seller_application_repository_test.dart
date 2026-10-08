@@ -74,6 +74,26 @@ void main() {
     );
   });
 
+  test(
+    'a personal email must look like an email when given (spec 0017)',
+    () async {
+      SellerApplicationRequest withEmail(String email) =>
+          SellerApplicationRequest(
+            id: 'a1',
+            storeName: 'My Shop',
+            username: 'my_shop',
+            location: 'Tunis',
+            idDocumentPath: 'user/a1/id.jpg',
+            personalEmail: email,
+          );
+      expect(
+        repository.submit(withEmail('not an email')),
+        refusedWith(SellerApplicationFailure.invalidField),
+      );
+      expect(await repository.submit(withEmail('me@example.com')), 'a1');
+    },
+  );
+
   test('a missing ID document is refused', () {
     expect(
       repository.submit(request(idDocumentPath: ' ')),

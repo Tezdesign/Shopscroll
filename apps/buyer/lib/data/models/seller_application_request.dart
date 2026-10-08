@@ -21,7 +21,10 @@ class ApplicantContact {
 /// application, so sending it again (a retry, a double tap) returns the same
 /// application instead of a second one (AC-1). Optional fields left empty are
 /// sent as null. [applicant] is set only when a visitor with no account
-/// applies (spec 0014).
+/// applies (spec 0014). [personalEmail] is the optional private email of a
+/// signed in applicant (spec 0017): the decision email goes there, it is never
+/// shown to buyers or copied to the profile. A visitor gives theirs in
+/// [applicant].
 class SellerApplicationRequest {
   const SellerApplicationRequest({
     required this.id,
@@ -36,6 +39,7 @@ class SellerApplicationRequest {
     this.logoPath,
     this.businessDocumentPath,
     this.applicant,
+    this.personalEmail,
   });
 
   final String id;
@@ -50,4 +54,5 @@ class SellerApplicationRequest {
   final String? logoPath;
   final String? businessDocumentPath;
   final ApplicantContact? applicant;
+  final String? personalEmail;
 }

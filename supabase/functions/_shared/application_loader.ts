@@ -3,7 +3,8 @@
 // Reads one seller application with the applicant's contact details, for the two
 // admin email functions (`notify-admin-application` and `review-application`),
 // so both show the same facts. For a visitor the details are on the application,
-// for an account they come from the profile. Needs the service role client.
+// for an account they come from the profile (the email from the application when
+// the applicant gave one). Needs the service role client.
 
 import type { ApplicationEmailData } from "./admin_email.ts";
 
@@ -44,7 +45,8 @@ export async function loadApplicationDetails(
       .eq("id", row.applicant_id)
       .maybeSingle();
     name = profile?.name ?? null;
-    email = profile?.email ?? null;
+    // The application's own private email (0017) wins over the profile email.
+    email = (row.applicant_email as string | null) ?? profile?.email ?? null;
     phone = profile?.phone ?? null;
   }
 

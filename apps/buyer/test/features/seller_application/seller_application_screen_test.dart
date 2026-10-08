@@ -117,6 +117,42 @@ void main() {
     expect(find.text('Submit a new application'), findsOneWidget);
   });
 
+  testWidgets('attached visitor rows of every status show with their chip', (
+    tester,
+  ) async {
+    // Rows attached to the account by a verified contact have no applicant id
+    // yet (spec 0014, AC-12, AC-17): a pending one and a rejected one both show.
+    SellerApplication attached(String id, SellerApplicationStatus status) =>
+        SellerApplication(
+          id: id,
+          status: status,
+          storeName: 'Store $id',
+          username: 'store_$id',
+          location: 'Tunis',
+          idDocumentPath: 'anon/$id/id.jpg',
+          rejectionReason: status == SellerApplicationStatus.rejected
+              ? 'Blurry ID'
+              : null,
+          createdAt: DateTime(2025, 6, 25),
+        );
+    await pumpScreen(
+      tester,
+      FakeSellerApplicationRepository(
+        applications: [
+          attached('a', SellerApplicationStatus.reviewing),
+          attached('b', SellerApplicationStatus.rejected),
+        ],
+      ),
+      role: UserRole.buyer,
+    );
+
+    expect(find.text('Store a'), findsOneWidget);
+    expect(find.text('Reviewing'), findsOneWidget);
+    expect(find.text('Store b'), findsOneWidget);
+    expect(find.text('Rejected'), findsOneWidget);
+    expect(find.text('Reason: Blurry ID'), findsOneWidget);
+  });
+
   testWidgets('a seller sees a note and no button', (tester) async {
     await pumpScreen(
       tester,

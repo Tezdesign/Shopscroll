@@ -224,8 +224,44 @@ void main() {
     expect(request.location, 'Tunis');
     expect(request.bio, isNull);
     expect(request.logoPath, isNull);
+    expect(request.personalEmail, isNull);
     expect(request.idDocumentPath, contains('idDocument'));
     expect(find.text('profile page'), findsOneWidget);
+  });
+
+  testWidgets('the optional personal email is private and sent with the form', (
+    tester,
+  ) async {
+    final repository = FakeSellerApplicationRepository();
+    await pumpWizard(tester, repository);
+    await fillDetails(tester);
+    await tapText(tester, 'Next');
+
+    expect(find.text('Your email (optional)'), findsOneWidget);
+    expect(find.textContaining('Private.'), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField).at(3), 'me@example.com');
+    await tapText(tester, 'Next');
+    await addPhoto(tester);
+    await tapText(tester, 'Next');
+
+    expect(find.text('me@example.com'), findsOneWidget);
+    await tapText(tester, 'Send application');
+    expect(repository.submitted.single.personalEmail, 'me@example.com');
+  });
+
+  testWidgets('a bad personal email keeps the person on the contact step', (
+    tester,
+  ) async {
+    await pumpWizard(tester, FakeSellerApplicationRepository());
+    await fillDetails(tester);
+    await tapText(tester, 'Next');
+
+    await tester.enterText(find.byType(TextFormField).at(3), 'nope');
+    await tapText(tester, 'Next');
+
+    expect(find.text('Please enter a valid email address.'), findsOneWidget);
+    expect(find.text('Your email (optional)'), findsOneWidget);
+    expect(find.text('Documents'), findsNothing);
   });
 
   testWidgets('a double tap sends one application', (tester) async {

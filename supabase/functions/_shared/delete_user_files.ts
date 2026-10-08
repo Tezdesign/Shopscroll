@@ -121,26 +121,32 @@ export async function deleteUserFiles(
 /// The slice of the `seller_applications` table the visitor cleanup needs, so a
 /// test can stand in for it (the real one is in `delete_user_data.ts`).
 export interface VisitorApplicationRows {
-  /// The visitor applications that belong to `userId`, by `applicant_id`
-  /// (claimed) or `bound_account_id` (attached), with the file paths on them.
+  /// The visitor applications `userId` owns: `applicant_id` equals the account,
+  /// which includes claimed rows. With the file paths on them. Rows that are only
+  /// attached (`bound_account_id`, no `applicant_id`) are somebody else's
+  /// application and are not listed.
   list(userId: string): Promise<{ id: string; paths: (string | null)[] }[]>;
   /// Deletes those rows.
   remove(ids: string[]): Promise<void>;
+  /// Sets `bound_account_id` to null on the rows that are only attached to
+  /// `userId`, so the real applicant's row and photos survive until the retention
+  /// job. A row whose detach would break the one open rule may stay attached.
+  detach(userId: string): Promise<void>;
 }
 
-/// Removes the visitor applications that belong to `userId` and their files in
-/// `visitor-documents` (spec 0014, AC-14). Those files sit in the folder of the
-/// anonymous session that sent them, not in a folder named with `userId`, so
-/// the folder walk in `deleteUserFiles` cannot find them: the paths come from
-/// the rows. Attached rows have no cascade from the profile either, so they are
-/// deleted here.
+/// Removes the visitor applications `userId` owns and their files in
+/// `visitor-documents`, and detaches the ones that are only attached to it
+/// (spec 0014, AC-14). Those files sit in the folder of the anonymous session
+/// that sent them, not in a folder named with `userId`, so the folder walk in
+/// `deleteUserFiles` cannot find them: the paths come from the rows. A visitor row
+/// has no cascade from the profile either, so the owned ones are deleted here.
 ///
-/// Order matters and is on purpose: read the paths, remove the files, and only
-/// then delete the rows. A failure before the rows go leaves them (and their
+/// Order matters and is on purpose: read the paths, remove the files, delete the
+/// rows, and only then detach. A failure before the rows go leaves them (and their
 /// paths) in place for a retry, and returns the error so the caller does not go
 /// on to delete the profile, which would cascade away a claimed row and its
-/// paths. Idempotent: nothing to delete is not an error. Returns the error, or
-/// null when everything went.
+/// paths. Idempotent: nothing to delete or detach is not an error. Returns the
+/// error, or null when everything went.
 export async function deleteVisitorApplications(
   storage: StorageClient,
   rows: VisitorApplicationRows,
@@ -150,18 +156,20 @@ export async function deleteVisitorApplications(
 
   try {
     const applications = await rows.list(userId);
-    if (applications.length === 0) return null;
+    if (applications.length > 0) {
+      const paths = applications.flatMap((application) =>
+        application.paths.filter((path): path is string => !!path)
+      );
+      const bucket = storage.from(VISITOR_BUCKET);
+      for (let i = 0; i < paths.length; i += REMOVE_CHUNK_SIZE) {
+        const { error } = await bucket.remove(paths.slice(i, i + REMOVE_CHUNK_SIZE));
+        if (error) return new Error(error.message);
+      }
 
-    const paths = applications.flatMap((application) =>
-      application.paths.filter((path): path is string => !!path)
-    );
-    const bucket = storage.from(VISITOR_BUCKET);
-    for (let i = 0; i < paths.length; i += REMOVE_CHUNK_SIZE) {
-      const { error } = await bucket.remove(paths.slice(i, i + REMOVE_CHUNK_SIZE));
-      if (error) return new Error(error.message);
+      await rows.remove(applications.map((application) => application.id));
     }
 
-    await rows.remove(applications.map((application) => application.id));
+    await rows.detach(userId);
     return null;
   } catch (error) {
     return error instanceof Error ? error : new Error(String(error));

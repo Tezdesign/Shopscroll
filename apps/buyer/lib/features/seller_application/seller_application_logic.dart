@@ -52,10 +52,24 @@ String? validateApplicantEmail(String? value) {
   return null;
 }
 
+/// The optional personal email of a signed in applicant (spec 0017, AC-8):
+/// empty is fine, otherwise it must look like an email, as in
+/// `submit_seller_application`.
+String? validatePersonalEmail(String? value) =>
+    (value ?? '').trim().isEmpty ? null : validateApplicantEmail(value);
+
 /// The phone as the server stores it: the picked country's dial code and the
-/// digits typed, in international format.
-String internationalPhone(CountryDialCode country, String typed) =>
-    '${country.dialCode}${typed.replaceAll(RegExp(r'\D'), '')}';
+/// digits typed, in international format. One leading national `0` is dropped,
+/// because Clerk stores the number without it (`+33612345678`, not
+/// `+330612345678`) and a verified phone is matched exactly (spec 0014, AC-7,
+/// AC-12). Italy keeps it: Italian landline numbers really start with `0`.
+String internationalPhone(CountryDialCode country, String typed) {
+  var digits = typed.replaceAll(RegExp(r'\D'), '');
+  if (digits.startsWith('0') && country.dialCode != '+39') {
+    digits = digits.substring(1);
+  }
+  return '${country.dialCode}$digits';
+}
 
 String? validateApplicantPhone(CountryDialCode country, String typed) {
   final digits = typed.replaceAll(RegExp(r'\D'), '');
