@@ -18,7 +18,8 @@ import '../area/app_area.dart';
 /// `DiscoverScreen`) must not render their own bottom nav bar.
 ///
 /// For an approved seller it also owns the [AreaToggle] above the tab screens
-/// (spec 0014, AC-4), and only on a tab's own screen: [location] is the
+/// (spec 0014, AC-4), except on Profile where the switch sits in the header
+/// (`ProfileAreaAction`), and only on a tab's own screen: [location] is the
 /// current path, and pushed screens inside the shell (the cart, search) do not
 /// show it. It also shows the notice a non seller gets after choosing Store
 /// owner on Log in (AC-1).
@@ -40,8 +41,11 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The Profile tab carries the switch in its own header, in place of the
+    // Become a seller button, so the shell does not add a second one there.
     final showToggle =
         ref.watch(isSellerProvider) &&
+        location != '/profile' &&
         (location == null || _tabRoots.contains(location));
 
     // Log in sets the notice before this shell is built, so it is read here

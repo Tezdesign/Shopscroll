@@ -14,17 +14,25 @@ import '../../shared/widgets/account_type_toggle.dart';
 /// sees it, and pushed detail screens (a product, the cart) do not show it:
 /// `AppShell` decides where it appears.
 class AreaToggle extends ConsumerWidget {
-  const AreaToggle({super.key, required this.current});
+  const AreaToggle({
+    super.key,
+    required this.current,
+    this.padding = const EdgeInsets.symmetric(
+      horizontal: AppSpacing.base,
+      vertical: AppSpacing.sm,
+    ),
+  });
 
   final AppArea current;
+
+  /// Space around the pill. The Profile tab, where the switch replaces the
+  /// Become a seller button, passes [EdgeInsets.zero].
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.base,
-        vertical: AppSpacing.sm,
-      ),
+      padding: padding,
       child: AccountTypeToggle(
         selected: current == AppArea.store
             ? AccountType.storeOwner

@@ -160,6 +160,15 @@ void main() {
       },
     );
 
+    testWidgets('the Profile tab has none of its own, its header carries it', (
+      tester,
+    ) async {
+      await pumpApp(tester, role: UserRole.seller, initialLocation: '/profile');
+
+      expect(find.text('tab /profile'), findsOneWidget);
+      expect(find.text('Store owner'), findsNothing);
+    });
+
     testWidgets('it stays on every tab and keeps a tab\'s own state', (
       tester,
     ) async {

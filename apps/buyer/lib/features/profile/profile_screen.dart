@@ -13,6 +13,8 @@ import 'package:shopscroll_shared/widgets/app_icon.dart';
 import 'package:shopscroll_shared/widgets/coming_soon_screen.dart';
 import 'package:shopscroll_shared/widgets/settings_row.dart';
 
+import 'profile_area_action.dart';
+
 /// The real, signed in Profile tab (spec 0005), reproducing Figma node
 /// 322:2872. Only ever built by [ClerkAuthBuilder]'s `signedInBuilder` in
 /// `app_router.dart`, so [authState] always has a real `user`.
@@ -90,11 +92,15 @@ class _ProfileContent extends ConsumerWidget {
                   ? Icon(Icons.person, size: 40, color: AppColors.primary400)
                   : null,
             ),
-            const Spacer(),
-            AppButton(
-              label: 'Become a seller',
-              size: AppButtonSize.small,
-              onPressed: () => context.push('/profile/seller-application'),
+            const SizedBox(width: AppSpacing.base),
+            // A button for a buyer, the Buyer | Store owner switch for a seller.
+            // A button keeps its natural width at the right; the switch fills
+            // the space beside the avatar.
+            const Expanded(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: ProfileAreaAction(),
+              ),
             ),
           ],
         ),

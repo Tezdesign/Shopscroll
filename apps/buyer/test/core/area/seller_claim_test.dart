@@ -22,9 +22,14 @@ class _Http extends http.BaseClient {
   final String body;
   final requests = <http.BaseRequest>[];
 
+  /// Runs when a request arrives, to change the server side state the way a
+  /// real claim does.
+  void Function()? onSend;
+
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     requests.add(request);
+    onSend?.call();
     return http.StreamedResponse(
       Stream.value(utf8.encode(body)),
       status,
@@ -39,10 +44,12 @@ class _Profiles implements UserProfileRepository {
 
   UserRole role;
   int reads = 0;
+  bool fail = false;
 
   @override
   Future<UserProfile?> getUserProfileById(String id) async {
     reads++;
+    if (fail) throw StateError('offline');
     return UserProfile(id: id, name: 'N', username: 'n', role: role);
   }
 
@@ -85,7 +92,8 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 400));
       expect(c.read(isSellerProvider), isFalse);
 
-      profiles.role = UserRole.seller;
+      // The claim itself is what makes the account a seller.
+      server.onSend = () => profiles.role = UserRole.seller;
       final claimed = await c.read(sellerClaimProvider).claim();
       await Future<void>.delayed(const Duration(milliseconds: 400));
 
@@ -99,6 +107,39 @@ void main() {
       expect(c.read(isSellerProvider), isTrue);
     },
   );
+
+  test(
+    'an account application approved by the admin is seen without a claim',
+    () async {
+      final server = _Http(200, '{"claimed": false}');
+      final profiles = _Profiles(UserRole.buyer);
+      final c = _makeContainer(server, profiles);
+      c.listen(isSellerProvider, (_, _) {});
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(c.read(isSellerProvider), isFalse);
+
+      // The admin approved it: the server role changed, the app was not told.
+      profiles.role = UserRole.seller;
+      final claimed = await c.read(sellerClaimProvider).claim();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(claimed, isFalse);
+      expect(server.requests, isEmpty);
+      expect(c.read(isSellerProvider), isTrue);
+    },
+  );
+
+  test('a failed profile read does not stop the claim', () async {
+    final server = _Http(200, '{"claimed": true}');
+    final profiles = _Profiles(UserRole.buyer);
+    final c = _makeContainer(server, profiles);
+    c.listen(isSellerProvider, (_, _) {});
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    profiles.fail = true;
+
+    expect(await c.read(sellerClaimProvider).claim(), isTrue);
+    expect(server.requests, hasLength(1));
+  });
 
   test('claimed false when there is nothing to claim', () async {
     final c = _makeContainer(

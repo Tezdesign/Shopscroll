@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:shopscroll_shared/models/user_profile.dart';
+
 import '../../data/providers/user_profile_providers.dart';
 import '../auth/active_supabase_client.dart';
 import 'app_area.dart';
@@ -18,11 +20,26 @@ class SellerClaim {
 
   final Ref _ref;
 
-  /// True only when this call made the account a seller. A seller, a visitor
-  /// and an app with no backend return false without a network call.
+  /// True only when this call made the account a seller through a claim. A
+  /// seller, a visitor and an app with no backend return false without a claim
+  /// call, and so does a profile that turns out to be a seller already.
   Future<bool> claim() async {
     final userId = _ref.read(signedInUserIdProvider);
     if (userId == null || _ref.read(isSellerProvider)) return false;
+
+    // An admin approving an account application sets the role on the server and
+    // tells the app nothing, so a cached buyer profile can be out of date. Read
+    // it again first: a seller needs no claim, and every screen that shows the
+    // role (the Profile switch, the area toggle) then catches up. A failed read
+    // changes nothing, the claim below still runs.
+    try {
+      final profile = await _ref.refresh(
+        userProfileByIdProvider(userId).future,
+      );
+      if (profile?.role == UserRole.seller) return false;
+    } catch (error) {
+      debugPrint('profile refresh before the claim failed: $error');
+    }
 
     try {
       final response = await _ref
