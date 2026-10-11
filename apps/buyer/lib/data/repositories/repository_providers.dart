@@ -10,6 +10,8 @@ import 'mock/mock_reel_repository.dart';
 import 'mock/mock_saved_product_repository.dart';
 import 'mock/mock_seller_application_repository.dart';
 import 'mock/mock_seller_product_repository.dart';
+import 'mock/mock_store_activity_repository.dart';
+import 'mock/mock_store_notification_repository.dart';
 import 'mock/mock_user_profile_repository.dart';
 import 'order_repository.dart';
 import 'product_repository.dart';
@@ -17,6 +19,8 @@ import 'reel_repository.dart';
 import 'saved_product_repository.dart';
 import 'seller_application_repository.dart';
 import 'seller_product_repository.dart';
+import 'store_activity_repository.dart';
+import 'store_notification_repository.dart';
 import 'user_profile_repository.dart';
 
 /// Every provider here defaults to its mock implementation, so the app,
@@ -61,3 +65,16 @@ final sellerApplicationRepositoryProvider =
 final sellerProductRepositoryProvider = Provider<SellerProductRepository>(
   (ref) => MockSellerProductRepository(),
 );
+
+/// The seller's Orders, Earnings and Reports (spec 0018). Like the others it
+/// defaults to the in memory mock and `main.dart` swaps in Supabase.
+final storeActivityRepositoryProvider = Provider<StoreActivityRepository>(
+  (ref) => MockStoreActivityRepository(),
+);
+
+/// The seller's Notifications feed (no spec number yet). Defaults to the
+/// in-memory mock and `main.dart` swaps in Supabase once available.
+final storeNotificationRepositoryProvider =
+    Provider<StoreNotificationRepository>(
+      (ref) => MockStoreNotificationRepository(),
+    );

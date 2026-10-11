@@ -64,23 +64,23 @@ void main() {
     await pumpAction(tester, UserRole.buyer);
 
     expect(find.text('Become a seller'), findsOneWidget);
-    expect(find.text('Store owner'), findsNothing);
+    expect(find.text('Seller'), findsNothing);
 
     await tester.tap(find.text('Become a seller'));
     await tester.pumpAndSettle();
     expect(find.text('seller application page'), findsOneWidget);
   });
 
-  testWidgets('a seller sees the Buyer | Store owner switch instead', (
+  testWidgets('a seller sees the Buyer | Seller switch instead', (
     tester,
   ) async {
     await pumpAction(tester, UserRole.seller);
 
     expect(find.text('Become a seller'), findsNothing);
     expect(find.text('Buyer'), findsOneWidget);
-    expect(find.text('Store owner'), findsOneWidget);
+    expect(find.text('Seller'), findsOneWidget);
 
-    await tester.tap(find.text('Store owner'));
+    await tester.tap(find.text('Seller'));
     await tester.pumpAndSettle();
     expect(find.text('store'), findsOneWidget);
   });

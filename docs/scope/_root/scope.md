@@ -18,6 +18,10 @@ Work that spans the buyer app, the seller app and the shared package. Buyer feat
 | 24 | Seller product creation | Unplanned | in-progress |
 | 25 | Seller application admin email | Unplanned | in-progress |
 | 26 | Applicant in app decision notice | Unplanned | planned |
+| 27 | Seller Activity screens | Unplanned | in-progress |
+| 28 | Seller order status changes | Unplanned | planned |
+| 29 | Buyer problem reports | Unplanned | planned |
+| 30 | Seller shell | Unplanned | planned |
 
 ## Features
 
@@ -211,3 +215,62 @@ the email from feature 21. Needs a seen flag per application.
 - [ ] Test it: `/test applicant in app decision notice`
 
 From spec [0017](../../specs/_root/0017-applicant-decision-email/index.md)
+
+### 27. Seller Activity screens · in-progress
+
+The seller's Activity area at `/store/activity`: an Orders list with status filters, search and an order detail page, an
+Earnings tab (sales today, this week and in total, customers, recent sales) and a Reports tab with a report details page
+and a Resolve action. Each order gets one `store_orders` row per store, and sellers read only their own part through server
+functions.
+**Done when:** a seller sees only the orders, earnings and reports of their own store, can open an order and a report, and
+can resolve a report, on mock data and on Supabase, and all buyer, shared and SQL checks still pass.
+- [x] Design it (spec): `/architect seller activity screens`
+- [x] Build it: `/develop seller activity screens`
+  - [x] Migration `0014`, `place_order` change, `store_orders_list` and the SQL checks (AC-12, AC-13)
+  - [x] Data layer, `/store/activity` screen and the Orders tab with filters, search and paging (AC-1 to AC-4, AC-14 to AC-16)
+  - [x] Order detail and Earnings, migrations `0015` and `0016` (AC-5 to AC-7)
+  - [x] Reports tab, report details, Resolve and migration `0017` (AC-8 to AC-11)
+  - [x] Closing pass: Returned badge, `AGENTS.md` notes and the full test run (AC-16, AC-17)
+- [ ] Verify it: `/check verify seller activity screens`
+- [x] Test it: `/test seller activity screens`
+
+Spec [0018](../../specs/_root/0018-seller-activity-screens/index.md) · code in `supabase/migrations/0014` to `0017`, `supabase/checks/store_activity.sql`, `apps/buyer/lib/features/seller_activity/` · its entry is a button on `/store` until feature 30 exists
+
+### 28. Seller order status changes · planned · needs a decision
+
+Let a seller move their part of an order to delivered, canceled or returned, from the order detail, and decide the rule that
+derives the buyer's order status from the store statuses.
+**Done when:** a seller changes a store order status, the buyer's order shows the right status, and earnings and the Returned
+Orders card follow (see the spec once it exists).
+- [ ] Design it (spec): `/architect seller order status changes`
+- [ ] Build it: `/develop seller order status changes`
+- [ ] Verify it: `/check verify seller order status changes`
+- [ ] Test it: `/test seller order status changes`
+
+From spec [0018](../../specs/_root/0018-seller-activity-screens/index.md)
+
+### 29. Buyer problem reports · planned · needs a decision
+
+The buyer side of reports: a "Report a problem" screen with photos, the "My reports" screen drawn in the Profile frame, and
+the function that creates a report and its items.
+**Done when:** a buyer reports a problem on an order, the seller sees it in the Reports tab, and the buyer sees its status
+(see the spec once it exists).
+- [ ] Design it (spec): `/architect buyer problem reports`
+- [ ] Build it: `/develop buyer problem reports`
+- [ ] Verify it: `/check verify buyer problem reports`
+- [ ] Test it: `/test buyer problem reports`
+
+From spec [0018](../../specs/_root/0018-seller-activity-screens/index.md)
+
+### 30. Seller shell · planned · needs a decision
+
+The seller's bottom tab bar and header (Home, Discover, Reels, Activity, profile) around the store area, so the Activity
+screens and the product screens stop depending on buttons on `/store`.
+**Done when:** a seller moves between the seller tabs from a tab bar and the temporary `/store` buttons are gone (see the
+spec once it exists).
+- [ ] Design it (spec): `/architect seller shell`
+- [ ] Build it: `/develop seller shell`
+- [ ] Verify it: `/check verify seller shell`
+- [ ] Test it: `/test seller shell`
+
+From spec [0018](../../specs/_root/0018-seller-activity-screens/index.md)

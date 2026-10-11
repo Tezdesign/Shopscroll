@@ -418,10 +418,12 @@ class _PriceStockStepState extends State<PriceStockStep> {
         'Tap a price or quantity to edit.',
         style: flowHelperStyle,
       ),
-      Row(
+      // A Wrap, so the two links drop to a second line on a narrow screen
+      // instead of overflowing.
+      Wrap(
+        spacing: AppSpacing.base,
         children: [
           FlowLink('Set all prices', onTap: () => _askAll(price: true)),
-          const SizedBox(width: AppSpacing.base),
           FlowLink('Set all stock', onTap: () => _askAll(price: false)),
         ],
       ),

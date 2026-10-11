@@ -44,6 +44,7 @@ enum AppIconGlyph {
   logout,
   openExternal,
   delete,
+  bell,
 }
 
 class AppIcon extends StatelessWidget {
@@ -89,6 +90,7 @@ class AppIcon extends StatelessWidget {
     AppIconGlyph.logout: Icons.logout,
     AppIconGlyph.openExternal: Icons.open_in_new,
     AppIconGlyph.delete: Icons.delete_outline,
+    AppIconGlyph.bell: Icons.notifications_none,
   };
 
   @override

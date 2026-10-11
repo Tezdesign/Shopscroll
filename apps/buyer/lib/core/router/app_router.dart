@@ -24,6 +24,9 @@ import '../../features/onboarding/welcome_screen.dart';
 import '../../features/profile/edit_profile_screen.dart';
 import '../../features/profile/profile_anonymous_view.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/seller_activity/seller_activity_screen.dart';
+import '../../features/seller_activity/store_order_detail_screen.dart';
+import '../../features/seller_activity/store_report_detail_screen.dart';
 import '../../features/seller_application/seller_application_screen.dart';
 import '../../features/seller_application/seller_application_wizard_screen.dart';
 import '../../features/reels/reel_player_screen.dart';
@@ -32,6 +35,7 @@ import '../../features/search/search_screen.dart';
 import '../../features/seller_products/product_flow_screen.dart';
 import '../../features/seller_products/seller_products_screen.dart';
 import '../../features/store/seller_gate.dart';
+import '../../features/seller_notifications/seller_notifications_screen.dart';
 import '../../features/store/store_area_screen.dart';
 import '../../features/store/store_page_screen.dart';
 import 'package:shopscroll_shared/widgets/coming_soon_screen.dart';
@@ -97,10 +101,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: ref.watch(initialLocationProvider),
     routes: [
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => AppShell(
-          navigationShell: navigationShell,
-          location: state.uri.path,
-        ),
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
             routes: [
@@ -388,6 +390,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => SellerGate(
           child: ProductFlowScreen(draftId: state.pathParameters['draftId']!),
         ),
+      ),
+      // The seller's Notifications screen. Declared before `/store/:id` so
+      // `notifications` is never read as a store id. SellerGate is inside.
+      GoRoute(
+        path: '/store/notifications',
+        builder: (context, state) => const SellerNotificationsScreen(),
+      ),
+      // The seller's Activity area (spec 0018). Declared before `/store/:id`
+      // so `activity` is never read as a store id. SellerGate is inside the
+      // screen.
+      GoRoute(
+        path: '/store/activity',
+        builder: (context, state) => const SellerActivityScreen(),
+      ),
+      GoRoute(
+        path: '/store/activity/orders/:id',
+        builder: (context, state) =>
+            StoreOrderDetailScreen(orderId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/store/activity/reports/:id',
+        builder: (context, state) =>
+            StoreReportDetailScreen(reportId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/store/:id',

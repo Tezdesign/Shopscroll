@@ -24,6 +24,7 @@ import 'data/repositories/supabase/supabase_reel_repository.dart';
 import 'data/repositories/supabase/supabase_saved_product_repository.dart';
 import 'data/repositories/supabase/supabase_seller_application_repository.dart';
 import 'data/repositories/supabase/supabase_seller_product_repository.dart';
+import 'data/repositories/supabase/supabase_store_activity_repository.dart';
 import 'data/repositories/supabase/supabase_user_profile_repository.dart';
 
 void main() async {
@@ -95,6 +96,9 @@ void main() async {
           ),
           sellerProductRepositoryProvider.overrideWithValue(
             SupabaseSellerProductRepository(anonymousClient),
+          ),
+          storeActivityRepositoryProvider.overrideWithValue(
+            SupabaseStoreActivityRepository(anonymousClient),
           ),
           conversationRepositoryProvider.overrideWithValue(
             SupabaseConversationRepository(),
@@ -182,6 +186,11 @@ void main() async {
         ),
         sellerProductRepositoryProvider.overrideWith(
           (ref) => SupabaseSellerProductRepository(
+            ref.watch(activeSupabaseClientProvider),
+          ),
+        ),
+        storeActivityRepositoryProvider.overrideWith(
+          (ref) => SupabaseStoreActivityRepository(
             ref.watch(activeSupabaseClientProvider),
           ),
         ),

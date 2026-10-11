@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:shopscroll_shared/widgets/app_bottom_nav_bar.dart';
 
-import '../../features/store/area_toggle.dart';
 import '../area/app_area.dart';
 
 /// The persistent bottom nav shell wrapping every top level tab (Home,
@@ -17,37 +16,16 @@ import '../area/app_area.dart';
 /// Owns the [AppBottomNavBar] once, here; branch screens (e.g. [HomeScreen],
 /// `DiscoverScreen`) must not render their own bottom nav bar.
 ///
-/// For an approved seller it also owns the [AreaToggle] above the tab screens
-/// (spec 0014, AC-4), except on Profile where the switch sits in the header
-/// (`ProfileAreaAction`), and only on a tab's own screen: [location] is the
-/// current path, and pushed screens inside the shell (the cart, search) do not
-/// show it. It also shows the notice a non seller gets after choosing Store
-/// owner on Log in (AC-1).
+/// It also shows the notice a non seller gets after choosing Store owner on
+/// Log in (spec 0014, AC-1). The Buyer | Seller switch is not here: a seller
+/// finds it in the Profile tab's header (`ProfileAreaAction`).
 class AppShell extends ConsumerWidget {
-  const AppShell({super.key, required this.navigationShell, this.location});
+  const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  /// The current path, or null when unknown (counts as a tab screen).
-  final String? location;
-
-  static const _tabRoots = {
-    '/',
-    '/discover',
-    '/reels',
-    '/activity',
-    '/profile',
-  };
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // The Profile tab carries the switch in its own header, in place of the
-    // Become a seller button, so the shell does not add a second one there.
-    final showToggle =
-        ref.watch(isSellerProvider) &&
-        location != '/profile' &&
-        (location == null || _tabRoots.contains(location));
-
     // Log in sets the notice before this shell is built, so it is read here
     // and shown once after the frame, then cleared.
     if (ref.watch(areaNoticeProvider) != null) {
@@ -69,26 +47,7 @@ class AppShell extends ConsumerWidget {
     }
 
     return Scaffold(
-      // The toggle sits in the top safe area, so the screen below drops its own
-      // top padding. Same widgets in the same slots either way, so showing or
-      // hiding the toggle never rebuilds the tabs and loses their state.
-      body: Column(
-        children: [
-          showToggle
-              ? const SafeArea(
-                  bottom: false,
-                  child: AreaToggle(current: AppArea.buyer),
-                )
-              : const SizedBox.shrink(),
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: showToggle,
-              child: navigationShell,
-            ),
-          ),
-        ],
-      ),
+      body: navigationShell,
       bottomNavigationBar: AppBottomNavBar(
         currentItem: AppTabItem.values[navigationShell.currentIndex],
         onItemSelected: (item) => navigationShell.goBranch(

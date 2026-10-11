@@ -15,8 +15,9 @@ person with `role = 'seller'` stays in. There is no separate seller app any more
   Store owner opens the store area only for a seller, otherwise the buyer area plus a notice. A failed lookup counts as
   "not a seller", so sign in never fails because of it.
 - `seller_claim.dart` — `SellerClaim.claim()` calls the `claim-seller-application` Edge Function (see
-  `supabase/AGENTS.md`) and never throws. It skips visitors and sellers, and refreshes the cached profile when it
-  returns `claimed: true`. The function first attaches a visitor application to the account only when Clerk verified
+  `supabase/AGENTS.md`) and never throws. It skips visitors and sellers. It first reads the profile again (an admin approving an
+  account application sets the role on the server and tells the app nothing, so a cached buyer profile can be stale),
+  and also refreshes it when it returns `claimed: true`. The function first attaches a visitor application to the account only when Clerk verified
   the email or phone typed in it (spec 0014 AC-12), so the app does nothing extra for the attach.
 
 ## Conventions
@@ -30,9 +31,12 @@ person with `role = 'seller'` stays in. There is no separate seller app any more
   on app resume (`MarketplaceApp`), and when `sellerApplicationsProvider` loads (the Seller application screen opening
   or refreshing). Log in routing awaits `signInSettledProvider`, so an approved applicant who signs in as Store owner
   reaches the store area in one pass.
-- The Buyer or Store owner toggle is `lib/shared/widgets/account_type_toggle.dart`, used by Log in and by
-  `AreaToggle` (`lib/features/store/area_toggle.dart`). `AppShell` shows `AreaToggle` only to a seller and only on a
-  tab's own screen (the cart, search and other pushed screens do not show it).
+- Two switches, two Figma components. The Buyer or Store owner toggle on Log in is
+  `lib/shared/widgets/account_type_toggle.dart` (Figma 620:3086). The switch a seller uses to change area is the compact
+  Buyer | Seller pill `lib/shared/widgets/area_switch.dart` (Figma 3001:9360), wrapped by `AreaToggle`
+  (`lib/features/store/area_toggle.dart`). It shows in only two places: the Profile tab's header, where it replaces the
+  Become a seller button for a seller (`ProfileAreaAction`, `lib/features/profile/`), and the top right of the store
+  area. `AppShell` shows no switch on any tab.
 
 Governing spec: `docs/specs/_root/0014-shared-login-seller-area/index.md`.
 

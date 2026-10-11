@@ -29,6 +29,25 @@ void main() {
       expect(Money.format(12.5, 'EUR'), '12.50 EUR');
     });
 
+    test('adds thousands commas to large amounts', () {
+      expect(Money.format(999, 'TND'), '999.000 TND');
+      expect(Money.format(1000, 'TND'), '1,000.000 TND');
+      expect(Money.format(478458, 'TND'), '478,458.000 TND');
+      expect(Money.format(1234567.5, 'EUR'), '1,234,567.50 EUR');
+      expect(Money.format(12426, 'USD'), '\$12,426');
+    });
+
+    test('keeps the sign and zero in the same form', () {
+      expect(Money.format(0, 'TND'), '0.000 TND');
+      expect(Money.format(-1500.25, 'TND'), '-1,500.250 TND');
+      expect(Money.format(-12, 'USD'), '\$-12');
+    });
+
+    test('toWire never carries commas, so an amount still reaches the server as typed', () {
+      expect(Money.toWire(478458), '478458.000');
+      expect(Money.tryParse(Money.toWire(1234.5)), 1234.5);
+    });
+
     test('toWire always has 3 decimals', () {
       expect(Money.toWire(89), '89.000');
       expect(Money.toWire(70.25), '70.250');

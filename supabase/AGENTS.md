@@ -36,7 +36,14 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
   sending phone. It detaches the rows the old rule attached, drops the 0012 email attach, trims
   `merge_anonymous_identity` to the cart and orders, and stops a sending session reading a row once it is attached.
   Approved and rejected rows always attach, a reviewing row only for an account with no open application (the oldest).
-- `checks/` — SQL you run by hand on a test or branch database: `seller_access.sql`,
+  `0014_store_orders.sql` to `0017_reports.sql` (spec 0018, seller Activity): `order_items.store_id`, one `store_orders` row per
+  order and store (status per store), `place_order` writes both, and the seller reads only through `security definer` functions
+  (`store_orders_list`, `store_order_detail`, `store_earnings`, `store_reports_summary`, `store_reports_list`,
+  `store_report_detail`, `resolve_report`). `store_orders`, `reports` and `report_items` are closed to every client. `0017` adds
+  the private `report-attachments` bucket (a seller reads only the folder named after their own id). `0014` changes the live
+  `place_order`, so run it on a test or branch project first. Checked on a local test database, not yet applied to the real project.
+- `checks/` — SQL you run by hand on a test or branch database: `store_activity.sql` (spec 0018, migrations 0014 to 0017, one
+  NOTICE per check, ends with rollback), `seller_access.sql`,
   `seller_applications.sql`, `visitor_applications.sql` and `applicant_notification.sql` (each rolls back, one NOTICE per
   check), `detach_unclaimed_attached.sql` (applies `0013` itself inside a transaction, run it with psql from the repo root
   before `0013` is applied) and `audit_seller_rows.sql` (read only, run before `0004`).
@@ -87,6 +94,6 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
 - New schema changes ship as a new `migrations/000N_<name>.sql`, never by editing `schema.sql` or an
   already-applied migration in place.
 
-Governing specs: `docs/specs/buyer/0003-supabase-backend/index.md`, `docs/specs/buyer/0004-clerk-authentication/index.md`, `docs/specs/_root/0012-one-backend-seller-role/index.md`, `docs/specs/_root/0013-seller-application-request/index.md`, `docs/specs/_root/0014-shared-login-seller-area/index.md`, `docs/specs/_root/0017-applicant-decision-email/index.md`.
+Governing specs: `docs/specs/buyer/0003-supabase-backend/index.md`, `docs/specs/buyer/0004-clerk-authentication/index.md`, `docs/specs/_root/0012-one-backend-seller-role/index.md`, `docs/specs/_root/0013-seller-application-request/index.md`, `docs/specs/_root/0014-shared-login-seller-area/index.md`, `docs/specs/_root/0017-applicant-decision-email/index.md`, `docs/specs/_root/0018-seller-activity-screens/index.md`.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

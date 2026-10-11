@@ -9,9 +9,8 @@ import '../store/area_toggle.dart';
 /// The top right action of the Profile header (Figma node 322:2872). A buyer
 /// sees "Become a seller", which opens the Seller application screen. Once an
 /// application is accepted and the person is a seller, it becomes the Buyer |
-/// Store owner switch, so the Profile tab is where a seller changes area
-/// (spec 0014, AC-4). `AppShell` hides its own top switch on this tab so the
-/// two never show together.
+/// Seller switch (Figma node 3001:9360), so the Profile tab is where a seller
+/// changes area (spec 0014, AC-4). No other buyer screen shows the switch.
 class ProfileAreaAction extends ConsumerWidget {
   const ProfileAreaAction({super.key});
 

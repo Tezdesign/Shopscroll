@@ -6,16 +6,34 @@
 class Money {
   const Money._();
 
+  /// Formats [amount] with thousands commas and [decimals] fraction digits,
+  /// e.g. `478458.0` → `"478,458"` (0 decimals) or `"478,458.000"` (3).
+  static String _fmt(double amount, int decimals) {
+    final isNeg = amount < 0;
+    final abs = amount.abs();
+    final parts = abs.toStringAsFixed(decimals).split('.');
+    final intStr = parts[0];
+    final fracStr = parts.length > 1 && decimals > 0 ? '.${parts[1]}' : '';
+    final buf = StringBuffer(isNeg ? '-' : '');
+    for (var i = 0; i < intStr.length; i++) {
+      if (i > 0 && (intStr.length - i) % 3 == 0) buf.write(',');
+      buf.write(intStr[i]);
+    }
+    buf.write(fracStr);
+    return buf.toString();
+  }
+
   /// `USD` keeps the app's older whole dollar look (`$40`), `TND` shows its
   /// 3 decimals (`89.000 TND`), any other code shows 2 decimals and the code.
+  /// Large amounts include thousands separators (`478,458.000 TND`).
   static String format(double amount, String currency) {
     switch (currency) {
       case 'USD':
-        return '\$${amount.toStringAsFixed(0)}';
+        return '\$${_fmt(amount, 0)}';
       case 'TND':
-        return '${amount.toStringAsFixed(3)} TND';
+        return '${_fmt(amount, 3)} TND';
       default:
-        return '${amount.toStringAsFixed(2)} $currency';
+        return '${_fmt(amount, 2)} $currency';
     }
   }
 

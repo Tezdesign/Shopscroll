@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:marketplace_app/core/area/app_area.dart';
 import 'package:marketplace_app/core/onboarding/onboarding_prefs.dart';
 import 'package:marketplace_app/core/router/app_shell.dart';
+import 'package:marketplace_app/data/providers/network_delay.dart';
 import 'package:marketplace_app/data/repositories/repository_providers.dart';
 import 'package:marketplace_app/data/repositories/user_profile_repository.dart';
+import 'package:marketplace_app/features/profile/profile_area_action.dart';
 import 'package:marketplace_app/features/store/store_area_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shopscroll_shared/models/user_profile.dart';
@@ -35,8 +37,7 @@ GoRouter router({String initialLocation = '/'}) => GoRouter(
   initialLocation: initialLocation,
   routes: [
     StatefulShellRoute.indexedStack(
-      builder: (context, state, shell) =>
-          AppShell(navigationShell: shell, location: state.uri.path),
+      builder: (context, state, shell) => AppShell(navigationShell: shell),
       branches: [
         StatefulShellBranch(
           routes: [
@@ -57,7 +58,7 @@ GoRouter router({String initialLocation = '/'}) => GoRouter(
             ),
           ],
         ),
-        for (final path in ['/discover', '/reels', '/activity', '/profile'])
+        for (final path in ['/discover', '/reels', '/activity'])
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -66,6 +67,17 @@ GoRouter router({String initialLocation = '/'}) => GoRouter(
               ),
             ],
           ),
+        // The Profile tab carries the switch in its header (ProfileAreaAction).
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const Column(
+                children: [Text('tab /profile'), ProfileAreaAction()],
+              ),
+            ),
+          ],
+        ),
       ],
     ),
     GoRoute(
@@ -119,79 +131,75 @@ Future<ProviderContainer> pumpApp(
   return container;
 }
 
+/// A tall screen, so the whole dashboard is built (a list builds only what is
+/// near the viewport).
+void tallScreen(WidgetTester tester) {
+  tester.view.physicalSize = const Size(800, 3000);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
   });
 
-  group('the area toggle in the buyer area (spec 0014, AC-4)', () {
-    testWidgets('a seller sees it on a tab screen', (tester) async {
-      await pumpApp(tester, role: UserRole.seller);
+  group('the Buyer | Seller switch in the buyer area (spec 0014, AC-4)', () {
+    testWidgets('a seller finds it on the Profile tab', (tester) async {
+      await pumpApp(tester, role: UserRole.seller, initialLocation: '/profile');
 
       expect(find.text('Buyer'), findsOneWidget);
-      expect(find.text('Store owner'), findsOneWidget);
+      expect(find.text('Seller'), findsOneWidget);
     });
 
-    testWidgets('a buyer never sees it', (tester) async {
-      await pumpApp(tester, role: UserRole.buyer);
-
+    testWidgets('no other tab shows it, not even for a seller', (tester) async {
+      await pumpApp(tester, role: UserRole.seller);
       expect(find.text('home tab'), findsOneWidget);
-      expect(find.text('Store owner'), findsNothing);
+      expect(find.text('Seller'), findsNothing);
+
+      for (final tab in ['Discover', 'Reels', 'Activity']) {
+        await tester.tap(find.text(tab));
+        await tester.pumpAndSettle();
+        expect(find.text('Seller'), findsNothing, reason: tab);
+      }
+    });
+
+    testWidgets('a buyer sees Become a seller instead, never the switch', (
+      tester,
+    ) async {
+      await pumpApp(tester, role: UserRole.buyer, initialLocation: '/profile');
+
+      expect(find.text('Become a seller'), findsOneWidget);
+      expect(find.text('Seller'), findsNothing);
     });
 
     testWidgets('a visitor never sees it', (tester) async {
-      await pumpApp(tester, role: UserRole.seller, userId: null);
+      await pumpApp(
+        tester,
+        role: UserRole.seller,
+        userId: null,
+        initialLocation: '/profile',
+      );
 
-      expect(find.text('Store owner'), findsNothing);
+      expect(find.text('Seller'), findsNothing);
     });
 
-    testWidgets(
-      'a pushed screen inside the shell, the cart, does not show it',
-      (tester) async {
-        await pumpApp(tester, role: UserRole.seller);
-        expect(find.text('Store owner'), findsOneWidget);
-
-        await tester.tap(find.text('home tab'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('cart page'), findsOneWidget);
-        expect(find.text('Store owner'), findsNothing);
-      },
-    );
-
-    testWidgets('the Profile tab has none of its own, its header carries it', (
+    testWidgets('tapping Seller opens the store area and remembers it', (
       tester,
     ) async {
+      tallScreen(tester);
       await pumpApp(tester, role: UserRole.seller, initialLocation: '/profile');
 
-      expect(find.text('tab /profile'), findsOneWidget);
-      expect(find.text('Store owner'), findsNothing);
-    });
-
-    testWidgets('it stays on every tab and keeps a tab\'s own state', (
-      tester,
-    ) async {
-      await pumpApp(tester, role: UserRole.seller);
-
-      await tester.tap(find.text('Discover'));
+      await tester.tap(find.text('Seller'));
       await tester.pumpAndSettle();
+      // The dashboard numbers load after the mock delay.
+      await tester.pump(mockNetworkDelay);
+      await tester.pump();
 
-      expect(find.text('tab /discover'), findsOneWidget);
-      expect(find.text('Store owner'), findsOneWidget);
-    });
-
-    testWidgets('tapping Store owner opens the store area and remembers it', (
-      tester,
-    ) async {
-      await pumpApp(tester, role: UserRole.seller);
-
-      await tester.tap(find.text('Store owner'));
-      await tester.pumpAndSettle();
-
-      // Spec 0015: the placeholder now holds the two product entry buttons.
-      expect(find.text('Your store'), findsOneWidget);
-      expect(find.text('Add product'), findsOneWidget);
+      // The store area is the seller dashboard with its Quick Actions.
+      expect(find.text('Quick Actions'), findsOneWidget);
+      expect(find.text('Add Product'), findsOneWidget);
       expect(OnboardingPrefs(prefs).lastArea, 'store');
     });
   });
@@ -200,10 +208,14 @@ void main() {
     testWidgets('shows the toggle and the product entry buttons', (
       tester,
     ) async {
+      tallScreen(tester);
       await pumpApp(tester, role: UserRole.seller, initialLocation: '/store');
+      // The dashboard numbers load after the mock delay.
+      await tester.pump(mockNetworkDelay);
+      await tester.pump();
 
-      expect(find.text('Your store'), findsOneWidget);
-      expect(find.text('Add product'), findsOneWidget);
+      expect(find.text('Quick Actions'), findsOneWidget);
+      expect(find.text('Add Product'), findsOneWidget);
       expect(find.text('Products'), findsOneWidget);
       expect(find.text('Buyer'), findsOneWidget);
     });
@@ -228,7 +240,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('home tab'), findsOneWidget);
-      expect(find.text('Store owner'), findsNothing);
+      expect(find.text('Seller'), findsNothing);
       expect(OnboardingPrefs(prefs).lastArea, 'buyer');
     });
 

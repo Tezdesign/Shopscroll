@@ -5,7 +5,8 @@ The real Profile tab (spec 0005), replacing the empty placeholder `/profile` use
 ## Files
 
 - `profile_screen.dart` (`ProfileScreen`) — the signed-in page: header (avatar, name, stores-followed
-  count, Become a seller, Edit profile), then `_SettingsSection` groups of `SettingsRow`
+  count, Become a seller or, for a seller, the Buyer | Seller switch (`profile_area_action.dart`,
+  `ProfileAreaAction`), Edit profile), then `_SettingsSection` groups of `SettingsRow`
   (`lib/shared/widgets/settings_row.dart`) for Generals / Help / Legal, plus Log out and Delete
   account rows. Every row for a feature that doesn't exist yet in this buyer-only app opens
   `ComingSoonScreen` rather than doing nothing.
