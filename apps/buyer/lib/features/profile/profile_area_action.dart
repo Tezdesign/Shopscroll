@@ -11,16 +11,18 @@ import '../store/area_toggle.dart';
 /// application is accepted and the person is a seller, it becomes the Buyer |
 /// Seller switch (Figma node 3001:9360), so the Profile tab is where a seller
 /// changes area (spec 0014, AC-4). No other buyer screen shows the switch.
+///
+/// [area] is the area this Profile tab sits in: the store area's Profile tab
+/// passes [AppArea.store] so the switch shows Seller selected.
 class ProfileAreaAction extends ConsumerWidget {
-  const ProfileAreaAction({super.key});
+  const ProfileAreaAction({super.key, this.area = AppArea.buyer});
+
+  final AppArea area;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(isSellerProvider)) {
-      return const AreaToggle(
-        current: AppArea.buyer,
-        padding: EdgeInsets.zero,
-      );
+      return AreaToggle(current: area, padding: EdgeInsets.zero);
     }
     return AppButton(
       label: 'Become a seller',

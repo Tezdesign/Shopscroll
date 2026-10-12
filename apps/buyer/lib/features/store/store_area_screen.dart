@@ -12,15 +12,15 @@ import '../../data/models/store_order.dart';
 import '../../data/models/store_report.dart';
 import '../../data/providers/store_activity_providers.dart';
 import '../../data/providers/user_profile_providers.dart';
-import 'area_toggle.dart';
 import 'seller_gate.dart';
 
 /// The seller's home dashboard at `/store` (spec 0014, AC-5).
 ///
 /// Figma node: Home-seller 3001:12309. Deviations:
-/// - Seller shell (status bar, bottom tab bar) not drawn — no spec yet (spec
-///   0018, feature 30). [AreaToggle] lives in the header row until the shell
-///   lands.
+/// - The status bar is not drawn. The bottom tab bar is the store shell's
+///   (`AppShell` with the seller variant, feature 30), not this screen's. The
+///   Buyer | Seller switch is in the Profile tab, as in the buyer area, so the
+///   header has no switch (the frame draws none).
 /// - "Out of stock" KPI tile removed: no dedicated count endpoint exists; the
 ///   Products screen at `/store/products` shows the Out of Stock tab.
 /// - "Last chats" replaced with a Quick Actions row: the Messages feature has
@@ -60,8 +60,9 @@ class _DashHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final id = ref.watch(signedInUserIdProvider);
-    final profile =
-        id == null ? null : ref.watch(userProfileByIdProvider(id)).value;
+    final profile = id == null
+        ? null
+        : ref.watch(userProfileByIdProvider(id)).value;
 
     return Container(
       color: AppColors.neutral1000,
@@ -92,8 +93,6 @@ class _DashHeader extends ConsumerWidget {
                   ),
                 ),
               ),
-              // AreaToggle stays here until the seller shell (feature 30) lands.
-              AreaToggle(current: AppArea.store),
               const _HeaderIcon(glyph: AppIconGlyph.chat, label: 'Chat'),
               _HeaderIconButton(
                 glyph: AppIconGlyph.bell,
@@ -240,17 +239,72 @@ class _DashBody extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
           _QuickActions(
             onAddProduct: () => context.push('/store/products/new'),
-            onOrders: () => context.push('/store/activity'),
+            onOrders: () => context.go('/store/activity'),
             onProducts: () => context.push('/store/products'),
-            onReports: () => context.push('/store/activity'),
+            onReports: () => context.go('/store/activity'),
           ),
+          const SizedBox(height: AppSpacing.md),
+          _PoliciesRow(onTap: () => context.push('/store/policies')),
           const SizedBox(height: AppSpacing.xl),
           _RecentSales(
             sales: earnings.recent,
             currency: earnings.currency,
-            onSeeAll: () => context.push('/store/activity'),
+            onSeeAll: () => context.go('/store/activity'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Opens the store policies (delivery, payment, returns defaults). Not in the
+/// Figma Home-seller frame; the seller shell has no Settings entry yet.
+class _PoliciesRow extends StatelessWidget {
+  const _PoliciesRow({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Store policies',
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: AppColors.neutral100,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          side: const BorderSide(color: AppColors.neutral200),
+        ),
+        child: InkWell(
+          customBorder: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          onTap: onTap,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.base,
+              vertical: AppSpacing.md,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Store policies',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamilyBody,
+                      fontSize: AppTypography.sizeSm,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.neutral1100,
+                    ),
+                  ),
+                ),
+                AppIcon(AppIconGlyph.forward),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -269,6 +323,9 @@ class _KpiGrid extends StatelessWidget {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
+      // Without this the grid adds the status bar height on top of the
+      // list's own padding, a gap of about 85 points under the header.
+      padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: AppSpacing.sm,
       mainAxisSpacing: AppSpacing.sm,

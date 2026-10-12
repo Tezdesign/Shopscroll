@@ -41,8 +41,13 @@ import '../cart/add_to_cart.dart';
 /// - The search field opens the dedicated search screen (`/discover/search`,
 ///   spec 0006) instead of live filtering this feed, which is spec 0006's
 ///   AC-12: it replaces this screen's former inline filter.
+///
+/// [searchPath] is where the search field goes. The store area's Discover tab
+/// passes its own (`/store/discover/search`) so the seller's tab bar stays.
 class DiscoverScreen extends ConsumerStatefulWidget {
-  const DiscoverScreen({super.key});
+  const DiscoverScreen({super.key, this.searchPath = '/discover/search'});
+
+  final String searchPath;
 
   @override
   ConsumerState<DiscoverScreen> createState() => _DiscoverScreenState();
@@ -72,7 +77,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
               child: SearchField(
                 readOnly: true,
-                onTap: () => context.push('/discover/search'),
+                onTap: () => context.push(widget.searchPath),
               ),
             ),
             const SizedBox(height: AppSpacing.base),

@@ -12,6 +12,7 @@ import 'mock/mock_seller_application_repository.dart';
 import 'mock/mock_seller_product_repository.dart';
 import 'mock/mock_store_activity_repository.dart';
 import 'mock/mock_store_notification_repository.dart';
+import 'mock/mock_store_policies_repository.dart';
 import 'mock/mock_user_profile_repository.dart';
 import 'order_repository.dart';
 import 'product_repository.dart';
@@ -21,6 +22,7 @@ import 'seller_application_repository.dart';
 import 'seller_product_repository.dart';
 import 'store_activity_repository.dart';
 import 'store_notification_repository.dart';
+import 'store_policies_repository.dart';
 import 'user_profile_repository.dart';
 
 /// Every provider here defaults to its mock implementation, so the app,
@@ -78,3 +80,9 @@ final storeNotificationRepositoryProvider =
     Provider<StoreNotificationRepository>(
       (ref) => MockStoreNotificationRepository(),
     );
+
+/// The seller's store policies. In-memory mock until the backend has a
+/// policies table.
+final storePoliciesRepositoryProvider = Provider<StorePoliciesRepository>(
+  (ref) => MockStorePoliciesRepository(),
+);

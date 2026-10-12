@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/area/app_area.dart';
 import '../../core/auth/active_supabase_client.dart';
 import 'package:shopscroll_shared/theme/app_theme.dart';
 import 'package:shopscroll_shared/models/user_profile.dart';
@@ -26,9 +27,17 @@ import 'profile_area_action.dart';
 /// opens the same [ComingSoonScreen] already used for the Activity tab,
 /// labeled for that row, rather than doing nothing when tapped.
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key, required this.authState});
+  const ProfileScreen({
+    super.key,
+    required this.authState,
+    this.area = AppArea.buyer,
+  });
 
   final ClerkAuthState authState;
+
+  /// The area whose tab bar this page sits in (the store area reuses this
+  /// page as its Profile tab).
+  final AppArea area;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,8 +48,11 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: AppColors.neutral100,
       body: SafeArea(
         child: profileAsync.when(
-          data: (profile) =>
-              _ProfileContent(authState: authState, profile: profile),
+          data: (profile) => _ProfileContent(
+            authState: authState,
+            profile: profile,
+            area: area,
+          ),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) => Center(
             child: Text(
@@ -57,9 +69,14 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 class _ProfileContent extends ConsumerWidget {
-  const _ProfileContent({required this.authState, required this.profile});
+  const _ProfileContent({
+    required this.authState,
+    required this.profile,
+    required this.area,
+  });
 
   final ClerkAuthState authState;
+  final AppArea area;
 
   /// Null only in the brief window between a fresh sign in and spec 0004's
   /// own upsert finishing; falls back to Clerk's own user fields so the
@@ -96,10 +113,10 @@ class _ProfileContent extends ConsumerWidget {
             // A button for a buyer, the Buyer | Store owner switch for a seller.
             // A button keeps its natural width at the right; the switch fills
             // the space beside the avatar.
-            const Expanded(
+            Expanded(
               child: Align(
                 alignment: Alignment.topRight,
-                child: ProfileAreaAction(),
+                child: ProfileAreaAction(area: area),
               ),
             ),
           ],

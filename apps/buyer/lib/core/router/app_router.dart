@@ -2,6 +2,7 @@ import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shopscroll_shared/widgets/app_bottom_nav_bar.dart';
 
 import '../../features/activity/activity_screen.dart';
 import '../../features/activity/order_receipt_screen.dart';
@@ -36,12 +37,25 @@ import '../../features/seller_products/product_flow_screen.dart';
 import '../../features/seller_products/seller_products_screen.dart';
 import '../../features/store/seller_gate.dart';
 import '../../features/seller_notifications/seller_notifications_screen.dart';
+import '../../features/seller_policies/store_policies_screen.dart';
+import '../../features/seller_policies/store_policy_edit_screen.dart';
 import '../../features/store/store_area_screen.dart';
 import '../../features/store/store_page_screen.dart';
 import 'package:shopscroll_shared/widgets/coming_soon_screen.dart';
+import '../area/app_area.dart';
 import '../config/clerk_config.dart';
 import '../onboarding/onboarding_prefs.dart';
 import 'app_shell.dart';
+
+/// The Profile tab of either shell: the real page once Clerk is configured,
+/// the same placeholder when it is not. [area] says which tab bar it sits in.
+Widget _profileTab(AppArea area) => ClerkConfig.isConfigured
+    ? ClerkAuthBuilder(
+        signedInBuilder: (context, authState) =>
+            ProfileScreen(authState: authState, area: area),
+        signedOutBuilder: (context, authState) => const ProfileAnonymousView(),
+      )
+    : const ComingSoonScreen(label: 'Profile', icon: Icons.person_outline);
 
 /// Where [appRouterProvider] opens the app: `/welcome` the first time a
 /// device is seen (and nobody is already signed in), `/` every time after
@@ -68,9 +82,12 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// Page ([StorePageScreen], spec 0010), stay top level routes, outside the
 /// shell, so they open full screen without the bottom nav.
 ///
-/// `/store` ([StoreAreaScreen], spec 0014) is the store area, a placeholder
-/// that only a seller stays in, and `/apply` is the seller application for a
-/// visitor with no account. Both are top level.
+/// `/store` is the store area (spec 0014): a second [StatefulShellRoute]
+/// with the seller tab bar, only for a seller ([SellerGate]). Its tabs are
+/// `/store` ([StoreAreaScreen]), `/store/discover`, `/store/reels`,
+/// `/store/activity` ([SellerActivityScreen], spec 0018) and `/store/profile`.
+/// `/apply` is the seller application for a visitor with no account, top
+/// level.
 ///
 /// `/cart` ([CartScreen], spec 0007) is a child route of the Home branch's
 /// root route, so the tab bar keeps showing with Home highlighted.
@@ -171,17 +188,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => ClerkConfig.isConfigured
-                    ? ClerkAuthBuilder(
-                        signedInBuilder: (context, authState) =>
-                            ProfileScreen(authState: authState),
-                        signedOutBuilder: (context, authState) =>
-                            const ProfileAnonymousView(),
-                      )
-                    : const ComingSoonScreen(
-                        label: 'Profile',
-                        icon: Icons.person_outline,
-                      ),
+                builder: (context, state) => _profileTab(AppArea.buyer),
               ),
             ],
           ),
@@ -354,10 +361,69 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           orderedReelIds: state.extra as List<String>?,
         ),
       ),
-      // The store area (spec 0014): a placeholder only a seller stays in.
-      GoRoute(
-        path: '/store',
-        builder: (context, state) => const StoreAreaScreen(),
+      // The store area (spec 0014): the seller's own shell, the Figma
+      // "tabbar-seller" bar. Home is the dashboard, Activity is spec 0018,
+      // Discover, Reels and Profile reuse the buyer screens. Only a seller
+      // stays (SellerGate). Everything else under `/store` (products,
+      // notifications, the detail pages) opens full screen over it, and these
+      // are declared before `/store/:id` so `discover` is never read as a
+      // store id.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => SellerGate(
+          child: AppShell(
+            navigationShell: navigationShell,
+            variant: AppTabBarVariant.seller,
+          ),
+        ),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/store',
+                builder: (context, state) => const StoreAreaScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/store/discover',
+                builder: (context, state) =>
+                    const DiscoverScreen(searchPath: '/store/discover/search'),
+                routes: [
+                  GoRoute(
+                    path: 'search',
+                    builder: (context, state) => const SearchScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/store/reels',
+                builder: (context, state) => const ReelsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/store/activity',
+                builder: (context, state) => const SellerActivityScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/store/profile',
+                builder: (context, state) => _profileTab(AppArea.store),
+              ),
+            ],
+          ),
+        ],
       ),
       // "Apply now" for a person with no account (spec 0014, AC-7). Someone
       // already signed in applies from Settings, Seller application instead.
@@ -391,19 +457,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           child: ProductFlowScreen(draftId: state.pathParameters['draftId']!),
         ),
       ),
+      // The seller's Store policies. Declared before `/store/:id` so
+      // `policies` is never read as a store id. SellerGate is inside.
+      GoRoute(
+        path: '/store/policies',
+        builder: (context, state) => const StorePoliciesScreen(),
+      ),
+      GoRoute(
+        path: '/store/policies/:section',
+        builder: (context, state) => StorePolicyEditScreen(
+          section: StorePolicySection.values.firstWhere(
+            (s) => s.name == state.pathParameters['section'],
+            orElse: () => StorePolicySection.delivery,
+          ),
+        ),
+      ),
       // The seller's Notifications screen. Declared before `/store/:id` so
       // `notifications` is never read as a store id. SellerGate is inside.
       GoRoute(
         path: '/store/notifications',
         builder: (context, state) => const SellerNotificationsScreen(),
       ),
-      // The seller's Activity area (spec 0018). Declared before `/store/:id`
-      // so `activity` is never read as a store id. SellerGate is inside the
-      // screen.
-      GoRoute(
-        path: '/store/activity',
-        builder: (context, state) => const SellerActivityScreen(),
-      ),
+      // The seller's Activity detail pages (spec 0018). The Activity tab itself
+      // is in the store shell above.
       GoRoute(
         path: '/store/activity/orders/:id',
         builder: (context, state) =>

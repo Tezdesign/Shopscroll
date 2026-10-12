@@ -81,6 +81,18 @@ Future<GoRouter> _pump(
 }
 
 void main() {
+  testWidgets('the first tiles sit one step under the header, even with a '
+      'status bar', (tester) async {
+    tester.view.padding = const FakeViewPadding(top: 59);
+    addTearDown(tester.view.resetPadding);
+    await _pump(tester);
+
+    final header = tester.getBottomLeft(find.text('Bershka')).dy;
+    final tile = tester.getTopLeft(find.text("Today's Sale")).dy;
+    // Tile padding (16) and the list's top padding (24), not the status bar.
+    expect(tile - header, lessThan(80));
+  });
+
   testWidgets('shows the four number tiles and Recent Sales', (tester) async {
     await _pump(tester);
     expect(find.text('Bershka'), findsOneWidget);

@@ -246,6 +246,18 @@ class _ProfileHeader extends StatelessWidget {
                       color: AppColors.neutral700,
                     ),
                   ),
+                  Text(
+                    seller.productCount == 1
+                        ? '1 Product'
+                        : '${seller.productCount} Products',
+                    style: const TextStyle(
+                      fontFamily: AppTypography.fontFamilyBody,
+                      fontSize: AppTypography.sizeSm,
+                      height: AppTypography.lineHeightSm,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.neutral700,
+                    ),
+                  ),
                 ],
               ),
             ),

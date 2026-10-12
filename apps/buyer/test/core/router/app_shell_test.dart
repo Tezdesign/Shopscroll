@@ -10,10 +10,12 @@ import 'package:marketplace_app/data/providers/network_delay.dart';
 import 'package:marketplace_app/data/repositories/repository_providers.dart';
 import 'package:marketplace_app/data/repositories/user_profile_repository.dart';
 import 'package:marketplace_app/features/profile/profile_area_action.dart';
+import 'package:marketplace_app/features/store/seller_gate.dart';
 import 'package:marketplace_app/features/store/store_area_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shopscroll_shared/models/user_profile.dart';
 import 'package:shopscroll_shared/theme/app_theme.dart';
+import 'package:shopscroll_shared/widgets/app_bottom_nav_bar.dart';
 
 class _Profiles implements UserProfileRepository {
   _Profiles(this.role, {this.fail = false});
@@ -80,9 +82,50 @@ GoRouter router({String initialLocation = '/'}) => GoRouter(
         ),
       ],
     ),
-    GoRoute(
-      path: '/store',
-      builder: (context, state) => const StoreAreaScreen(),
+    // The store area: the same shell with the seller tab bar.
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, shell) => SellerGate(
+        child: AppShell(
+          navigationShell: shell,
+          variant: AppTabBarVariant.seller,
+        ),
+      ),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/store',
+              builder: (context, state) => const StoreAreaScreen(),
+            ),
+          ],
+        ),
+        for (final path in [
+          '/store/discover',
+          '/store/reels',
+          '/store/activity',
+        ])
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: path,
+                builder: (context, state) => Text('tab $path'),
+              ),
+            ],
+          ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/store/profile',
+              builder: (context, state) => const Column(
+                children: [
+                  Text('tab /store/profile'),
+                  ProfileAreaAction(area: AppArea.store),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     ),
     GoRoute(
       path: '/seller-app',
@@ -205,9 +248,7 @@ void main() {
   });
 
   group('the store area (spec 0014, AC-3, AC-5)', () {
-    testWidgets('shows the toggle and the product entry buttons', (
-      tester,
-    ) async {
+    testWidgets('shows the dashboard and the seller tab bar', (tester) async {
       tallScreen(tester);
       await pumpApp(tester, role: UserRole.seller, initialLocation: '/store');
       // The dashboard numbers load after the mock delay.
@@ -217,13 +258,68 @@ void main() {
       expect(find.text('Quick Actions'), findsOneWidget);
       expect(find.text('Add Product'), findsOneWidget);
       expect(find.text('Products'), findsOneWidget);
+      for (final tab in ['Home', 'Discover', 'Reels', 'Activity', 'Profile']) {
+        expect(find.text(tab), findsOneWidget, reason: tab);
+      }
+      // The switch is in the Profile tab, not on the dashboard header.
+      expect(find.text('Buyer'), findsNothing);
+    });
+
+    testWidgets('the tab bar moves between the store tabs', (tester) async {
+      tallScreen(tester);
+      await pumpApp(tester, role: UserRole.seller, initialLocation: '/store');
+
+      for (final tab in ['Discover', 'Reels', 'Activity']) {
+        await tester.tap(find.text(tab));
+        await tester.pumpAndSettle();
+        expect(
+          find.text('tab /store/${tab.toLowerCase()}'),
+          findsOneWidget,
+          reason: tab,
+        );
+      }
+      await tester.tap(find.text('Home'));
+      await tester.pump(mockNetworkDelay);
+      await tester.pump();
+      expect(find.text('Quick Actions'), findsOneWidget);
+    });
+
+    testWidgets('the Orders quick action opens the Activity tab', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      await pumpApp(tester, role: UserRole.seller, initialLocation: '/store');
+      await tester.pump(mockNetworkDelay);
+      await tester.pump();
+
+      // The KPI tile is also called Orders, the quick action comes after it.
+      await tester.tap(find.text('Orders').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('tab /store/activity'), findsOneWidget);
+    });
+
+    testWidgets('the Profile tab shows the switch with Seller selected', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        role: UserRole.seller,
+        initialLocation: '/store/profile',
+      );
+
       expect(find.text('Buyer'), findsOneWidget);
+      expect(find.text('Seller'), findsOneWidget);
     });
 
     testWidgets('tapping Buyer goes back to the buyer area and remembers it', (
       tester,
     ) async {
-      await pumpApp(tester, role: UserRole.seller, initialLocation: '/store');
+      await pumpApp(
+        tester,
+        role: UserRole.seller,
+        initialLocation: '/store/profile',
+      );
 
       await tester.tap(find.text('Buyer'));
       await tester.pumpAndSettle();
