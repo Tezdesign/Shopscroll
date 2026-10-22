@@ -14,6 +14,11 @@ enum AppArea { buyer, store }
 /// read it without a widget tree.
 final signedInUserIdProvider = StateProvider<String?>((ref) => null);
 
+/// The page a visitor was on when they chose Log in from a prompt (spec 0011,
+/// AC-1). Sign in and sign up go back to it instead of the area home, then
+/// clear it. Null means no prompt started this login.
+final loginReturnPathProvider = StateProvider<String?>((ref) => null);
+
 /// Whether the signed in profile has `role = 'seller'`. False while the
 /// profile loads, when it fails, and for a visitor. Routing to the store area
 /// is only a convenience: the server rules still check the role on every

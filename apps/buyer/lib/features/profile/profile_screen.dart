@@ -151,39 +151,62 @@ class _ProfileContent extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.xl),
         _SettingsSection(
-          title: 'Generals',
-          rows: [
-            SettingsRow(
-              label: 'Shopping in',
-              onTap: () =>
-                  _openComingSoon(context, 'Shopping in', Icons.flag_outlined),
-            ),
-            SettingsRow(
-              label: 'Language',
-              onTap: () => _openComingSoon(context, 'Language', Icons.language),
-            ),
-            SettingsRow(
-              label: 'Delivery addresses',
-              onTap: () => _openComingSoon(
-                context,
-                'Delivery addresses',
-                Icons.location_on_outlined,
-              ),
-            ),
-            SettingsRow(
-              label: 'Payments',
-              onTap: () =>
-                  _openComingSoon(context, 'Payments', Icons.payment_outlined),
-            ),
-            SettingsRow(
-              label: 'Seller application',
-              onTap: () => context.push('/profile/seller-application'),
-            ),
-          ],
+          title: area == AppArea.store ? 'Store' : 'Generals',
+          rows: area == AppArea.store
+              ? [
+                  SettingsRow(
+                    label: 'Language',
+                    onTap: () =>
+                        _openComingSoon(context, 'Language', Icons.language),
+                  ),
+                  SettingsRow(
+                    label: 'Store policies',
+                    onTap: () => context.push('/store/policies'),
+                  ),
+                  SettingsRow(
+                    label: 'Notifications',
+                    onTap: () => context.push('/store/notifications'),
+                  ),
+                ]
+              : [
+                  SettingsRow(
+                    label: 'Shopping in',
+                    onTap: () => _openComingSoon(
+                      context,
+                      'Shopping in',
+                      Icons.flag_outlined,
+                    ),
+                  ),
+                  SettingsRow(
+                    label: 'Language',
+                    onTap: () =>
+                        _openComingSoon(context, 'Language', Icons.language),
+                  ),
+                  SettingsRow(
+                    label: 'Delivery addresses',
+                    onTap: () => _openComingSoon(
+                      context,
+                      'Delivery addresses',
+                      Icons.location_on_outlined,
+                    ),
+                  ),
+                  SettingsRow(
+                    label: 'Payments',
+                    onTap: () => _openComingSoon(
+                      context,
+                      'Payments',
+                      Icons.payment_outlined,
+                    ),
+                  ),
+                  SettingsRow(
+                    label: 'Seller application',
+                    onTap: () => context.push('/profile/seller-application'),
+                  ),
+                ],
         ),
         const SizedBox(height: AppSpacing.lg),
         _SettingsSection(
-          title: 'Help and Legal',
+          title: 'Help & legal',
           rows: [
             SettingsRow(
               label: 'Contact us',
@@ -193,14 +216,15 @@ class _ProfileContent extends ConsumerWidget {
                 Icons.chat_bubble_outline,
               ),
             ),
-            SettingsRow(
-              label: 'My reports',
-              onTap: () => _openComingSoon(
-                context,
-                'My reports',
-                Icons.warning_amber_rounded,
+            if (area != AppArea.store)
+              SettingsRow(
+                label: 'My reports',
+                onTap: () => _openComingSoon(
+                  context,
+                  'My reports',
+                  Icons.warning_amber_rounded,
+                ),
               ),
-            ),
             SettingsRow(
               label: 'Privacy policy',
               trailingIcon: AppIconGlyph.openExternal,

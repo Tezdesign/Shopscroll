@@ -85,6 +85,7 @@ Declined: further Agent Skill / MCP discovery search
 - [apps/buyer/lib/core/area/AGENTS.md](apps/buyer/lib/core/area/AGENTS.md): the buyer and store areas, the seller check, the notice after Log in, and the seller claim
 - [apps/buyer/lib/features/seller_application/AGENTS.md](apps/buyer/lib/features/seller_application/AGENTS.md): the seller application screen and wizard, including the visitor path from "Apply now"
 - [apps/buyer/lib/features/cart/AGENTS.md](apps/buyer/lib/features/cart/AGENTS.md): the cart screen at `/cart`, the shared add to cart helper, and the optimistic cart notifier rules
+- [apps/buyer/lib/features/chat/AGENTS.md](apps/buyer/lib/features/chat/AGENTS.md): buyer chat with a store, the thread screen, the optimistic send rules and the Log in return path
 - [apps/buyer/lib/features/seller_activity/AGENTS.md](apps/buyer/lib/features/seller_activity/AGENTS.md): the seller's Activity area at `/store/activity` (Orders, Earnings, Reports, both detail pages, Resolve)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

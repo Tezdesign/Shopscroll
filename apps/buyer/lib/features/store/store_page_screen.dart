@@ -261,10 +261,9 @@ class _ProfileHeader extends StatelessWidget {
                 ],
               ),
             ),
-            // Decorative: no follow/social graph or buyer-to-seller chat
-            // model exists yet (spec 0010 Follow-up), same "looks real, does
-            // nothing" treatment as Reels' own Follow button and product
-            // detail's "Chat now".
+            // Follow is decorative: no follow/social graph exists yet (spec
+            // 0010 Follow-up), same "looks real, does nothing" treatment as
+            // Reels' own Follow button. Message opens the chat (spec 0011).
             AppButton(
               label: 'Follow',
               size: AppButtonSize.small,
@@ -275,7 +274,7 @@ class _ProfileHeader extends StatelessWidget {
               label: 'Message',
               variant: AppButtonVariant.secondary,
               size: AppButtonSize.small,
-              onPressed: () {},
+              onPressed: () => context.push('/chat/store/${seller.id}'),
             ),
           ],
         ),

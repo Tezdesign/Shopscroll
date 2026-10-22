@@ -22,10 +22,11 @@ build plan assumed Tracer Bullet (thin, end to end slices) as a default in the m
 | 9 | Cart interface | Unplanned | in-progress |
 | 10 | Activity screens | Unplanned | in-progress |
 | 11 | Order details | Unplanned | planned |
-| 12 | Chat | Unplanned | planned |
+| 12 | Chat | Unplanned | in-progress |
 | 13 | Purchasing flow | Unplanned | in-progress |
 | 14 | Card payment | Unplanned | planned |
 | 15 | Discount codes | Unplanned | planned |
+| 16 | Seller chat screens | Unplanned | planned |
 
 ## Features
 
@@ -305,18 +306,26 @@ once it exists).
 
 From spec [0008](../../specs/buyer/0008-activity-screens/index.md)
 
-### 12. Chat · planned · needs a decision
+### 12. Chat · in-progress
 
-Design and build buyer to store chat: conversations, messages and sending, a table behind them, and the
-Chat now button on product detail. The Messages tab lists mock conversations only until this exists.
-**Done when:** a buyer can open a conversation from the Messages tab or product detail and exchange
-messages with a store, with its states handled (see the spec once it exists).
-- [ ] Design it (spec): `/architect chat`
+Chat between buyers and stores in both directions: one thread per buyer and store pair, with text, a photo or
+a product card, live delivery, typing, seen marks, unread counts, delete and block. The server side serves both
+roles, the screens built here are the buyer's (the Messages tab, the thread, and the Chat now and Message
+buttons). The Messages tab lists mock conversations only until this ships.
+**Done when:** a buyer can open a conversation from the Messages tab, product detail or the Store Page and
+exchange messages with a store that arrive live, with its states handled (see spec 0011 for the full
+acceptance criteria).
+- [x] Design it (spec): `/architect chat`
 - [ ] Build it: `/develop chat`
+   - [ ] Server and thread slice: migration `0018`, send and read text end to end, the thread screen, the entry buttons (AC-1, AC-3, AC-4, AC-5, AC-6, AC-13, AC-14, AC-15, AC-19, AC-20, AC-21). Partly built: the thread screen, entry buttons and mock backend work and are tested; `0018_chat.sql` is applied on a test project and `supabase/checks/chat.sql` ran with no FAIL (reported by the engineer, the SQL editor shows no NOTICE lines), not yet applied to the live project, and the Realtime spike is not done
+   - [ ] Inbox and unread: migration `0019`, the live paged Messages tab, unread count and dot (AC-2, AC-8, AC-16)
+   - [ ] Live details: seen mark, typing, reconnect and resume (AC-7, AC-8, AC-18)
+   - [ ] Product card and photos: the Asking about chip, the card, the private photo bucket (AC-9, AC-10)
+   - [ ] Delete, block, account deletion and finish: migration `0021`, states, accessibility, tests (AC-11, AC-12, AC-17, AC-20, AC-22, AC-23)
 - [ ] Verify it: `/check verify chat`
 - [ ] Test it: `/test chat`
 
-From spec [0008](../../specs/buyer/0008-activity-screens/index.md)
+Code in `apps/buyer/lib/features/chat/`, `supabase/migrations/0018_chat.sql` · Spec [0011](../../specs/buyer/0011-chat/index.md) · from spec [0008](../../specs/buyer/0008-activity-screens/index.md)
 
 ### 13. Purchasing flow · in-progress
 
@@ -370,3 +379,23 @@ line and the crossed out price (Figma 3001:10221 and 3001:10085).
 - [ ] Test it: `/test discount codes`
 
 From spec [0009](../../specs/buyer/0009-purchasing-flow/index.md)
+
+### 16. Seller chat screens · planned · needs a decision
+
+The store side of chat: a seller inbox, a seller thread, a "Message customer" button on the order detail, and a
+badge on the store header chat icon. The server already supports the store role (spec 0011). The Figma file has
+no seller chat frames yet, so they are designed first.
+**Done when:** a seller can read and answer buyer messages, and start a chat from an order, in the store area
+(see the spec once it exists).
+- [ ] Design it (spec): `/architect seller chat screens`
+- [ ] Build it: `/develop seller chat screens`
+- [ ] Verify it: `/check verify seller chat screens`
+- [ ] Test it: `/test seller chat screens`
+
+From spec [0011](../../specs/buyer/0011-chat/index.md)
+
+## Deferred
+
+- Push notifications for new chat messages (needs device tokens and a sender function), from spec 0011.
+- Cleanup of `chat-images` files that no message points to, from spec 0011.
+- Report a chat message to an admin, once an admin view exists, from spec 0011.

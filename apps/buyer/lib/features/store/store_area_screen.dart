@@ -243,8 +243,6 @@ class _DashBody extends ConsumerWidget {
             onProducts: () => context.push('/store/products'),
             onReports: () => context.go('/store/activity'),
           ),
-          const SizedBox(height: AppSpacing.md),
-          _PoliciesRow(onTap: () => context.push('/store/policies')),
           const SizedBox(height: AppSpacing.xl),
           _RecentSales(
             sales: earnings.recent,
@@ -252,59 +250,6 @@ class _DashBody extends ConsumerWidget {
             onSeeAll: () => context.go('/store/activity'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Opens the store policies (delivery, payment, returns defaults). Not in the
-/// Figma Home-seller frame; the seller shell has no Settings entry yet.
-class _PoliciesRow extends StatelessWidget {
-  const _PoliciesRow({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Store policies',
-      excludeSemantics: true,
-      onTap: onTap,
-      child: Material(
-        color: AppColors.neutral100,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          side: const BorderSide(color: AppColors.neutral200),
-        ),
-        child: InkWell(
-          customBorder: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          onTap: onTap,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.base,
-              vertical: AppSpacing.md,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Store policies',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamilyBody,
-                      fontSize: AppTypography.sizeSm,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.neutral1100,
-                    ),
-                  ),
-                ),
-                AppIcon(AppIconGlyph.forward),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

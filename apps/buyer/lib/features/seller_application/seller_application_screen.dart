@@ -45,6 +45,7 @@ class SellerApplicationScreen extends ConsumerWidget {
           children: [
             CheckoutHeader(
               title: 'Seller application',
+              isBack: true,
               onClose: () =>
                   context.canPop() ? context.pop() : context.go('/profile'),
             ),
@@ -274,7 +275,7 @@ class _StatusChip extends StatelessWidget {
   ({Color background, Color text, String label}) get _spec => switch (status) {
     SellerApplicationStatus.reviewing => (
       background: AppColors.warning100,
-      text: AppColors.warning400,
+      text: AppColors.warning600,
       label: 'Reviewing',
     ),
     SellerApplicationStatus.approved => (

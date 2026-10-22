@@ -11,6 +11,7 @@ import 'package:shopscroll_shared/widgets/search_field.dart';
 
 import '../../core/area/app_area.dart';
 import '../../data/providers/store_activity_providers.dart';
+import '../../data/providers/store_notification_providers.dart';
 import '../../data/providers/user_profile_providers.dart';
 import '../store/seller_gate.dart';
 import 'earnings_tab.dart';
@@ -142,6 +143,9 @@ class _Header extends ConsumerWidget {
                   _HeaderIcon(
                     glyph: AppIconGlyph.bell,
                     label: 'Notifications',
+                    badge: (ref.watch(storeNotificationUnreadProvider).value ??
+                            0) >
+                        0,
                     onTap: () => context.push('/store/notifications'),
                   ),
                 ],
@@ -191,18 +195,45 @@ class _StoreLogo extends StatelessWidget {
 }
 
 class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({required this.glyph, required this.label, this.onTap});
+  const _HeaderIcon({
+    required this.glyph,
+    required this.label,
+    this.onTap,
+    this.badge = false,
+  });
 
   final AppIconGlyph glyph;
   final String label;
   final VoidCallback? onTap;
+
+  /// A small red dot on the icon, for unread items.
+  final bool badge;
 
   @override
   Widget build(BuildContext context) {
     final icon = SizedBox(
       width: _tapSize,
       height: _tapSize,
-      child: Center(child: AppIcon(glyph, color: AppColors.neutral100)),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AppIcon(glyph, color: AppColors.neutral100),
+          if (badge)
+            Positioned(
+              top: 10,
+              right: 11,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: AppColors.error400,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.neutral1000),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
     return Semantics(
       button: true,

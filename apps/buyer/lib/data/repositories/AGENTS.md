@@ -25,6 +25,11 @@ abstract interface, never on which implementation is active.
   both implementations), a `mock/` implementation, a `supabase/` implementation, and a provider
   override pair in `repository_providers.dart` + `main.dart` — never a single concrete class.
 - Interfaces return domain models (`lib/data/models/*`), never raw Supabase rows or mock JSON.
+- `chat_repository.dart` (spec 0011) is the one interface that also streams (`watchMessages`) and reports failures as a
+  `ChatException` carrying a `ChatFailure`, mapped from the server function's reason by `chatFailureFor`. Its Supabase
+  version takes the client as an argument (`main.dart` passes the anonymous client at start and
+  `activeSupabaseClientProvider` after sign in) and writes only through the chat functions, never to the tables. See
+  `apps/buyer/lib/features/chat/AGENTS.md`.
 
 Governing spec: `docs/specs/buyer/0003-supabase-backend/index.md`.
 

@@ -9,7 +9,8 @@ The real Profile tab (spec 0005), replacing the empty placeholder `/profile` use
   `ProfileAreaAction`), Edit profile), then `_SettingsSection` groups of `SettingsRow`
   (`lib/shared/widgets/settings_row.dart`) for Generals / Help / Legal, plus Log out and Delete
   account rows. Every row for a feature that doesn't exist yet in this buyer-only app opens
-  `ComingSoonScreen` rather than doing nothing.
+  `ComingSoonScreen` rather than doing nothing. In the store area (`AppArea.store`) the first group is
+  titled "Store" (Language, Store policies, Notifications) and "My reports" is hidden.
 - `profile_anonymous_view.dart` (`ProfileAnonymousView`) — shown at the same `/profile` route for an
   anonymous session: a short sign-in message and a button into `/welcome` (the onboarding flow, see
   `lib/features/onboarding/AGENTS.md`) — not a direct link to Clerk's prebuilt card, every entry into

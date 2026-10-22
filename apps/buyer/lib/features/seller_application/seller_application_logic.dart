@@ -108,8 +108,21 @@ String? checkPhoto({required String fileName, required int bytes}) {
 /// `Submitted 25/06/2025`, the line under a store name (Figma node 3001:9565).
 String submittedLabel(DateTime date) {
   final local = date.toLocal();
-  String two(int n) => n.toString().padLeft(2, '0');
-  return 'Submitted ${two(local.day)}/${two(local.month)}/${local.year}';
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return 'Submitted ${months[local.month - 1]} ${local.day}, ${local.year}';
 }
 
 /// Whether the screen offers "Submit a new application" (AC-8): only to a

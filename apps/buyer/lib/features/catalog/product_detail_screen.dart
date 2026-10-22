@@ -184,6 +184,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           final added =
               findLine(cartLines, product.id, _selectedSize, color) != null;
           return _BottomActionBar(
+            storeId: product.storeId,
             quantity: _quantity,
             onDecrement: _quantity > 1
                 ? () => setState(() => _quantity--)
@@ -945,10 +946,8 @@ class _MiniProductTile extends StatelessWidget {
 }
 
 /// Fixed footer (Figma node 205:2579): quantity stepper, [AddToCartToggle],
-/// and Chat now / Buy now [AppButton]s. "Chat now" isn't wired to a real
-/// destination — this build is user-scope only (no seller-side messaging
-/// screen exists yet), shown for fidelity but inert, same reasoning already
-/// applied to Home's "Become a seller" button.
+/// and Chat now / Buy now [AppButton]s. "Chat now" opens the chat with the
+/// product's store (spec 0011, AC-1).
 class _BottomActionBar extends StatelessWidget {
   const _BottomActionBar({
     required this.quantity,
@@ -956,8 +955,10 @@ class _BottomActionBar extends StatelessWidget {
     required this.onIncrement,
     required this.addedToCart,
     required this.onAddToCart,
+    required this.storeId,
   });
 
+  final String storeId;
   final int quantity;
   final VoidCallback? onDecrement;
   final VoidCallback onIncrement;
@@ -1025,7 +1026,7 @@ class _BottomActionBar extends StatelessWidget {
                         label: 'Chat now',
                         variant: AppButtonVariant.secondary,
                         size: AppButtonSize.small,
-                        onPressed: () {},
+                        onPressed: () => context.push('/chat/store/$storeId'),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       AppButton(

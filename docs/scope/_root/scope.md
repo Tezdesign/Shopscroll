@@ -21,7 +21,7 @@ Work that spans the buyer app, the seller app and the shared package. Buyer feat
 | 27 | Seller Activity screens | Unplanned | in-progress |
 | 28 | Seller order status changes | Unplanned | planned |
 | 29 | Buyer problem reports | Unplanned | planned |
-| 30 | Seller shell | Unplanned | planned |
+| 30 | Seller shell | Unplanned | in-progress |
 
 ## Features
 
@@ -262,15 +262,19 @@ the function that creates a report and its items.
 
 From spec [0018](../../specs/_root/0018-seller-activity-screens/index.md)
 
-### 30. Seller shell · planned · needs a decision
+### 30. Seller shell · in-progress · built without a spec ⚠ spec pending
 
 The seller's bottom tab bar and header (Home, Discover, Reels, Activity, profile) around the store area, so the Activity
 screens and the product screens stop depending on buttons on `/store`.
 **Done when:** a seller moves between the seller tabs from a tab bar and the temporary `/store` buttons are gone (see the
 spec once it exists).
 - [ ] Design it (spec): `/architect seller shell`
-- [ ] Build it: `/develop seller shell`
+- [x] Build it: `/develop seller shell`
 - [ ] Verify it: `/check verify seller shell`
 - [ ] Test it: `/test seller shell`
+
+Code in `apps/buyer/lib/core/router/app_router.dart` (store `StatefulShellRoute`), `app_shell.dart` (seller variant),
+`apps/buyer/lib/features/store/store_area_screen.dart`, `apps/buyer/test/core/router/app_shell_test.dart`. Built on the
+engineer's call without a spec: Discover, Reels and Profile reuse the buyer screens.
 
 From spec [0018](../../specs/_root/0018-seller-activity-screens/index.md)

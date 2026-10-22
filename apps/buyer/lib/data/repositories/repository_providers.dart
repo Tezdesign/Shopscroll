@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'cart_repository.dart';
+import 'chat_repository.dart';
 import 'conversation_repository.dart';
 import 'mock/mock_cart_repository.dart';
+import 'mock/mock_chat_repository.dart';
 import 'mock/mock_conversation_repository.dart';
 import 'mock/mock_order_repository.dart';
 import 'mock/mock_product_repository.dart';
@@ -55,6 +57,12 @@ final savedProductRepositoryProvider = Provider<SavedProductRepository>(
 
 final conversationRepositoryProvider = Provider<ConversationRepository>(
   (ref) => MockConversationRepository(),
+);
+
+/// Chat threads with stores (spec 0011). Like the others it defaults to the
+/// in memory mock and `main.dart` swaps in Supabase.
+final chatRepositoryProvider = Provider<ChatRepository>(
+  (ref) => MockChatRepository(),
 );
 
 final sellerApplicationRepositoryProvider =

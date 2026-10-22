@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shopscroll_shared/widgets/app_bottom_nav_bar.dart';
 
+import '../../features/chat/chat_thread_screen.dart';
 import '../../features/activity/activity_screen.dart';
 import '../../features/activity/order_receipt_screen.dart';
 import '../../features/cart/cart_screen.dart';
@@ -175,9 +176,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'chat/:id',
-                    builder: (context, state) => const ComingSoonScreen(
-                      label: 'Chat',
-                      icon: Icons.chat_bubble_outline,
+                    builder: (context, state) => ChatThreadScreen(
+                      conversationId: state.pathParameters['id']!,
                     ),
                   ),
                 ],
@@ -291,8 +291,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/sign-up/setting-up',
-        builder: (context, state) =>
-            SettingUpAccountScreen(onDone: () => context.go('/')),
+        builder: (context, state) => SettingUpAccountScreen(
+          onDone: () {
+            // A visitor who signed up from a prompt goes back to that page.
+            final container = ProviderScope.containerOf(context);
+            final back = container.read(loginReturnPathProvider);
+            container.read(loginReturnPathProvider.notifier).state = null;
+            context.go(back ?? '/');
+          },
+        ),
       ),
       GoRoute(
         path: '/profile/edit',
@@ -348,6 +355,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 )
               : OrderConfirmationScreen(orderId: orderId);
         },
+      ),
+      // A chat with a store that may have no thread yet, opened from "Chat now"
+      // and "Message" (spec 0011). Outside the Activity tabs on purpose: it is
+      // pushed from product detail and the Store Page, like `/product/:id`.
+      GoRoute(
+        path: '/chat/store/:storeId',
+        builder: (context, state) =>
+            ChatThreadScreen(storeId: state.pathParameters['storeId']!),
       ),
       GoRoute(
         path: '/product/:id',

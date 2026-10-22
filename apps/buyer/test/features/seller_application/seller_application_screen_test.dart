@@ -94,7 +94,7 @@ void main() {
     );
 
     expect(find.text('Borgi phone'), findsOneWidget);
-    expect(find.text('Submitted 25/06/2025'), findsOneWidget);
+    expect(find.text('Submitted Jun 25, 2025'), findsOneWidget);
     expect(find.text('Reviewing'), findsOneWidget);
     expect(find.text('Submit a new application'), findsNothing);
   });
@@ -192,10 +192,10 @@ void main() {
     expect(find.text('Borgi phone'), findsOneWidget);
   });
 
-  testWidgets('the close button goes back to the profile', (tester) async {
+  testWidgets('the back button goes back to the profile', (tester) async {
     await pumpScreen(tester, FakeSellerApplicationRepository());
 
-    await tester.tap(find.bySemanticsLabel('Close'));
+    await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
 
     expect(find.text('profile page'), findsOneWidget);

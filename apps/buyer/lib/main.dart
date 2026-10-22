@@ -17,6 +17,7 @@ import 'core/onboarding/onboarding_prefs.dart';
 import 'core/router/app_router.dart';
 import 'data/repositories/repository_providers.dart';
 import 'data/repositories/supabase/supabase_cart_repository.dart';
+import 'data/repositories/supabase/supabase_chat_repository.dart';
 import 'data/repositories/supabase/supabase_conversation_repository.dart';
 import 'data/repositories/supabase/supabase_order_repository.dart';
 import 'data/repositories/supabase/supabase_product_repository.dart';
@@ -102,6 +103,9 @@ void main() async {
           ),
           conversationRepositoryProvider.overrideWithValue(
             SupabaseConversationRepository(),
+          ),
+          chatRepositoryProvider.overrideWithValue(
+            SupabaseChatRepository(anonymousClient),
           ),
         ],
         child: const MarketplaceApp(),
@@ -196,6 +200,9 @@ void main() async {
         ),
         conversationRepositoryProvider.overrideWithValue(
           SupabaseConversationRepository(),
+        ),
+        chatRepositoryProvider.overrideWith(
+          (ref) => SupabaseChatRepository(ref.watch(activeSupabaseClientProvider)),
         ),
       ],
       child: MarketplaceApp(

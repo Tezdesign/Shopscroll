@@ -150,7 +150,13 @@ class SignInVerification {
 
     _ref.read(onboardingPrefsProvider).setLastArea(landing.area.name);
     _ref.read(areaNoticeProvider.notifier).state = landing.notice;
-    _context.go(landing.area == AppArea.store ? '/store' : '/');
+    // A visitor who logged in from a prompt (like the chat prompt) goes back
+    // to that page, unless the choice sends them to the store area.
+    final back = _ref.read(loginReturnPathProvider);
+    _ref.read(loginReturnPathProvider.notifier).state = null;
+    _context.go(
+      landing.area == AppArea.store ? '/store' : (back ?? '/'),
+    );
   }
 
   /// Asks Clerk for a fresh code for the same pending sign in.

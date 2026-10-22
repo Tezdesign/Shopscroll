@@ -68,11 +68,9 @@ class ReportsTab extends ConsumerWidget {
                   text: "Couldn't load your reports.",
                   onRetry: () => ref.invalidate(storeReportsProvider),
                 ),
-                data: (_) => ActivityMessage(
-                  text: search.isEmpty
-                      ? 'No reports yet'
-                      : 'No results found for “$search”',
-                ),
+                data: (_) => search.isEmpty
+                    ? const _EmptyReports()
+                    : ActivityMessage(text: 'No results found for “$search”'),
               ),
             );
           }
@@ -129,62 +127,83 @@ class _Summary extends ConsumerWidget {
           onRetry: () => ref.invalidate(storeReportsSummaryProvider),
         ),
       ),
-      data: (data) => Column(
-        children: [
-          _SummaryCard(
-            label: 'Total Reports',
-            value: '${data.total}',
-            note: '${data.newToday} new reports today',
-            inline: true,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _SummaryCard(
-                    label: 'Unresolved Reports',
-                    value: '${data.unresolved}',
-                    color: AppColors.error400,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.base),
-                Expanded(
-                  child: _SummaryCard(
-                    label: 'Returned Orders',
-                    value: '${data.returnedOrders}',
-                  ),
-                ),
-              ],
+      data: (data) {
+        final open = data.unresolved > 0;
+        return Column(
+          children: [
+            _SummaryCard(
+              label: 'Unresolved Reports',
+              value: '${data.unresolved}',
+              note: open ? 'Needs your attention' : 'All caught up',
+              noteColor: open ? AppColors.error400 : AppColors.success600,
+              color: open ? AppColors.error400 : AppColors.success600,
+              tint: open ? AppColors.errorAlpha10 : AppColors.successAlpha10,
+              inline: true,
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: AppSpacing.md),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _SummaryCard(
+                      label: 'Total Reports',
+                      value: '${data.total}',
+                      note: '${data.newToday} new reports today',
+                      noteColor: data.newToday > 0
+                          ? AppColors.error400
+                          : AppColors.neutral500,
+                      color: AppColors.neutral700,
+                      border: AppColors.neutral200,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.base),
+                  Expanded(
+                    child: _SummaryCard(
+                      label: 'Returned Orders',
+                      value: '${data.returnedOrders}',
+                      color: AppColors.neutral700,
+                      border: AppColors.neutral200,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-/// One number card: the label, the number and an optional red note. An
-/// [inline] card puts the label and the number side by side.
+/// One number card: the label, the number and an optional note. An [inline]
+/// card puts the label and the number side by side. [tint] fills the card,
+/// [border] overrides the outline (default [color]).
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({
     required this.label,
     required this.value,
     this.note,
+    this.noteColor = AppColors.error400,
     this.inline = false,
     this.color = AppColors.primary400,
+    this.border,
+    this.tint,
   });
 
   final String label;
   final String value;
   final String? note;
+  final Color noteColor;
   final bool inline;
   final Color color;
+  final Color? border;
+  final Color? tint;
 
   @override
   Widget build(BuildContext context) {
     final labelText = Text(label, style: _label.copyWith(color: color));
+    final noteStyle = _note.copyWith(color: noteColor);
     final numbers = Column(
       crossAxisAlignment: inline
           ? CrossAxisAlignment.end
@@ -196,7 +215,7 @@ class _SummaryCard extends StatelessWidget {
           Text(
             note!,
             textAlign: inline ? TextAlign.end : TextAlign.start,
-            style: _note,
+            style: noteStyle,
           ),
       ],
     );
@@ -211,16 +230,16 @@ class _SummaryCard extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: AppColors.neutral100,
-          border: Border.all(color: color),
+          color: tint ?? AppColors.neutral100,
+          border: Border.all(color: border ?? color),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: inline
             ? Row(
                 children: [
-                  Flexible(child: labelText),
+                  Expanded(child: labelText),
                   const SizedBox(width: AppSpacing.base),
-                  Flexible(child: numbers),
+                  numbers,
                 ],
               )
             : Column(
@@ -404,6 +423,43 @@ class _ListFooter extends ConsumerWidget {
     return const Padding(
       padding: EdgeInsets.all(AppSpacing.base),
       child: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// The list when the store has no reports at all.
+class _EmptyReports extends StatelessWidget {
+  const _EmptyReports();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppIcon(AppIconGlyph.report, size: 32, color: AppColors.neutral400),
+          SizedBox(height: AppSpacing.md),
+          Text(
+            'No reports yet',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamilyDisplay,
+              fontSize: AppTypography.sizeBase,
+              fontWeight: FontWeight.w600,
+              color: AppColors.neutral1100,
+            ),
+          ),
+          SizedBox(height: AppSpacing.xs),
+          Text(
+            'When a customer reports an order,\nit shows up here.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: AppTypography.sizeSm,
+              height: AppTypography.lineHeightSm,
+              color: AppColors.neutral500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

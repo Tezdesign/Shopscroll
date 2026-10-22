@@ -9,10 +9,19 @@ import 'package:shopscroll_shared/widgets/app_icon.dart';
 /// The X is 24 across in the design, its tap area is 56 (spec 0009, AC-23).
 /// The device status bar is not built, the phone draws its own.
 class CheckoutHeader extends StatelessWidget {
-  const CheckoutHeader({super.key, required this.title, required this.onClose});
+  const CheckoutHeader({
+    super.key,
+    required this.title,
+    required this.onClose,
+    this.isBack = false,
+  });
 
   final String title;
   final VoidCallback onClose;
+
+  /// Draws a back arrow labelled "Back" instead of the X, for pages pushed
+  /// from a list such as Settings.
+  final bool isBack;
 
   @override
   Widget build(BuildContext context) {
@@ -25,18 +34,18 @@ class CheckoutHeader extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Semantics(
               button: true,
-              label: 'Close',
+              label: isBack ? 'Back' : 'Close',
               onTap: onClose,
               excludeSemantics: true,
               child: GestureDetector(
                 onTap: onClose,
                 behavior: HitTestBehavior.opaque,
-                child: const SizedBox(
+                child: SizedBox(
                   width: 56,
                   height: 56,
                   child: Center(
                     child: AppIcon(
-                      AppIconGlyph.close,
+                      isBack ? AppIconGlyph.back : AppIconGlyph.close,
                       color: AppColors.neutral1100,
                     ),
                   ),

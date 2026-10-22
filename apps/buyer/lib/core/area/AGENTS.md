@@ -10,7 +10,9 @@ person with `role = 'seller'` stays in. There is no separate seller app any more
   seller, false while loading or on failure); `signInSettledProvider` (a `Future` that completes when the work a sign in
   starts has finished: merge, client switch, profile row, claim); `AreaNotice` and `areaNoticeFor(applications)` (the
   notice a non seller sees after choosing Store owner); `areaNoticeProvider` (set by Log in, shown once by `AppShell` as a
-  snack bar with an action to the Seller application screen).
+  snack bar with an action to the Seller application screen); `loginReturnPathProvider` (the page a visitor was on when
+  they chose Log in from a prompt such as the chat one, spec 0011 AC-1; sign in and the sign up "setting up" step go
+  back to it instead of the area home, then clear it; a Store owner landing still goes to `/store`).
 - `landing_after_sign_in.dart` — `landingAfterSignIn`, the pure rule for where Log in lands: Buyer opens the buyer area,
   Store owner opens the store area only for a seller, otherwise the buyer area plus a notice. A failed lookup counts as
   "not a seller", so sign in never fails because of it.

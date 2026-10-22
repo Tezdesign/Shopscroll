@@ -56,8 +56,8 @@ void main() {
   });
 
   test('submitted label is dd/mm/yyyy', () {
-    expect(submittedLabel(DateTime(2025, 6, 25)), 'Submitted 25/06/2025');
-    expect(submittedLabel(DateTime(2026, 1, 5)), 'Submitted 05/01/2026');
+    expect(submittedLabel(DateTime(2025, 6, 25)), 'Submitted Jun 25, 2025');
+    expect(submittedLabel(DateTime(2026, 1, 5)), 'Submitted Jan 5, 2026');
   });
 
   group('canSubmitNewApplication', () {
