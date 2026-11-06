@@ -184,10 +184,7 @@ class _SellerProductsScreenState extends ConsumerState<SellerProductsScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              child: FlowHeader(
-                title: 'Products',
-                onBack: () => context.canPop() ? context.pop() : context.go('/store'),
-              ),
+              child: const FlowHeader(title: 'Products'),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.base, 0, AppSpacing.base, AppSpacing.sm),

@@ -2,7 +2,6 @@ import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shopscroll_shared/widgets/app_bottom_nav_bar.dart';
 
 import '../../features/chat/chat_thread_screen.dart';
 import '../../features/activity/activity_screen.dart';
@@ -47,6 +46,7 @@ import '../area/app_area.dart';
 import '../config/clerk_config.dart';
 import '../onboarding/onboarding_prefs.dart';
 import 'app_shell.dart';
+import 'seller_shell.dart';
 
 /// The Profile tab of either shell: the real page once Clerk is configured,
 /// the same placeholder when it is not. [area] says which tab bar it sits in.
@@ -83,10 +83,11 @@ final initialLocationProvider = Provider<String>((ref) => '/');
 /// Page ([StorePageScreen], spec 0010), stay top level routes, outside the
 /// shell, so they open full screen without the bottom nav.
 ///
-/// `/store` is the store area (spec 0014): a second [StatefulShellRoute]
-/// with the seller tab bar, only for a seller ([SellerGate]). Its tabs are
-/// `/store` ([StoreAreaScreen]), `/store/discover`, `/store/reels`,
-/// `/store/activity` ([SellerActivityScreen], spec 0018) and `/store/profile`.
+/// `/store` is the store area (spec 0014, 0019): a second [StatefulShellRoute]
+/// with the seller tab bar ([SellerShell]), only for a seller. Its tabs are
+/// `/store` ([StoreAreaScreen]), `/store/products`
+/// ([SellerProductsScreen]), `/store/activity` ([SellerActivityScreen], spec
+/// 0018), `/store/messages` (a placeholder) and `/store/profile`.
 /// `/apply` is the seller application for a visitor with no account, top
 /// level.
 ///
@@ -376,20 +377,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           orderedReelIds: state.extra as List<String>?,
         ),
       ),
-      // The store area (spec 0014): the seller's own shell, the Figma
-      // "tabbar-seller" bar. Home is the dashboard, Activity is spec 0018,
-      // Discover, Reels and Profile reuse the buyer screens. Only a seller
-      // stays (SellerGate). Everything else under `/store` (products,
-      // notifications, the detail pages) opens full screen over it, and these
-      // are declared before `/store/:id` so `discover` is never read as a
-      // store id.
+      // The store area (spec 0014, spec 0019): the seller's own shell with
+      // five tabs, Home (dashboard), Products, Activity (spec 0018), Messages
+      // (a placeholder) and Profile. Only a seller stays (SellerGate, inside
+      // SellerShell). Tasks and details (the product flow, policies,
+      // notifications, order and report details) open full screen over it,
+      // below. Everything here is declared before `/store/:id` so a tab path
+      // is never read as a store id.
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => SellerGate(
-          child: AppShell(
-            navigationShell: navigationShell,
-            variant: AppTabBarVariant.seller,
-          ),
-        ),
+        builder: (context, state, navigationShell) =>
+            SellerShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
             routes: [
@@ -402,23 +399,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/store/discover',
-                builder: (context, state) =>
-                    const DiscoverScreen(searchPath: '/store/discover/search'),
-                routes: [
-                  GoRoute(
-                    path: 'search',
-                    builder: (context, state) => const SearchScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/store/reels',
-                builder: (context, state) => const ReelsScreen(),
+                path: '/store/products',
+                builder: (context, state) => const SellerProductsScreen(),
               ),
             ],
           ),
@@ -433,6 +415,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/store/messages',
+                builder: (context, state) => const ComingSoonScreen(
+                  label: 'Messages',
+                  icon: Icons.chat_bubble_outline,
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/store/profile',
                 builder: (context, state) => _profileTab(AppArea.store),
               ),
@@ -440,6 +433,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      // The store area no longer has Discover or Reels tabs (spec 0019,
+      // AC-2). Old links land on the dashboard instead of `/store/:id`.
+      GoRoute(
+        path: '/store/discover',
+        redirect: (context, state) => '/store',
+      ),
+      GoRoute(path: '/store/reels', redirect: (context, state) => '/store'),
       // "Apply now" for a person with no account (spec 0014, AC-7). Someone
       // already signed in applies from Settings, Seller application instead.
       GoRoute(
@@ -456,11 +456,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // The seller's product screens (spec 0015). Declared before
       // `/store/:id` so `products` is never read as a store id. Every one is
       // for sellers only (SellerGate).
-      GoRoute(
-        path: '/store/products',
-        builder: (context, state) =>
-            const SellerGate(child: SellerProductsScreen()),
-      ),
       GoRoute(
         path: '/store/products/new',
         builder: (context, state) =>

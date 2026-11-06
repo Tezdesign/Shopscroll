@@ -262,19 +262,21 @@ the function that creates a report and its items.
 
 From spec [0018](../../specs/_root/0018-seller-activity-screens/index.md)
 
-### 30. Seller shell · in-progress · built without a spec ⚠ spec pending
+### 30. Seller shell · in-progress
 
-The seller's bottom tab bar and header (Home, Discover, Reels, Activity, profile) around the store area, so the Activity
-screens and the product screens stop depending on buttons on `/store`.
-**Done when:** a seller moves between the seller tabs from a tab bar and the temporary `/store` buttons are gone (see the
-spec once it exists).
-- [ ] Design it (spec): `/architect seller shell`
+The store area's own bottom tab bar: Home, Products, Activity, Messages (a placeholder) and Profile. Discover and Reels
+leave the store area, and tasks and details open full screen over the tabs.
+**Done when:** a seller moves between the five tabs from `SellerBottomNavBar`, each tab keeps its place, and old
+`/store/discover` and `/store/reels` links land on the dashboard.
+- [x] Design it (spec): [0019](../../specs/_root/0019-seller-shell/index.md)
 - [x] Build it: `/develop seller shell`
 - [ ] Verify it: `/check verify seller shell`
 - [ ] Test it: `/test seller shell`
 
-Code in `apps/buyer/lib/core/router/app_router.dart` (store `StatefulShellRoute`), `app_shell.dart` (seller variant),
-`apps/buyer/lib/features/store/store_area_screen.dart`, `apps/buyer/test/core/router/app_shell_test.dart`. Built on the
-engineer's call without a spec: Discover, Reels and Profile reuse the buyer screens.
+Code in `apps/buyer/lib/core/router/seller_shell.dart` and `app_router.dart` (store `StatefulShellRoute`),
+`packages/shared/lib/widgets/seller_bottom_nav_bar.dart`, `apps/buyer/lib/features/store/store_area_screen.dart`, tests in
+`apps/buyer/test/core/router/app_shell_test.dart` and `packages/shared/test/widgets/seller_bottom_nav_bar_test.dart`.
+Open: the Messages tab needs a seller inbox (feature 12), and the Figma `tabbar-seller` component still has the buyer
+labels.
 
 From spec [0018](../../specs/_root/0018-seller-activity-screens/index.md)

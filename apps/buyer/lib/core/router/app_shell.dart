@@ -20,19 +20,12 @@ import '../area/app_area.dart';
 /// Log in (spec 0014, AC-1). The Buyer | Seller switch is not here: a seller
 /// finds it in the Profile tab's header (`ProfileAreaAction`).
 ///
-/// The store area (`/store`) reuses this shell with
-/// [AppTabBarVariant.seller], the Figma "tabbar-seller" bar (same five tabs,
-/// own border color), so a seller moves between Home, Discover, Reels,
-/// Activity and Profile from the tab bar.
+/// The buyer area only: the store area has its own tabs in `SellerShell`
+/// (spec 0019).
 class AppShell extends ConsumerWidget {
-  const AppShell({
-    super.key,
-    required this.navigationShell,
-    this.variant = AppTabBarVariant.user,
-  });
+  const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
-  final AppTabBarVariant variant;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +52,6 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: AppBottomNavBar(
-        variant: variant,
         currentItem: AppTabItem.values[navigationShell.currentIndex],
         onItemSelected: (item) => navigationShell.goBranch(
           AppTabItem.values.indexOf(item),

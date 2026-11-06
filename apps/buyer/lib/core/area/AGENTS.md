@@ -43,3 +43,12 @@ person with `role = 'seller'` stays in. There is no separate seller app any more
 Governing spec: `docs/specs/_root/0014-shared-login-seller-area/index.md`.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._
+
+## The store area shell (spec 0019)
+
+`/store` is its own `StatefulShellRoute` wrapped by `SellerShell` (`lib/core/router/seller_shell.dart`), with
+`SellerBottomNavBar` from the shared package. Tabs, in order: Home `/store`, Products `/store/products`, Activity
+`/store/activity`, Messages `/store/messages` (Coming soon placeholder) and Profile `/store/profile`. `AppShell` is the
+buyer area only. The store area has no Discover or Reels: `/store/discover` and `/store/reels` redirect to `/store`.
+Products, Activity and the other tab roots switch with `go`, not `push`. Tasks and details (the product flow, Store
+policies, Notifications, order and report details) are top level routes that open over the bar.

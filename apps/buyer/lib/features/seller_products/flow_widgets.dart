@@ -63,12 +63,14 @@ class FlowHeader extends StatelessWidget {
   const FlowHeader({
     super.key,
     required this.title,
-    required this.onBack,
+    this.onBack,
     this.onSaveDraft,
   });
 
   final String title;
-  final VoidCallback onBack;
+
+  /// Null on a tab root, which has nothing behind it (spec 0019, AC-5).
+  final VoidCallback? onBack;
   final VoidCallback? onSaveDraft;
 
   @override
@@ -77,11 +79,14 @@ class FlowHeader extends StatelessWidget {
       height: 56,
       child: Row(
         children: [
-          IconButton(
-            tooltip: 'Back',
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back, color: AppColors.neutral1100),
-          ),
+          if (onBack != null)
+            IconButton(
+              tooltip: 'Back',
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back, color: AppColors.neutral1100),
+            )
+          else
+            const SizedBox(width: AppSpacing.base),
           Expanded(
             child: Semantics(
               header: true,

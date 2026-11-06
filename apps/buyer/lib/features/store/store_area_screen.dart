@@ -240,7 +240,7 @@ class _DashBody extends ConsumerWidget {
           _QuickActions(
             onAddProduct: () => context.push('/store/products/new'),
             onOrders: () => context.go('/store/activity'),
-            onProducts: () => context.push('/store/products'),
+            onProducts: () => context.go('/store/products'),
             onReports: () => context.go('/store/activity'),
           ),
           const SizedBox(height: AppSpacing.xl),

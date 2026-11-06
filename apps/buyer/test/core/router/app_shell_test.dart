@@ -6,16 +6,15 @@ import 'package:go_router/go_router.dart';
 import 'package:marketplace_app/core/area/app_area.dart';
 import 'package:marketplace_app/core/onboarding/onboarding_prefs.dart';
 import 'package:marketplace_app/core/router/app_shell.dart';
+import 'package:marketplace_app/core/router/seller_shell.dart';
 import 'package:marketplace_app/data/providers/network_delay.dart';
 import 'package:marketplace_app/data/repositories/repository_providers.dart';
 import 'package:marketplace_app/data/repositories/user_profile_repository.dart';
 import 'package:marketplace_app/features/profile/profile_area_action.dart';
-import 'package:marketplace_app/features/store/seller_gate.dart';
 import 'package:marketplace_app/features/store/store_area_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shopscroll_shared/models/user_profile.dart';
 import 'package:shopscroll_shared/theme/app_theme.dart';
-import 'package:shopscroll_shared/widgets/app_bottom_nav_bar.dart';
 
 class _Profiles implements UserProfileRepository {
   _Profiles(this.role, {this.fail = false});
@@ -82,14 +81,9 @@ GoRouter router({String initialLocation = '/'}) => GoRouter(
         ),
       ],
     ),
-    // The store area: the same shell with the seller tab bar.
+    // The store area: its own shell with the seller tab bar (spec 0019).
     StatefulShellRoute.indexedStack(
-      builder: (context, state, shell) => SellerGate(
-        child: AppShell(
-          navigationShell: shell,
-          variant: AppTabBarVariant.seller,
-        ),
-      ),
+      builder: (context, state, shell) => SellerShell(navigationShell: shell),
       branches: [
         StatefulShellBranch(
           routes: [
@@ -100,9 +94,9 @@ GoRouter router({String initialLocation = '/'}) => GoRouter(
           ],
         ),
         for (final path in [
-          '/store/discover',
-          '/store/reels',
+          '/store/products',
           '/store/activity',
+          '/store/messages',
         ])
           StatefulShellBranch(
             routes: [
@@ -127,6 +121,8 @@ GoRouter router({String initialLocation = '/'}) => GoRouter(
         ),
       ],
     ),
+    GoRoute(path: '/store/discover', redirect: (context, state) => '/store'),
+    GoRoute(path: '/store/reels', redirect: (context, state) => '/store'),
     GoRoute(
       path: '/seller-app',
       builder: (context, state) => const Text('seller application page'),
@@ -257,10 +253,14 @@ void main() {
 
       expect(find.text('Quick Actions'), findsOneWidget);
       expect(find.text('Add Product'), findsOneWidget);
-      expect(find.text('Products'), findsOneWidget);
-      for (final tab in ['Home', 'Discover', 'Reels', 'Activity', 'Profile']) {
+      // Products is both a quick action and a tab.
+      expect(find.text('Products'), findsNWidgets(2));
+      for (final tab in ['Home', 'Activity', 'Messages', 'Profile']) {
         expect(find.text(tab), findsOneWidget, reason: tab);
       }
+      // The buyer's tabs are not in the store area (spec 0019, AC-2).
+      expect(find.text('Discover'), findsNothing);
+      expect(find.text('Reels'), findsNothing);
       // The switch is in the Profile tab, not on the dashboard header.
       expect(find.text('Buyer'), findsNothing);
     });
@@ -269,8 +269,8 @@ void main() {
       tallScreen(tester);
       await pumpApp(tester, role: UserRole.seller, initialLocation: '/store');
 
-      for (final tab in ['Discover', 'Reels', 'Activity']) {
-        await tester.tap(find.text(tab));
+      for (final tab in ['Products', 'Activity', 'Messages']) {
+        await tester.tap(find.text(tab).last);
         await tester.pumpAndSettle();
         expect(
           find.text('tab /store/${tab.toLowerCase()}'),
@@ -283,6 +283,18 @@ void main() {
       await tester.pump();
       expect(find.text('Quick Actions'), findsOneWidget);
     });
+
+    for (final path in ['/store/discover', '/store/reels']) {
+      testWidgets('the old store link $path lands on the dashboard', (
+        tester,
+      ) async {
+        tallScreen(tester);
+        await pumpApp(tester, role: UserRole.seller, initialLocation: path);
+        await tester.pump(mockNetworkDelay);
+        await tester.pump();
+        expect(find.text('Quick Actions'), findsOneWidget);
+      });
+    }
 
     testWidgets('the Orders quick action opens the Activity tab', (
       tester,
