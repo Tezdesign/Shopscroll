@@ -26,6 +26,8 @@ class _Flaky extends MockChatRepository {
     required String messageId,
     String? conversationId,
     String? storeId,
+    String? orderId,
+    ChatRole role = ChatRole.buyer,
     required String body,
   }) async {
     sentIds.add(messageId);
@@ -35,6 +37,8 @@ class _Flaky extends MockChatRepository {
       messageId: messageId,
       conversationId: conversationId,
       storeId: storeId,
+      orderId: orderId,
+      role: role,
       body: body,
     );
   }
@@ -47,6 +51,8 @@ class _OwnStore extends MockChatRepository {
   Future<ChatThreadInfo> getThreadInfo({
     String? conversationId,
     String? storeId,
+    String? orderId,
+    ChatRole role = ChatRole.buyer,
   }) => throw const ChatException(ChatFailure.notAllowed);
 }
 

@@ -5,49 +5,112 @@ import 'package:go_router/go_router.dart';
 
 import 'package:shopscroll_shared/theme/app_theme.dart';
 import 'package:shopscroll_shared/models/conversation.dart';
-import '../../data/providers/saved_providers.dart';
+import '../../data/providers/chat_providers.dart';
+import '../../data/repositories/chat_repository.dart';
 import 'activity_logic.dart';
 import 'list_states.dart';
 
-/// The Messages tab (spec 0008, AC-11, AC-13): the buyer's conversations
-/// with stores, newest first. Tapping a row opens the chat coming soon page.
-/// On the Supabase backend the list is always empty until a chat feature
-/// designs a table.
+/// The Messages tab (spec 0008, AC-11, AC-13; spec 0011, AC-2): the buyer's
+/// conversations with stores, newest first, 20 at a time, with pull to
+/// refresh. Tapping a row opens the thread. The search field filters the rows
+/// that are loaded.
+///
+/// With [role] `store` it is the seller's inbox (spec 0020, AC-1): the same
+/// list of the customers who wrote to the store, opening
+/// `/store/messages/:id`. A row with no photo shows the first letter of the
+/// name.
 class MessagesTab extends ConsumerWidget {
-  const MessagesTab({super.key, required this.query});
+  const MessagesTab({
+    super.key,
+    required this.query,
+    this.role = ChatRole.buyer,
+  });
 
   final String query;
+  final ChatRole role;
+
+  AsyncNotifierProvider<ChatInboxNotifier, ChatInboxState> get _provider =>
+      role == ChatRole.store ? storeInboxProvider : chatInboxProvider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ref
-        .watch(conversationsProvider)
+        .watch(_provider)
         .when(
           loading: () => const ListLoading(),
           error: (error, stackTrace) => ListMessage(
             "Couldn't load your messages.",
             buttonLabel: 'Try again',
-            onPressed: () => ref.invalidate(conversationsProvider),
+            onPressed: () => ref.invalidate(_provider),
           ),
-          data: (conversations) {
-            if (conversations.isEmpty) {
-              return const ListMessage('No messages yet');
+          data: (inbox) {
+            if (inbox.conversations.isEmpty) {
+              return role == ChatRole.store
+                  ? const _EmptySellerInbox()
+                  : const ListMessage('No messages yet');
             }
             final shown = filterConversations(
-              newestConversationsFirst(conversations),
+              newestConversationsFirst(inbox.conversations),
               query,
             );
-            if (shown.isEmpty) return ListMessage.noResults(query);
-            return ListView.separated(
-              padding: const EdgeInsets.all(AppSpacing.base),
-              itemCount: shown.length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(height: AppSpacing.base),
-              itemBuilder: (context, index) =>
-                  _ConversationRow(conversation: shown[index]),
+            // With a search typed and nothing matching, the next page may
+            // hold the match, so the footer stays.
+            if (shown.isEmpty && !inbox.hasMore) {
+              return ListMessage.noResults(query);
+            }
+            final footer = inbox.hasMore ? 1 : 0;
+            return RefreshIndicator(
+              onRefresh: () => ref.refresh(_provider.future),
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSpacing.base),
+                itemCount: shown.length + footer,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: AppSpacing.base),
+                itemBuilder: (context, index) {
+                  if (index < shown.length) {
+                    return _ConversationRow(
+                      conversation: shown[index],
+                      route: role == ChatRole.store
+                          ? '/store/messages/${shown[index].id}'
+                          : '/activity/chat/${shown[index].id}',
+                    );
+                  }
+                  return _Footer(state: inbox, provider: _provider);
+                },
+              ),
             );
           },
         );
+  }
+}
+
+/// The end of the list: a spinner while the next page loads, or a retry when
+/// that load failed. The next page starts as soon as this row is built, which
+/// happens only when the list has scrolled near its end.
+class _Footer extends ConsumerWidget {
+  const _Footer({required this.state, required this.provider});
+
+  final ChatInboxState state;
+  final AsyncNotifierProvider<ChatInboxNotifier, ChatInboxState> provider;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (state.loadMoreFailed) {
+      return Center(
+        child: TextButton(
+          onPressed: () => ref.read(provider.notifier).loadMore(),
+          child: const Text('Try again'),
+        ),
+      );
+    }
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => ref.read(provider.notifier).loadMore(),
+    );
+    return const Padding(
+      padding: EdgeInsets.all(AppSpacing.base),
+      child: Center(child: CircularProgressIndicator()),
+    );
   }
 }
 
@@ -55,9 +118,10 @@ class MessagesTab extends ConsumerWidget {
 /// message, and the time on the right. An unread row is all in the darker
 /// text colour, a read one has a lighter message and time.
 class _ConversationRow extends StatelessWidget {
-  const _ConversationRow({required this.conversation});
+  const _ConversationRow({required this.conversation, required this.route});
 
   final Conversation conversation;
+  final String route;
 
   static const double _avatar = 48;
 
@@ -83,7 +147,7 @@ class _ConversationRow extends StatelessWidget {
           '${unread ? ', unread' : ''}',
       excludeSemantics: true,
       child: GestureDetector(
-        onTap: () => context.push('/activity/chat/${conversation.id}'),
+        onTap: () => context.push(route),
         behavior: HitTestBehavior.opaque,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 44),
@@ -95,7 +159,22 @@ class _ConversationRow extends StatelessWidget {
                   width: _avatar,
                   height: _avatar,
                   child: conversation.storeAvatarUrl == null
-                      ? const ColoredBox(color: AppColors.neutral200)
+                      ? ColoredBox(
+                          color: AppColors.neutral200,
+                          child: Center(
+                            child: Text(
+                              conversation.storeName.isEmpty
+                                  ? ''
+                                  : conversation.storeName
+                                        .substring(0, 1)
+                                        .toUpperCase(),
+                              style: style(
+                                AppColors.neutral700,
+                                weight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        )
                       : CachedNetworkImage(
                           imageUrl: conversation.storeAvatarUrl!,
                           fit: BoxFit.cover,
@@ -131,6 +210,47 @@ class _ConversationRow extends StatelessWidget {
               Text(time, style: style(detailColor)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The seller's inbox with no threads yet (spec 0020, AC-9).
+class _EmptySellerInbox extends StatelessWidget {
+  const _EmptySellerInbox();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(AppSpacing.base),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'No messages yet',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamilyDisplay,
+                fontSize: AppTypography.sizeLg,
+                height: AppTypography.lineHeightSm,
+                fontWeight: FontWeight.w600,
+                color: AppColors.neutral1100,
+              ),
+            ),
+            SizedBox(height: AppSpacing.xs),
+            Text(
+              'When a customer writes to your store,\nit shows up here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamilyBody,
+                fontSize: AppTypography.sizeSm,
+                height: AppTypography.lineHeightSm,
+                color: AppColors.neutral500,
+              ),
+            ),
+          ],
         ),
       ),
     );

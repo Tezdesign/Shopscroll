@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:shopscroll_shared/widgets/app_bottom_nav_bar.dart';
 
+import '../../data/providers/chat_providers.dart';
 import '../area/app_area.dart';
 
 /// The persistent bottom nav shell wrapping every top level tab (Home,
@@ -49,9 +50,13 @@ class AppShell extends ConsumerWidget {
       });
     }
 
+    // A dot on Activity while a chat thread is unread (spec 0011, AC-8).
+    final hasUnread = (ref.watch(chatUnreadCountProvider).value ?? 0) > 0;
+
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: AppBottomNavBar(
+        badged: hasUnread ? const {AppTabItem.activity} : const {},
         currentItem: AppTabItem.values[navigationShell.currentIndex],
         onItemSelected: (item) => navigationShell.goBranch(
           AppTabItem.values.indexOf(item),

@@ -11,7 +11,8 @@ import 'package:shopscroll_shared/models/conversation.dart';
 import 'package:marketplace_app/data/models/saved_product.dart';
 import 'package:marketplace_app/data/models/saved_reel.dart';
 import 'package:marketplace_app/data/providers/network_delay.dart';
-import 'package:marketplace_app/data/repositories/conversation_repository.dart';
+import 'package:marketplace_app/data/repositories/chat_repository.dart';
+import 'package:marketplace_app/data/repositories/mock/mock_chat_repository.dart';
 import 'package:marketplace_app/data/repositories/mock/mock_reel_repository.dart';
 import 'package:marketplace_app/data/repositories/mock/mock_saved_product_repository.dart';
 import 'package:marketplace_app/data/repositories/repository_providers.dart';
@@ -46,15 +47,22 @@ class _ReelsWithUnavailable extends MockReelRepository {
   }
 }
 
-class _NoConversations implements ConversationRepository {
+class _NoConversations extends MockChatRepository {
   @override
-  Future<List<Conversation>> getConversations() async => const [];
+  Future<List<Conversation>> listConversations({
+    required ChatRole role,
+    Conversation? before,
+    int limit = 20,
+  }) async => const [];
 }
 
-class _BrokenConversations implements ConversationRepository {
+class _BrokenConversations extends MockChatRepository {
   @override
-  Future<List<Conversation>> getConversations() async =>
-      throw Exception('no network');
+  Future<List<Conversation>> listConversations({
+    required ChatRole role,
+    Conversation? before,
+    int limit = 20,
+  }) async => throw Exception('no network');
 }
 
 /// The Semantics widget with this spoken label. Not `bySemanticsLabel`, which
@@ -304,7 +312,7 @@ void main() {
     await open(
       tester,
       overrides: [
-        conversationRepositoryProvider.overrideWithValue(_NoConversations()),
+        chatRepositoryProvider.overrideWithValue(_NoConversations()),
       ],
     );
     await openTab(tester, 'Messages');
@@ -317,9 +325,7 @@ void main() {
     await open(
       tester,
       overrides: [
-        conversationRepositoryProvider.overrideWithValue(
-          _BrokenConversations(),
-        ),
+        chatRepositoryProvider.overrideWithValue(_BrokenConversations()),
         savedProductRepositoryProvider.overrideWithValue(
           _FlakyProducts()..failLoad = true,
         ),

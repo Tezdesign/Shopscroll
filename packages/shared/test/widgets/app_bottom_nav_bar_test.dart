@@ -93,4 +93,22 @@ void main() {
     expect(userBorder.top.color, AppColors.neutral200);
     expect(sellerBorder.top.color, AppColors.neutral300);
   });
+
+  testWidgets('badged tabs show a dot and the others do not', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          bottomNavigationBar: AppBottomNavBar(
+            currentItem: AppTabItem.home,
+            onItemSelected: (_) {},
+            badged: const {AppTabItem.activity},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('tab-badge-activity')), findsOneWidget);
+    expect(find.byKey(const ValueKey('tab-badge-profile')), findsNothing);
+  });
 }

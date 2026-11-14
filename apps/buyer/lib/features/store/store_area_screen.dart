@@ -11,6 +11,8 @@ import '../../core/area/app_area.dart';
 import '../../data/models/store_order.dart';
 import '../../data/models/store_report.dart';
 import '../../data/providers/store_activity_providers.dart';
+import '../../data/providers/chat_providers.dart';
+import '../../data/providers/store_notification_providers.dart';
 import '../../data/providers/user_profile_providers.dart';
 import 'seller_gate.dart';
 
@@ -93,10 +95,17 @@ class _DashHeader extends ConsumerWidget {
                   ),
                 ),
               ),
-              const _HeaderIcon(glyph: AppIconGlyph.chat, label: 'Chat'),
+              _HeaderIconButton(
+                glyph: AppIconGlyph.chat,
+                label: 'Messages',
+                badge: (ref.watch(storeUnreadCountProvider).value ?? 0) > 0,
+                onTap: () => context.go('/store/messages'),
+              ),
               _HeaderIconButton(
                 glyph: AppIconGlyph.bell,
                 label: 'Notifications',
+                badge:
+                    (ref.watch(storeNotificationUnreadProvider).value ?? 0) > 0,
                 onTap: () => context.push('/store/notifications'),
               ),
             ],
@@ -137,38 +146,20 @@ class _StoreLogo extends StatelessWidget {
   }
 }
 
-class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({required this.glyph, required this.label});
-
-  final AppIconGlyph glyph;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      enabled: false,
-      label: label,
-      excludeSemantics: true,
-      child: SizedBox(
-        width: _tapSize,
-        height: _tapSize,
-        child: Center(child: AppIcon(glyph, color: AppColors.neutral100)),
-      ),
-    );
-  }
-}
-
 class _HeaderIconButton extends StatelessWidget {
   const _HeaderIconButton({
     required this.glyph,
     required this.label,
     required this.onTap,
+    this.badge = false,
   });
 
   final AppIconGlyph glyph;
   final String label;
   final VoidCallback onTap;
+
+  /// A small red dot on the icon, for unread items.
+  final bool badge;
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +172,26 @@ class _HeaderIconButton extends StatelessWidget {
         child: SizedBox(
           width: _tapSize,
           height: _tapSize,
-          child: Center(child: AppIcon(glyph, color: AppColors.neutral100)),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              AppIcon(glyph, color: AppColors.neutral100),
+              if (badge)
+                Positioned(
+                  top: 10,
+                  right: 11,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppColors.error400,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.neutral1000),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

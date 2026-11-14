@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/repositories/chat_repository.dart';
 import '../../features/chat/chat_thread_screen.dart';
 import '../../features/activity/activity_screen.dart';
 import '../../features/activity/order_receipt_screen.dart';
@@ -36,6 +37,7 @@ import '../../features/search/search_screen.dart';
 import '../../features/seller_products/product_flow_screen.dart';
 import '../../features/seller_products/seller_products_screen.dart';
 import '../../features/store/seller_gate.dart';
+import '../../features/seller_chat/seller_inbox_screen.dart';
 import '../../features/seller_notifications/seller_notifications_screen.dart';
 import '../../features/seller_policies/store_policies_screen.dart';
 import '../../features/seller_policies/store_policy_edit_screen.dart';
@@ -416,10 +418,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/store/messages',
-                builder: (context, state) => const ComingSoonScreen(
-                  label: 'Messages',
-                  icon: Icons.chat_bubble_outline,
-                ),
+                builder: (context, state) => const SellerInboxScreen(),
               ),
             ],
           ),
@@ -432,6 +431,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      // The seller's chat threads (spec 0020): full screen over the tab bar.
+      // `order` is declared before `:conversationId` so it is never read as a
+      // conversation id. The route holds the order id, never a customer id.
+      GoRoute(
+        path: '/store/messages/order/:orderId',
+        builder: (context, state) => SellerGate(
+          child: ChatThreadScreen(
+            orderId: state.pathParameters['orderId']!,
+            role: ChatRole.store,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/store/messages/:conversationId',
+        builder: (context, state) => SellerGate(
+          child: ChatThreadScreen(
+            conversationId: state.pathParameters['conversationId']!,
+            role: ChatRole.store,
+          ),
+        ),
       ),
       // The store area no longer has Discover or Reels tabs (spec 0019,
       // AC-2). Old links land on the dashboard instead of `/store/:id`.

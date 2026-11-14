@@ -318,7 +318,7 @@ acceptance criteria).
 - [x] Design it (spec): `/architect chat`
 - [ ] Build it: `/develop chat`
    - [ ] Server and thread slice: migration `0018`, send and read text end to end, the thread screen, the entry buttons (AC-1, AC-3, AC-4, AC-5, AC-6, AC-13, AC-14, AC-15, AC-19, AC-20, AC-21). Partly built: the thread screen, entry buttons and mock backend work and are tested; `0018_chat.sql` is applied on a test project and `supabase/checks/chat.sql` ran with no FAIL (reported by the engineer, the SQL editor shows no NOTICE lines), not yet applied to the live project, and the Realtime spike is not done
-   - [ ] Inbox and unread: migration `0019`, the live paged Messages tab, unread count and dot (AC-2, AC-8, AC-16)
+   - [x] Inbox and unread (built, SQL checks not run yet, `0019` not applied anywhere): migration `0019`, the live paged Messages tab, unread count and dot (AC-2, AC-8, AC-16)
    - [ ] Live details: seen mark, typing, reconnect and resume (AC-7, AC-8, AC-18)
    - [ ] Product card and photos: the Asking about chip, the card, the private photo bucket (AC-9, AC-10)
    - [ ] Delete, block, account deletion and finish: migration `0021`, states, accessibility, tests (AC-11, AC-12, AC-17, AC-20, AC-22, AC-23)
@@ -380,15 +380,16 @@ line and the crossed out price (Figma 3001:10221 and 3001:10085).
 
 From spec [0009](../../specs/buyer/0009-purchasing-flow/index.md)
 
-### 16. Seller chat screens · planned · needs a decision
+### 16. Seller chat screens · planned
 
 The store side of chat: a seller inbox, a seller thread, a "Message customer" button on the order detail, and a
-badge on the store header chat icon. The server already supports the store role (spec 0011). The Figma file has
-no seller chat frames yet, so they are designed first.
+badge on the store header chat icon. The server already supports the store role (spec 0011). The Figma frames are
+drawn on the page "The design - seller". Built after spec 0011's thread and inbox slices, because the role parameter
+and the inbox function are added there once for both roles.
 **Done when:** a seller can read and answer buyer messages, and start a chat from an order, in the store area
-(see the spec once it exists).
-- [ ] Design it (spec): `/architect seller chat screens`
-- [ ] Build it: `/develop seller chat screens`
+(see spec 0020).
+- [x] Design it (spec): [0020](../../specs/_root/0020-seller-chat/index.md)
+- [ ] Build it: `/develop seller chat screens`. Built on the mock backend and tested: the inbox, the thread as the store, "Message customer" on the order detail, the unread dots. Not built: Block and Unblock (AC-7, needs spec 0011 task 7). Not run against Supabase: `0019` is unrun and unapplied.
 - [ ] Verify it: `/check verify seller chat screens`
 - [ ] Test it: `/test seller chat screens`
 

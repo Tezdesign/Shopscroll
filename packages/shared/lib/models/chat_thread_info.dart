@@ -14,6 +14,7 @@ class ChatThreadInfo {
     this.storeReadAt,
     this.buyerBlocked = false,
     this.storeBlocked = false,
+    this.selfId,
   });
 
   final String? conversationId;
@@ -25,6 +26,12 @@ class ChatThreadInfo {
   final DateTime? storeReadAt;
   final bool buyerBlocked;
   final bool storeBlocked;
+
+  /// The caller's own account id, when the backend gives it. The server does
+  /// not return it, so the app falls back to the signed in id; the mock sets
+  /// it. A store tells its own messages from the customer's by it, because a
+  /// store never receives the customer's id (spec 0020, AC-8).
+  final String? selfId;
 
   factory ChatThreadInfo.fromJson(Map<String, dynamic> json) {
     DateTime? time(String key) {
@@ -69,6 +76,7 @@ class ChatThreadInfo {
     DateTime? storeReadAt,
     bool? buyerBlocked,
     bool? storeBlocked,
+    String? selfId,
   }) {
     return ChatThreadInfo(
       conversationId: conversationId ?? this.conversationId,
@@ -80,6 +88,7 @@ class ChatThreadInfo {
       storeReadAt: storeReadAt ?? this.storeReadAt,
       buyerBlocked: buyerBlocked ?? this.buyerBlocked,
       storeBlocked: storeBlocked ?? this.storeBlocked,
+      selfId: selfId ?? this.selfId,
     );
   }
 }

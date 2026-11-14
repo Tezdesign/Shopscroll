@@ -62,6 +62,6 @@ Give the store `StatefulShellRoute` its own five branches and its own bar widget
 ## Consequences
 
 - Reels and Discover are no longer reachable from the store area. A seller reaches them by switching to the buyer area. Seller reel creation, if it is ever built, needs its own entry (spec 0015, AC-15).
-- The Figma `tabbar-seller` component and the frames that use it must be updated to the new labels. Until then the design file and the app disagree.
+- The Figma `tabbar-seller` component labels now read Home, Products, Activity, Messages, Profile (done with spec 0020). Its icons are still the buyer's (search for Products, play for Messages) and need swapping.
 - Home quick actions that used `push` now use `go`, so Back from Products no longer returns to Home. This is the normal tab behavior.
 - The Messages tab is a promise: the inbox needs a spec of its own (scope feature 12).

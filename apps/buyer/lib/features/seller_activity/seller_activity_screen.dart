@@ -10,6 +10,7 @@ import 'package:shopscroll_shared/widgets/app_icon.dart';
 import 'package:shopscroll_shared/widgets/search_field.dart';
 
 import '../../core/area/app_area.dart';
+import '../../data/providers/chat_providers.dart';
 import '../../data/providers/store_activity_providers.dart';
 import '../../data/providers/store_notification_providers.dart';
 import '../../data/providers/user_profile_providers.dart';
@@ -28,7 +29,8 @@ import 'reports_tab.dart';
 /// 3001:11908. Deviations from the frames:
 /// - The status bar and the bottom tab bar belong to the seller shell, which
 ///   has no spec yet (spec 0018, feature 30), so they are not drawn.
-/// - The chat and bell icons are drawn but do nothing yet.
+/// - The chat icon opens the Messages tab (spec 0020) and the bell opens
+///   Notifications, each with a dot while something is unread.
 /// - The header fill is [AppColors.neutral1000], the nearest token to the
 ///   frame's `#222` (variable `Surface/Inverse header`, which has no token).
 /// - The search field is the shared [SearchField] (bordered, no microphone).
@@ -139,7 +141,12 @@ class _Header extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const _HeaderIcon(glyph: AppIconGlyph.chat, label: 'Chat'),
+                  _HeaderIcon(
+                    glyph: AppIconGlyph.chat,
+                    label: 'Messages',
+                    badge: (ref.watch(storeUnreadCountProvider).value ?? 0) > 0,
+                    onTap: () => context.go('/store/messages'),
+                  ),
                   _HeaderIcon(
                     glyph: AppIconGlyph.bell,
                     label: 'Notifications',

@@ -14,6 +14,7 @@ import '../activity/activity_logic.dart';
 import '../activity/list_states.dart';
 import '../checkout/checkout_logic.dart';
 import '../store/seller_gate.dart';
+import 'report_widgets.dart';
 import 'store_order_status_badge.dart';
 
 /// The seller's order detail at `/store/activity/orders/:id` (spec 0018, AC-5).
@@ -24,8 +25,8 @@ import 'store_order_status_badge.dart';
 /// receipt-user", node 3001:9058, `OrderReceiptScreen`) with these changes:
 /// only this store's lines and their subtotal (no delivery fee, no total of
 /// the whole order), the chosen size and color under each title, the customer's
-/// name, email and phone as "Customer", and no download button or warning
-/// glyph. Money shows the store currency with 3 decimals.
+/// name, email and phone as "Customer" with a "Message customer" button
+/// (spec 0020, AC-5), and no download button or warning glyph. Money shows the store currency with 3 decimals.
 class StoreOrderDetailScreen extends ConsumerWidget {
   const StoreOrderDetailScreen({super.key, required this.orderId});
 
@@ -215,6 +216,17 @@ class _Body extends StatelessWidget {
                 ?order.customerEmail,
                 ?order.customerPhone,
               ]),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ReportButton(
+                  label: 'Message customer',
+                  glyph: AppIconGlyph.chat,
+                  // The route holds the order id, never the customer's id
+                  // (spec 0020, AC-5, AC-8).
+                  onPressed: () =>
+                      context.push('/store/messages/order/${order.orderId}'),
+                ),
+              ),
               if (place.isNotEmpty)
                 _Block('Delivery address', place, [
                   if (note != null && note.isNotEmpty) note,

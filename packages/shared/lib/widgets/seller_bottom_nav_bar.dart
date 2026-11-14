@@ -18,10 +18,15 @@ class SellerBottomNavBar extends StatelessWidget {
     super.key,
     required this.currentItem,
     required this.onItemSelected,
+    this.badged = const {},
   });
 
   final SellerTabItem currentItem;
   final ValueChanged<SellerTabItem> onItemSelected;
+
+  /// Tabs that show a small red dot on the icon, for unread items (Messages
+  /// while a customer thread is unread, spec 0020 AC-2).
+  final Set<SellerTabItem> badged;
 
   static const double _height = 65;
   static const double _iconSize = 24;
@@ -89,10 +94,30 @@ class SellerBottomNavBar extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  isActive ? _filledIcons[item] : _outlineIcons[item],
-                  size: _iconSize,
-                  color: color,
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      isActive ? _filledIcons[item] : _outlineIcons[item],
+                      size: _iconSize,
+                      color: color,
+                    ),
+                    if (badged.contains(item))
+                      Positioned(
+                        top: 0,
+                        right: -2,
+                        child: Container(
+                          key: ValueKey('tab-badge-${item.name}'),
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppColors.error400,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.white100),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(

@@ -48,8 +48,12 @@ The real backend (managed Postgres + Auth via Supabase), replacing the mock data
   publication, plus `send_message`, `mark_conversation_read` and `chat_thread_info`. The functions raise their reason as the
   whole error message (`no_session`, `not_allowed`, `blocked`, `rate_limited`, and so on). The inbox list (`0019`), photo
   bucket (`0020`) and delete and block (`0021`) come later. Applied on a test project only, not yet on the real project.
+  `0019_chat_inbox.sql` (spec 0011, task 3): `chat_conversations_list` (the caller's threads in one role, newest first, in
+  pages by `(last_message_at, id)`, with the other side's name and avatar and an unread flag, never a buyer's account id
+  to a store) and `chat_unread_count`. Written and not yet run: `checks/chat_inbox.sql` has not been executed, and the
+  migration is not applied anywhere.
 - `checks/` — SQL you run by hand on a test or branch database: `store_activity.sql` (spec 0018, migrations 0014 to 0017, one
-  NOTICE per check, ends with rollback), `chat.sql` (spec 0011, migration 0018), `seller_access.sql`,
+  NOTICE per check, ends with rollback), `chat.sql` (spec 0011, migration 0018), `chat_inbox.sql` (migration 0019), `seller_access.sql`,
   `seller_applications.sql`, `visitor_applications.sql` and `applicant_notification.sql` (each rolls back, one NOTICE per
   check), `detach_unclaimed_attached.sql` (applies `0013` itself inside a transaction, run it with psql from the repo root
   before `0013` is applied) and `audit_seller_rows.sql` (read only, run before `0004`).

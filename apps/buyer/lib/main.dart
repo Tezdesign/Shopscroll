@@ -18,7 +18,6 @@ import 'core/router/app_router.dart';
 import 'data/repositories/repository_providers.dart';
 import 'data/repositories/supabase/supabase_cart_repository.dart';
 import 'data/repositories/supabase/supabase_chat_repository.dart';
-import 'data/repositories/supabase/supabase_conversation_repository.dart';
 import 'data/repositories/supabase/supabase_order_repository.dart';
 import 'data/repositories/supabase/supabase_product_repository.dart';
 import 'data/repositories/supabase/supabase_reel_repository.dart';
@@ -100,9 +99,6 @@ void main() async {
           ),
           storeActivityRepositoryProvider.overrideWithValue(
             SupabaseStoreActivityRepository(anonymousClient),
-          ),
-          conversationRepositoryProvider.overrideWithValue(
-            SupabaseConversationRepository(),
           ),
           chatRepositoryProvider.overrideWithValue(
             SupabaseChatRepository(anonymousClient),
@@ -197,9 +193,6 @@ void main() async {
           (ref) => SupabaseStoreActivityRepository(
             ref.watch(activeSupabaseClientProvider),
           ),
-        ),
-        conversationRepositoryProvider.overrideWithValue(
-          SupabaseConversationRepository(),
         ),
         chatRepositoryProvider.overrideWith(
           (ref) => SupabaseChatRepository(ref.watch(activeSupabaseClientProvider)),

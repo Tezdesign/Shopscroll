@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shopscroll_shared/models/chat_message.dart';
 import 'package:shopscroll_shared/models/chat_thread_info.dart';
+import 'package:shopscroll_shared/models/conversation.dart';
 import 'package:shopscroll_shared/models/ids.dart';
 
 import '../../core/area/app_area.dart';
@@ -18,9 +19,16 @@ final chatVisitorProvider = Provider<bool>(
   (ref) => ClerkConfig.isConfigured && ref.watch(signedInUserIdProvider) == null,
 );
 
-/// Which thread a screen shows: an existing one by [conversationId], or a
-/// store by [storeId] that may not have one yet. Exactly one is set.
-typedef ChatTarget = ({String? conversationId, String? storeId});
+/// Which thread a screen shows, and as whom: an existing one by
+/// [conversationId], a store by [storeId] that may not have one yet (buyer
+/// role), or an order by [orderId] (store role, spec 0020). Exactly one of the
+/// three is set.
+typedef ChatTarget = ({
+  String? conversationId,
+  String? storeId,
+  String? orderId,
+  ChatRole role,
+});
 
 /// The sender of a message the server has not stored yet. The screen tells own
 /// messages from the store's by comparing the sender with the store's id, so
@@ -95,17 +103,31 @@ class ChatThreadNotifier extends AsyncNotifier<ChatThreadState> {
     final info = await repository.getThreadInfo(
       conversationId: target.conversationId,
       storeId: target.storeId,
+      orderId: target.orderId,
+      role: target.role,
     );
     final id = info.conversationId;
     if (id == null) return ChatThreadState(info: info);
 
     _watch(id);
+    unawaited(repository.markRead(id));
     final page = await repository.getMessages(id, limit: chatPageSize);
     return ChatThreadState(
       info: info,
       messages: mergeChatMessages(const [], page),
       hasMore: page.length == chatPageSize,
     );
+  }
+
+  /// Whether [message] is the caller's own. A buyer's thread knows the store's
+  /// id, so anything else is theirs. A store never receives the customer's id,
+  /// so it compares with its own (spec 0020, AC-8).
+  bool isMine(ChatMessage message) {
+    final info = state.value?.info;
+    if (message.senderId == _pendingSender) return true;
+    if (target.role == ChatRole.buyer) return message.senderId != info?.otherId;
+    final me = info?.selfId ?? ref.read(signedInUserIdProvider);
+    return message.senderId == me;
   }
 
   void _watch(String conversationId) {
@@ -121,6 +143,12 @@ class ChatThreadNotifier extends AsyncNotifier<ChatThreadState> {
   void _onLive(ChatMessage message) {
     final current = state.value;
     if (current == null) return;
+    // A message from the other side while the thread is open is read at once
+    // (spec 0011, AC-8).
+    final id = current.info.conversationId;
+    if (id != null && !isMine(message)) {
+      unawaited(ref.read(chatRepositoryProvider).markRead(id));
+    }
     state = AsyncData(
       current.copyWith(
         messages: mergeChatMessages(current.messages, [message]),
@@ -218,6 +246,8 @@ class ChatThreadNotifier extends AsyncNotifier<ChatThreadState> {
         messageId: messageId,
         conversationId: id,
         storeId: id == null ? target.storeId : null,
+        orderId: id == null ? target.orderId : null,
+        role: target.role,
         body: message.body ?? '',
       );
       if (!ref.mounted) return null;
@@ -268,3 +298,159 @@ class ChatThreadNotifier extends AsyncNotifier<ChatThreadState> {
     );
   }
 }
+
+/// How many threads the inbox asks for at a time (spec 0011, AC-2).
+const chatInboxPageSize = 20;
+
+/// The rows loaded so far for the Messages tab, and whether more follow.
+class ChatInboxState {
+  const ChatInboxState({
+    required this.conversations,
+    required this.hasMore,
+    this.loadingMore = false,
+    this.loadMoreFailed = false,
+  });
+
+  final List<Conversation> conversations;
+  final bool hasMore;
+  final bool loadingMore;
+  final bool loadMoreFailed;
+
+  ChatInboxState copyWith({
+    List<Conversation>? conversations,
+    bool? hasMore,
+    bool? loadingMore,
+    bool? loadMoreFailed,
+  }) => ChatInboxState(
+    conversations: conversations ?? this.conversations,
+    hasMore: hasMore ?? this.hasMore,
+    loadingMore: loadingMore ?? this.loadingMore,
+    loadMoreFailed: loadMoreFailed ?? this.loadMoreFailed,
+  );
+}
+
+/// The buyer's chat threads, newest first, as if fetched from `GET /chats`
+/// (spec 0011, AC-2). The first page loads when the Messages tab opens;
+/// [ChatInboxNotifier.loadMore] adds the next 20 by keyset. A change to any of
+/// the person's threads reloads what is already on screen without a spinner.
+/// No automatic retry, so a failed load reaches the tab as an error with its
+/// own "Try again" (AC-20).
+final chatInboxProvider =
+    AsyncNotifierProvider.autoDispose<ChatInboxNotifier, ChatInboxState>(
+      () => ChatInboxNotifier(ChatRole.buyer),
+      retry: (retryCount, error) => null,
+    );
+
+/// The seller's inbox: the threads where the signed in seller is the store
+/// (spec 0020, AC-1). Same paging and live reload as [chatInboxProvider].
+final storeInboxProvider =
+    AsyncNotifierProvider.autoDispose<ChatInboxNotifier, ChatInboxState>(
+      () => ChatInboxNotifier(ChatRole.store),
+      retry: (retryCount, error) => null,
+    );
+
+class ChatInboxNotifier extends AsyncNotifier<ChatInboxState> {
+  ChatInboxNotifier(this.role);
+
+  final ChatRole role;
+
+  @override
+  Future<ChatInboxState> build() async {
+    final repository = ref.watch(chatRepositoryProvider);
+    final sub = repository.watchInbox().listen((_) => _refresh());
+    ref.onDispose(sub.cancel);
+    final rows = await repository.listConversations(
+      role: role,
+      limit: chatInboxPageSize,
+    );
+    return ChatInboxState(
+      conversations: rows,
+      hasMore: rows.length == chatInboxPageSize,
+    );
+  }
+
+  /// Reloads the rows already shown (at least one page) and keeps them on
+  /// screen while it does. A failure keeps the old rows.
+  Future<void> _refresh() async {
+    final current = state.value;
+    if (current == null || current.loadingMore) return;
+    final want = current.conversations.length < chatInboxPageSize
+        ? chatInboxPageSize
+        : current.conversations.length;
+    try {
+      final rows = await ref
+          .read(chatRepositoryProvider)
+          .listConversations(role: role, limit: want);
+      if (!ref.mounted) return;
+      state = AsyncData(
+        current.copyWith(conversations: rows, hasMore: rows.length == want),
+      );
+    } catch (_) {}
+  }
+
+  /// The next 20 older threads (AC-2).
+  Future<void> loadMore() async {
+    final current = state.value;
+    if (current == null ||
+        !current.hasMore ||
+        current.loadingMore ||
+        current.conversations.isEmpty) {
+      return;
+    }
+    state = AsyncData(
+      current.copyWith(loadingMore: true, loadMoreFailed: false),
+    );
+    try {
+      final rows = await ref
+          .read(chatRepositoryProvider)
+          .listConversations(
+            role: role,
+            before: current.conversations.last,
+            limit: chatInboxPageSize,
+          );
+      if (!ref.mounted) return;
+      final latest = state.value ?? current;
+      final known = {for (final c in latest.conversations) c.id};
+      state = AsyncData(
+        latest.copyWith(
+          conversations: [
+            ...latest.conversations,
+            for (final c in rows)
+              if (!known.contains(c.id)) c,
+          ],
+          hasMore: rows.length == chatInboxPageSize,
+          loadingMore: false,
+        ),
+      );
+    } catch (_) {
+      if (!ref.mounted) return;
+      state = AsyncData(
+        (state.value ?? current).copyWith(
+          loadingMore: false,
+          loadMoreFailed: true,
+        ),
+      );
+    }
+  }
+}
+
+/// How many of the buyer's threads are unread, as if fetched from
+/// `GET /chats/unread` (AC-8). Drives the dot on the Activity tab. A failure
+/// counts as zero: a dot that cannot be drawn is not worth an error.
+final chatUnreadCountProvider = _unreadProvider(ChatRole.buyer);
+
+/// The same for the seller: threads where the seller is the store. Drives the
+/// dot on the Messages tab and on the header chat icons (spec 0020, AC-2).
+final storeUnreadCountProvider = _unreadProvider(ChatRole.store);
+
+FutureProvider<int> _unreadProvider(ChatRole role) =>
+    FutureProvider.autoDispose<int>((ref) async {
+      final repository = ref.watch(chatRepositoryProvider);
+      final sub = repository.watchInbox().listen((_) => ref.invalidateSelf());
+      ref.onDispose(sub.cancel);
+      try {
+        return await repository.unreadCount(role);
+      } catch (_) {
+        return 0;
+      }
+    }, retry: (retryCount, error) => null);

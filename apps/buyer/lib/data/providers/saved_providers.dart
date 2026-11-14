@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:shopscroll_shared/models/conversation.dart';
 import 'package:shopscroll_shared/models/product.dart';
 import 'package:shopscroll_shared/models/reel.dart';
 import '../models/saved_product.dart';
@@ -28,14 +27,6 @@ final savedReelsProvider =
       SavedReelsNotifier.new,
       retry: (retryCount, error) => null,
     );
-
-/// The buyer's store conversations, as if fetched from
-/// `GET /conversations`, newest first. No automatic retry, so a failed load
-/// reaches the Messages tab as an error with its own "Try again" (AC-12).
-final conversationsProvider = FutureProvider<List<Conversation>>(
-  (ref) => ref.watch(conversationRepositoryProvider).getConversations(),
-  retry: (retryCount, error) => null,
-);
 
 class SavedProductsNotifier extends _SavedNotifier<SavedProduct> {
   @override

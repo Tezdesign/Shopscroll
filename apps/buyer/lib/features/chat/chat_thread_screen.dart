@@ -14,10 +14,12 @@ import 'chat_bubble.dart';
 import 'chat_composer.dart';
 import 'chat_logic.dart';
 
-/// The chat thread with one store (spec 0011, AC-1, AC-3, AC-4, AC-19, AC-20).
-/// Open it by [conversationId] from the Messages tab, or by [storeId] from
-/// "Chat now" and "Message", where the thread may not exist yet. Nothing is
-/// stored until the first message is sent.
+/// The chat thread with one store (spec 0011, AC-1, AC-3, AC-4, AC-19, AC-20),
+/// or, as [ChatRole.store], with one customer (spec 0020, AC-3, AC-5). Open it
+/// by [conversationId] from the Messages tab, by [storeId] from "Chat now" and
+/// "Message", or by [orderId] from "Message customer" on an order, where the
+/// thread may not exist yet. Nothing is stored until the first message is
+/// sent.
 ///
 /// Figma nodes 874:5806 (empty) and 874:5937 (with messages): a back arrow, the
 /// store avatar and name (a tap opens the Store Page), the messages and the
@@ -25,14 +27,24 @@ import 'chat_logic.dart';
 /// and the screen adds a log in prompt, a failure state and the retry line for
 /// a message that was not sent, none of which the frames draw.
 class ChatThreadScreen extends ConsumerStatefulWidget {
-  const ChatThreadScreen({super.key, this.conversationId, this.storeId})
-    : assert(
-        (conversationId == null) != (storeId == null),
-        'Name a thread or a store, not both.',
-      );
+  const ChatThreadScreen({
+    super.key,
+    this.conversationId,
+    this.storeId,
+    this.orderId,
+    this.role = ChatRole.buyer,
+  }) : assert(
+         (conversationId != null ? 1 : 0) +
+                 (storeId != null ? 1 : 0) +
+                 (orderId != null ? 1 : 0) ==
+             1,
+         'Name a thread, a store or an order, exactly one.',
+       );
 
   final String? conversationId;
   final String? storeId;
+  final String? orderId;
+  final ChatRole role;
 
   @override
   ConsumerState<ChatThreadScreen> createState() => _ChatThreadScreenState();
@@ -41,8 +53,12 @@ class ChatThreadScreen extends ConsumerStatefulWidget {
 class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   final _scroll = ScrollController();
 
-  ChatTarget get _target =>
-      (conversationId: widget.conversationId, storeId: widget.storeId);
+  ChatTarget get _target => (
+    conversationId: widget.conversationId,
+    storeId: widget.storeId,
+    orderId: widget.orderId,
+    role: widget.role,
+  );
 
   @override
   void initState() {
@@ -66,8 +82,14 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     if (!mounted || failure == null || failure == ChatFailure.failed) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(chatFailureText(failure))));
+      ..showSnackBar(SnackBar(content: Text(_failureText(failure))));
   }
+
+  /// A store's refusal to start is worded for a store (spec 0020, AC-6).
+  String _failureText(ChatFailure failure) =>
+      widget.role == ChatRole.store && failure == ChatFailure.notAllowed
+      ? "You can't start new conversations"
+      : chatFailureText(failure);
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +107,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               name: data?.info.otherName ?? '',
               avatarUrl: data?.info.otherAvatarUrl,
               storeId: data?.info.otherId,
+              backTo: widget.role == ChatRole.store
+                  ? '/store/messages'
+                  : '/activity',
             ),
             Expanded(
               child: visitor
@@ -109,7 +134,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 
   Widget _failure(Object error) {
     if (error is ChatException && error.reason == ChatFailure.notAllowed) {
-      return ListMessage(chatFailureText(ChatFailure.notAllowed));
+      return ListMessage(_failureText(ChatFailure.notAllowed));
     }
     return ListMessage(
       "Couldn't load this chat.",
@@ -120,7 +145,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 
   Widget _messages(ChatThreadState state) {
     final all = state.all;
-    if (all.isEmpty) return _EmptyThread(state: state);
+    if (all.isEmpty) return _EmptyThread(state: state, role: widget.role);
 
     final info = state.info;
     final notifier = ref.read(chatThreadProvider(_target).notifier);
@@ -133,14 +158,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       itemBuilder: (context, index) {
         if (index == newestFirst.length) return const ListLoading();
         final message = newestFirst[index];
-        final mine = message.senderId != info.otherId;
+        final mine = notifier.isMine(message);
         // The list is newest first, so the message before this one in time is
         // the next index.
         final earlier = index + 1 < newestFirst.length
             ? newestFirst[index + 1]
             : null;
-        final startsRun =
-            earlier == null || (earlier.senderId != info.otherId) != mine;
+        final startsRun = earlier == null || notifier.isMine(earlier) != mine;
         return ChatBubble(
           key: ValueKey(message.id),
           message: message,
@@ -177,11 +201,19 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 /// The back arrow, the store avatar and the name (Figma node 874:5948). The
 /// avatar and name open the Store Page once the store is known.
 class _Header extends StatelessWidget {
-  const _Header({required this.name, this.avatarUrl, this.storeId});
+  const _Header({
+    required this.name,
+    this.avatarUrl,
+    this.storeId,
+    required this.backTo,
+  });
 
   final String name;
   final String? avatarUrl;
   final String? storeId;
+
+  /// Where Back goes when there is nothing to pop.
+  final String backTo;
 
   @override
   Widget build(BuildContext context) {
@@ -198,9 +230,8 @@ class _Header extends StatelessWidget {
             excludeSemantics: true,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => context.canPop()
-                  ? context.pop()
-                  : context.go('/activity'),
+              onTap: () =>
+                  context.canPop() ? context.pop() : context.go(backTo),
               child: const SizedBox(
                 width: 56,
                 height: 56,
@@ -249,9 +280,10 @@ class _Header extends StatelessWidget {
 /// name, abbreviated follower count and "Ask NAME about anything you want"
 /// (AC-3).
 class _EmptyThread extends StatelessWidget {
-  const _EmptyThread({required this.state});
+  const _EmptyThread({required this.state, required this.role});
 
   final ChatThreadState state;
+  final ChatRole role;
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +321,9 @@ class _EmptyThread extends StatelessWidget {
               ),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              'Ask ${info.otherName} about anything you want',
+              role == ChatRole.store
+                  ? 'Say hello to ${info.otherName}'
+                  : 'Ask ${info.otherName} about anything you want',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: AppTypography.fontFamilyDisplay,

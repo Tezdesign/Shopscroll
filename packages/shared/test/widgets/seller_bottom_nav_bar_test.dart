@@ -79,4 +79,24 @@ void main() {
       handle.dispose();
     },
   );
+
+  testWidgets('a badged Messages tab shows a dot, the others do not', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          bottomNavigationBar: SellerBottomNavBar(
+            currentItem: SellerTabItem.home,
+            onItemSelected: (_) {},
+            badged: const {SellerTabItem.messages},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('tab-badge-messages')), findsOneWidget);
+    expect(find.byKey(const ValueKey('tab-badge-activity')), findsNothing);
+  });
 }
